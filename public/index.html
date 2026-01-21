@@ -35,7 +35,93 @@
   <script>
     // === CONFIG SUPABASE (tes valeurs) ===
     const SUPABASE_URL = "https://cehqaxctcfmgjajmmcccz.supabase.co";
+    const SUPABASE_ANON_KEY = "<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pickleball</title>
+
+  <!-- Supabase (une seule fois) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+  <h1>Pickleball</h1>
+
+  <hr />
+
+  <h2>Connexion</h2>
+
+  <label for="email">Courriel</label><br />
+  <input
+    id="email"
+    name="email"
+    type="email"
+    placeholder="nom@exemple.com"
+    autocomplete="email"
+  />
+  <button id="loginBtn" type="button">Recevoir un lien</button>
+
+  <p id="status"></p>
+
+  <hr />
+
+  <button id="test" type="button">Tester JavaScript</button>
+
+  <script>
+    // === CONFIG SUPABASE (tes valeurs) ===
+    const SUPABASE_URL = "https://cehqaxctcfmgjajmmcccz.supabase.co";
     const SUPABASE_ANON_KEY = "re_Rz5eYjuV_6tvkLzf2QJBApAL7bYq5N1ZK";
+
+    // === INIT ===
+    const statusEl = document.getElementById("status");
+
+    function setStatus(msg) {
+      statusEl.textContent = msg || "";
+    }
+
+    // Vérifie que Supabase CDN est chargé
+    if (!window.supabase) {
+      setStatus("Erreur: la librairie Supabase n'est pas chargée (CDN).");
+      throw new Error("Supabase CDN non chargé");
+    }
+
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // === UI ===
+    document.getElementById("test").addEventListener("click", () => {
+      alert("JavaScript chargé correctement");
+    });
+
+    async function sendMagicLink(email) {
+      setStatus("Envoi du lien…");
+
+      const { error } = await client.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: "https://pickleball-ccyp.pages.dev"
+        }
+      });
+
+      if (error) {
+        setStatus("Erreur: " + error.message);
+      } else {
+        setStatus("Lien envoyé. Vérifiez votre courriel.");
+      }
+    }
+
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+      const email = document.getElementById("email").value.trim();
+      if (!email) {
+        alert("Courriel requis");
+        return;
+      }
+      await sendMagicLink(email);
+    });
+  </script>
+</body>
+</html>";
 
     // === INIT ===
     const statusEl = document.getElementById("status");
