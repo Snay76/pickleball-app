@@ -1,6 +1,6 @@
 // 1) Mets tes valeurs ici
-const SUPABASE_URL = "https://cehqaxtcfmgjajmmcccz.supabase.co";
-const SUPABASE_ANON_KEY = "re_AD2aSkEc_HakFbmU8gFQQ8WBPh9MqtFH6";
+const SUPABASE_URL = "https://cehqaxctcfmgjajmmcccz.supabase.co";
+const SUPABASE_ANON_KEY = "re_Rz5eYjuV_6tvkLzf2QJBApAL7bYq5N1ZK";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const fmtDate = new Intl.DateTimeFormat("fr-CA", { dateStyle: "medium", timeStyle: "short" });
