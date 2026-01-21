@@ -3,68 +3,121 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pickleball – Test OTP</title>
+  <title>Pickleball</title>
 
   <style>
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      margin: 24px;
-    }
-    label { display: block; margin-top: 12px; }
-    input, button { padding: 8px; margin-top: 6px; }
-    button { cursor: pointer; }
-    #status { margin-top: 12px; white-space: pre-wrap; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
+    .hidden { display: none; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; margin-top: 16px; }
+    label { display:block; margin-top: 10px; }
+    input { padding: 8px; width: min(420px, 100%); }
+    button { padding: 8px 12px; margin-top: 10px; cursor: pointer; }
+    #status { white-space: pre-wrap; }
   </style>
 </head>
 
 <body>
-  <h1>Pickleball</h1>
   <p style="color:red;font-weight:bold">VERSION TEST OTP 2026-01-21-001</p>
+  <h1>Pickleball</h1>
 
-  <h2>Connexion (test OTP direct)</h2>
+  <div id="loginSection" class="card">
+    <h2>Connexion</h2>
 
-  <label for="email">Courriel</label>
-  <input
-    id="email"
-    type="email"
-    placeholder="nom@exemple.com"
-    autocomplete="email"
-    required
-  />
+    <label for="email">Courriel</label>
+    <input id="email" type="email" placeholder="nom@exemple.com" autocomplete="email" required />
 
-  <br />
-  <button id="loginBtn" type="button">Recevoir un lien</button>
+    <br />
+    <button id="loginBtn" type="button">Recevoir un lien</button>
 
-  <p id="status" aria-live="polite"></p>
+    <p id="status" aria-live="polite"></p>
+  </div>
+
+  <div id="appSection" class="card hidden">
+    <h2>Application</h2>
+    <p>Connecté : <strong id="userEmail">(chargement…)</strong></p>
+    <button id="logoutBtn" type="button">Se déconnecter</button>
+    <p id="appStatus"></p>
+  </div>
 
   <script>
-    // ================= CONFIG =================
+    // ====== CONFIG ======
     const SUPABASE_URL = "https://cehqaxtcfmgjajmmcccz.supabase.co";
-    const SUPABASE_ANON_KEY =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlaHFheHRjZm1namFqbW1jY2N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5NTQ1OTUsImV4cCI6MjA4NDUzMDU5NX0.U0IiTLx1_Vd4D8WBkhkO8KOrl3w_ftbPtcIWs_n1KmA";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlaHFheHRjZm1namFqbW1jY2N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5NTQ1OTUsImV4cCI6MjA4NDUzMDU5NX0.U0IiTLx1_Vd4D8WBkhkO8KOrl3w_ftbPtcIWs_n1KmA";
 
-    // ================= DOM =================
-    const emailEl = document.getElementById("email");
-    const btnEl = document.getElementById("loginBtn");
-    const statusEl = document.getElementById("status");
+    // ====== DOM ======
+    const loginSection = document.getElementById("loginSection");
+    const appSection   = document.getElementById("appSection");
+    const statusEl     = document.getElementById("status");
+    const appStatusEl  = document.getElementById("appStatus");
+    const emailEl      = document.getElementById("email");
+    const loginBtn     = document.getElementById("loginBtn");
+    const logoutBtn    = document.getElementById("logoutBtn");
+    const userEmailEl  = document.getElementById("userEmail");
 
-    function setStatus(msg) {
-      statusEl.textContent = msg || "";
+    function setStatus(msg) { statusEl.textContent = msg || ""; }
+    function setAppStatus(msg) { appStatusEl.textContent = msg || ""; }
+
+    function showLogin(msg) {
+      appSection.classList.add("hidden");
+      loginSection.classList.remove("hidden");
+      if (msg) setStatus(msg);
     }
 
-    // ================= TEST OTP DIRECT =================
-    async function testOtpFromPage() {
-      const email = emailEl.value.trim();
-      if (!email) {
-        alert("Courriel requis");
-        return;
-      }
+    function showApp() {
+      loginSection.classList.add("hidden");
+      appSection.classList.remove("hidden");
+      setStatus("");
+    }
 
-      btnEl.disabled = true;
-      setStatus("Envoi du lien (test direct)…");
+    // ====== STORAGE ======
+    const LS_ACCESS = "pb_access_token";
+
+    function saveAccessToken(token) {
+      localStorage.setItem(LS_ACCESS, token);
+    }
+    function getAccessToken() {
+      return localStorage.getItem(LS_ACCESS);
+    }
+    function clearTokens() {
+      localStorage.removeItem(LS_ACCESS);
+    }
+
+    // ====== PARSE MAGIC LINK RETURN ======
+    // Supabase magic link revient souvent avec un hash: #access_token=...&...
+    function parseHashParams() {
+      const hash = window.location.hash?.startsWith("#") ? window.location.hash.slice(1) : "";
+      if (!hash) return null;
+      const params = new URLSearchParams(hash);
+      const access_token = params.get("access_token");
+      const error = params.get("error");
+      const error_description = params.get("error_description");
+      return { access_token, error, error_description, raw: hash };
+    }
+
+    // ====== API CALL: GET USER ======
+    async function fetchUserEmail(accessToken) {
+      const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+        method: "GET",
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+
+      const text = await r.text();
+      if (!r.ok) throw new Error(`USER ${r.status}: ${text}`);
+
+      const data = JSON.parse(text);
+      return data?.email || "(email inconnu)";
+    }
+
+    // ====== SEND MAGIC LINK (OTP) ======
+    async function sendMagicLink(email) {
+      loginBtn.disabled = true;
+      setStatus("Envoi du lien…");
 
       try {
-        const response = await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
+        const r = await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
           method: "POST",
           headers: {
             apikey: SUPABASE_ANON_KEY,
@@ -72,32 +125,77 @@
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            email: email,
+            email,
             create_user: true,
             redirect_to: "https://pickleball-ccyp.pages.dev"
           })
         });
 
-        const text = await response.text();
+        const text = await r.text();
 
-        console.log("OTP RESULT:", response.status, text);
-
-        if (!response.ok) {
-          setStatus(`ERREUR ${response.status}\n${text}`);
-        } else {
-          setStatus("✔ Lien envoyé.\nVérifie ton courriel et clique sur le lien.");
+        if (!r.ok) {
+          setStatus(`Erreur (${r.status}): ${text}`);
+          return;
         }
 
-      } catch (err) {
-        console.error("OTP FETCH ERROR:", err);
-        setStatus("❌ ERREUR FETCH : " + err.message);
+        // Souvent "{}" et c'est normal
+        setStatus("Lien envoyé. Vérifie ton courriel et clique sur le lien.");
+      } catch (e) {
+        console.error("OTP FETCH ERROR:", e);
+        setStatus("Erreur: Load failed");
       } finally {
-        btnEl.disabled = false;
+        loginBtn.disabled = false;
       }
     }
 
-    // ================= HANDLER BOUTON =================
-    btnEl.addEventListener("click", testOtpFromPage);
+    // ====== INIT (AU CHARGEMENT) ======
+    (async function init() {
+      // 1) Si on revient du magic link, on récupère le token
+      const hp = parseHashParams();
+      if (hp?.error) {
+        showLogin(`Erreur auth: ${hp.error}\n${hp.error_description || ""}`);
+        // Nettoie l'URL
+        history.replaceState(null, "", window.location.pathname + window.location.search);
+        return;
+      }
+
+      if (hp?.access_token) {
+        saveAccessToken(hp.access_token);
+        // Nettoie l'URL (enlève le #access_token...)
+        history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+
+      // 2) Si on a un token stocké, on affiche l'app
+      const token = getAccessToken();
+      if (token) {
+        showApp();
+        setAppStatus("Chargement du profil…");
+        try {
+          const email = await fetchUserEmail(token);
+          userEmailEl.textContent = email;
+          setAppStatus("Connecté ✔");
+        } catch (e) {
+          console.error(e);
+          clearTokens();
+          showLogin("Session invalide. Reconnecte-toi.");
+        }
+      } else {
+        showLogin();
+      }
+    })();
+
+    // ====== EVENTS ======
+    loginBtn.addEventListener("click", async () => {
+      const email = emailEl.value.trim();
+      if (!email) return alert("Courriel requis");
+      await sendMagicLink(email);
+    });
+
+    logoutBtn.addEventListener("click", () => {
+      clearTokens();
+      // reload propre
+      window.location.href = window.location.origin + window.location.pathname;
+    });
   </script>
 </body>
 </html>
