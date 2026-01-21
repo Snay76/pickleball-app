@@ -2,388 +2,1079 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Pickleball</title>
 
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
-    .hidden { display: none; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; margin-top: 16px; max-width: 760px; }
-    label { display:block; margin-top: 10px; font-weight: 600; }
-    input, select { padding: 8px; width: min(420px, 100%); }
-    button { padding: 8px 12px; margin-top: 10px; cursor: pointer; }
-    #status, #appStatus, #debug { white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
-    .muted { color: #666; }
-    .list { margin-top: 12px; padding-left: 18px; }
-    .pill { display:inline-block; padding:2px 8px; border:1px solid #ddd; border-radius:999px; font-size:12px; margin-left:8px; }
-    .ok { color: #0a7a2f; font-weight: 700; }
-    .err { color: #b00020; font-weight: 700; }
-    .top { font-size: 20px; font-weight: 800; color: red; margin-bottom: 8px; }
+    :root{
+      --bg:#0b1220; --card:#121b2f; --muted:#9fb0d0; --text:#e8efff;
+      --line:rgba(255,255,255,.12);
+      --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --accent:#60a5fa;
+      --btn:#1f2a44; --btn2:#223357;
+      --radius:16px;
+      --pad:16px;
+      --tap:56px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; font-family:var(--sans); background:linear-gradient(180deg,#070b14, var(--bg));
+      color:var(--text);
+      padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+    }
+    h1{ margin: 8px 0 4px; font-size: 22px; letter-spacing:.2px; }
+    h2{ margin: 0 0 8px; font-size: 18px; }
+    h3{ margin: 16px 0 8px; font-size: 16px; color: #d7e3ff; }
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; padding: 10px 12px; border:1px solid var(--line);
+      border-radius: 18px; background: rgba(255,255,255,.04); box-shadow: var(--shadow);
+      position: sticky; top: 10px; z-index: 10;
+      backdrop-filter: blur(8px);
+    }
+    .brand{ display:flex; flex-direction:column; gap:2px; }
+    .brand small{ color:var(--muted); font-size:12px; }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 8px 12px; border:1px solid var(--line); border-radius:999px;
+      font-size: 12px; color: var(--muted); white-space:nowrap;
+    }
+    .dot{ width:10px; height:10px; border-radius:999px; background: var(--warn); }
+    .dot.ok{ background: var(--ok); }
+    .dot.bad{ background: var(--bad); }
+
+    .grid{ display:grid; gap: 12px; margin-top: 14px; }
+    .card{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      border-radius: var(--radius);
+      padding: var(--pad);
+      box-shadow: var(--shadow);
+    }
+    .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:end; }
+    .col{ display:flex; flex-direction:column; gap:8px; flex:1 1 220px; }
+    label{ font-weight:700; font-size: 13px; color:#d7e3ff; }
+    input, select{
+      width:100%;
+      height: var(--tap);
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.2);
+      color: var(--text);
+      outline: none;
+      font-size: 16px;
+    }
+    input::placeholder{ color: rgba(232,239,255,.45); }
+    button{
+      height: var(--tap);
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      color: var(--text);
+      font-weight: 800;
+      font-size: 16px;
+      padding: 0 14px;
+      cursor:pointer;
+      user-select:none;
+      touch-action: manipulation;
+    }
+    button:disabled{ opacity:.55; cursor:not-allowed; }
+    .btnPrimary{
+      background: linear-gradient(180deg, rgba(96,165,250,.35), rgba(96,165,250,.14));
+      border-color: rgba(96,165,250,.45);
+    }
+    .btnDanger{
+      background: linear-gradient(180deg, rgba(239,68,68,.28), rgba(239,68,68,.10));
+      border-color: rgba(239,68,68,.40);
+    }
+    .btnGhost{
+      background: rgba(255,255,255,.03);
+    }
+    .help{ color: var(--muted); font-size: 13px; margin-top: 6px; line-height:1.35; }
+    .status{
+      font-family: var(--mono);
+      font-size: 12px;
+      white-space: pre-wrap;
+      color: #d7e3ff;
+      border:1px dashed rgba(255,255,255,.18);
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: rgba(0,0,0,.18);
+    }
+    .muted{ color: var(--muted); }
+    .hidden{ display:none !important; }
+
+    /* Tabs (mobile friendly) */
+    .tabs{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .tab{
+      height: 52px;
+      border-radius: 16px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      font-weight: 900;
+      font-size: 14px;
+    }
+    .tab.active{
+      background: linear-gradient(180deg, rgba(96,165,250,.35), rgba(96,165,250,.14));
+      border-color: rgba(96,165,250,.55);
+    }
+
+    /* Lists */
+    ul{ margin: 8px 0 0; padding-left: 18px; }
+    li{ margin: 8px 0; }
+    .listItem{
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      padding: 10px 12px; border:1px solid var(--line); border-radius: 14px;
+      background: rgba(0,0,0,.12);
+    }
+    .listItem .name{ font-weight:900; }
+    .listItem .meta{ font-family: var(--mono); font-size: 11px; color: var(--muted); }
+    .listItem .actions{ display:flex; gap:10px; }
+    .miniBtn{
+      height: 44px; min-width: 44px;
+      border-radius: 14px;
+      font-size: 14px;
+      padding: 0 12px;
+    }
+
+    /* Match preview */
+    .matchBox{
+      border:1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      background: rgba(0,0,0,.12);
+    }
+    .teams{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+    }
+    .teamRow{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding: 10px 12px; border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .teamRow strong{ font-size: 15px; }
+    .scoreInput{
+      width: 90px;
+      text-align:center;
+      height: 48px;
+      border-radius: 14px;
+      font-weight: 900;
+      font-size: 18px;
+    }
+    .small{ font-size: 12px; color: var(--muted); }
+    .sep{ height:1px; background: var(--line); margin: 14px 0; }
+
+    @media (min-width: 840px){
+      body{ max-width: 860px; margin: 0 auto; }
+      .teams{ grid-template-columns: 1fr 1fr; }
+      .tabs{ grid-template-columns: repeat(4, 1fr); }
+    }
   </style>
 </head>
 
 <body>
-  <div class="top">VERSION ROUGE: 2026-01-21-APP-005</div>
+  <div class="topbar">
+    <div class="brand">
+      <div style="font-weight:900">Pickleball</div>
+      <small id="versionText">Version: 2026-01-21-APP-FULL-001</small>
+    </div>
 
-  <h1>Pickleball</h1>
+    <div class="pill">
+      <span id="authDot" class="dot"></span>
+      <span id="authText">Non connecté</span>
+    </div>
+  </div>
 
   <!-- ===== LOGIN ===== -->
-  <div id="loginSection" class="card">
+  <div id="loginCard" class="card" style="margin-top:14px;">
     <h2>Connexion</h2>
+    <div class="row">
+      <div class="col">
+        <label for="email">Courriel</label>
+        <input id="email" type="email" placeholder="nom@exemple.com" autocomplete="email" inputmode="email" />
+      </div>
+      <div class="col" style="flex:0 0 220px;">
+        <button id="loginBtn" class="btnPrimary" type="button">Recevoir un lien</button>
+      </div>
+    </div>
 
-    <label for="email">Courriel</label>
-    <input id="email" type="email" placeholder="nom@exemple.com" autocomplete="email" required />
-    <button id="loginBtn" type="button">Recevoir un lien</button>
+    <div class="help">
+      Tu reçois un lien par courriel. Clique-le et tu reviens ici automatiquement.
+    </div>
 
-    <p id="status" aria-live="polite"></p>
-    <p class="muted">Après avoir cliqué le lien reçu par courriel, tu reviens ici et l’app s’ouvre.</p>
+    <div class="sep"></div>
+
+    <div id="loginStatus" class="status">Prêt.</div>
   </div>
 
   <!-- ===== APP ===== -->
-  <div id="appSection" class="card hidden">
-    <h2>Application</h2>
-    <p>Connecté : <strong id="userEmail">(chargement…)</strong> <span id="authPill" class="pill">auth</span></p>
-    <button id="logoutBtn" type="button">Se déconnecter</button>
-    <p id="appStatus"></p>
-
-    <hr />
-
-    <!-- Players -->
-    <h3>Joueurs</h3>
-    <div class="row">
-      <div>
-        <label for="playerName">Nom du joueur</label>
-        <input id="playerName" type="text" placeholder="Ex: Marc" />
-        <button id="addPlayerBtn" type="button">Ajouter joueur</button>
+  <div id="appCard" class="card hidden" style="margin-top:14px;">
+    <div class="row" style="align-items:center;">
+      <div class="col">
+        <div style="font-weight:900; font-size:16px;">
+          Connecté : <span id="userEmail" class="muted">(chargement…)</span>
+        </div>
+        <div class="small">Les données sont partagées (Supabase) si tes règles RLS l’autorisent.</div>
+      </div>
+      <div class="col" style="flex:0 0 220px;">
+        <button id="logoutBtn" class="btnDanger" type="button">Se déconnecter</button>
       </div>
     </div>
-    <ul id="playersList" class="list"></ul>
 
-    <hr />
+    <div class="tabs">
+      <button class="tab active" data-tab="tabPlayers">Joueurs</button>
+      <button class="tab" data-tab="tabGen">Générateur</button>
+      <button class="tab" data-tab="tabMatch">Match</button>
+      <button class="tab" data-tab="tabDebug">Debug</button>
+    </div>
 
-    <!-- Matches -->
-    <h3>Matchs</h3>
-    <div class="row">
-      <div>
-        <label for="court">Terrain</label>
-        <input id="court" type="number" min="1" step="1" value="1" />
+    <!-- ===== TAB: Players ===== -->
+    <div id="tabPlayers" class="grid">
+      <div class="card" style="padding:0; background:transparent; border:none; box-shadow:none;">
+        <h3>Ajouter un joueur</h3>
+        <div class="row">
+          <div class="col">
+            <label for="playerName">Nom</label>
+            <input id="playerName" type="text" placeholder="Ex: Yans Cote" />
+          </div>
+          <div class="col" style="flex:0 0 220px;">
+            <button id="addPlayerBtn" class="btnPrimary" type="button">Ajouter</button>
+          </div>
+        </div>
+        <div class="help">Suppression: si le joueur est déjà utilisé dans un match, la DB peut refuser (clé étrangère).</div>
       </div>
-      <div>
-        <label for="statusMatch">Statut</label>
-        <select id="statusMatch">
-          <option value="open">open</option>
-          <option value="locked">locked</option>
-          <option value="done">done</option>
-        </select>
-      </div>
-      <div>
-        <button id="createMatchBtn" type="button">Créer match</button>
+
+      <div class="card" style="padding:0; background:transparent; border:none; box-shadow:none;">
+        <h3>Liste des joueurs</h3>
+        <div id="playersEmpty" class="muted">Chargement…</div>
+        <div id="playersWrap"></div>
       </div>
     </div>
-    <ul id="matchesList" class="list"></ul>
 
-    <hr />
-    <button id="toggleDebugBtn" type="button">Afficher/Masquer debug</button>
-    <pre id="debug" class="hidden"></pre>
+    <!-- ===== TAB: Generator ===== -->
+    <div id="tabGen" class="grid hidden">
+      <h3>Générer des équipes (aléatoire)</h3>
+
+      <div class="row">
+        <div class="col">
+          <label for="nbCourts">Nombre de terrains</label>
+          <input id="nbCourts" type="number" min="1" step="1" value="1" />
+        </div>
+        <div class="col">
+          <label for="modeGen">Mode</label>
+          <select id="modeGen">
+            <option value="random">Aléatoire</option>
+            <option value="avoid">Éviter les doublons (local)</option>
+          </select>
+        </div>
+        <div class="col" style="flex:0 0 220px;">
+          <button id="genBtn" class="btnPrimary" type="button">Générer</button>
+        </div>
+      </div>
+
+      <div class="help">
+        “Éviter les doublons” utilise un historique LOCAL (ton navigateur) pour limiter les mêmes partenaires / adversaires.
+        Ce n’est pas parfait, mais ça marche sans complexifier la DB.
+      </div>
+
+      <div id="genOutput" class="grid"></div>
+    </div>
+
+    <!-- ===== TAB: Match ===== -->
+    <div id="tabMatch" class="grid hidden">
+      <h3>Créer un match (DB)</h3>
+
+      <div class="row">
+        <div class="col">
+          <label for="roundId">Round ID</label>
+          <input id="roundId" type="text" placeholder="uuid (bouton ci-dessous)" />
+        </div>
+        <div class="col" style="flex:0 0 220px;">
+          <button id="newRoundBtn" type="button">Nouveau round</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label for="court">Terrain</label>
+          <input id="court" type="number" min="1" step="1" value="1" />
+        </div>
+        <div class="col">
+          <label for="statusMatch">Statut</label>
+          <select id="statusMatch">
+            <option value="open">open</option>
+            <option value="locked">locked</option>
+            <option value="done">done</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label for="a1">A1</label>
+          <select id="a1"></select>
+        </div>
+        <div class="col">
+          <label for="a2">A2</label>
+          <select id="a2"></select>
+        </div>
+        <div class="col">
+          <label for="b1">B1</label>
+          <select id="b1"></select>
+        </div>
+        <div class="col">
+          <label for="b2">B2</label>
+          <select id="b2"></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col" style="flex:0 0 220px;">
+          <button id="createMatchBtn" class="btnPrimary" type="button">Créer match</button>
+        </div>
+      </div>
+
+      <div class="sep"></div>
+
+      <h3>Entrer le pointage (dans l’UI)</h3>
+      <div class="matchBox">
+        <div class="teams">
+          <div class="teamRow">
+            <div>
+              <div class="small">Équipe A</div>
+              <strong id="teamAName">(non défini)</strong>
+            </div>
+            <input id="scoreA" class="scoreInput" type="number" min="0" step="1" value="0" />
+          </div>
+
+          <div class="teamRow">
+            <div>
+              <div class="small">Équipe B</div>
+              <strong id="teamBName">(non défini)</strong>
+            </div>
+            <input id="scoreB" class="scoreInput" type="number" min="0" step="1" value="0" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px;">
+          <div class="col" style="flex:0 0 220px;">
+            <button id="applyScoreBtn" type="button">Appliquer au match</button>
+          </div>
+          <div class="col">
+            <div class="help">
+              Par défaut, le pointage est stocké LOCAL (ton navigateur). Si ta table <code>matches</code> a des colonnes
+              <code>score_a</code> et <code>score_b</code>, l’app essaiera aussi de les sauvegarder dans la DB.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sep"></div>
+
+      <h3>Derniers matchs</h3>
+      <div id="matchesWrap" class="grid"></div>
+      <div id="matchesEmpty" class="muted">Chargement…</div>
+    </div>
+
+    <!-- ===== TAB: Debug ===== -->
+    <div id="tabDebug" class="grid hidden">
+      <h3>Debug</h3>
+      <div class="row">
+        <div class="col" style="flex:0 0 220px;">
+          <button id="refreshBtn" type="button">Rafraîchir données</button>
+        </div>
+        <div class="col" style="flex:0 0 220px;">
+          <button id="clearLocalBtn" class="btnDanger" type="button">Vider LOCAL</button>
+        </div>
+      </div>
+      <div id="debug" class="status">…</div>
+    </div>
   </div>
 
   <script>
-    // ====== CONFIG ======
+    // ============================
+    // CONFIG
+    // ============================
     const SUPABASE_URL = "https://cehqaxtcfmgjajmmcccz.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlaHFheHRjZm1namFqbW1jY2N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5NTQ1OTUsImV4cCI6MjA4NDUzMDU5NX0.U0IiTLx1_Vd4D8WBkhkO8KOrl3w_ftbPtcIWs_n1KmA";
 
-    // ====== DOM ======
-    const loginSection = document.getElementById("loginSection");
-    const appSection   = document.getElementById("appSection");
-    const statusEl     = document.getElementById("status");
-    const appStatusEl  = document.getElementById("appStatus");
-    const debugEl      = document.getElementById("debug");
+    // ============================
+    // DOM
+    // ============================
+    const loginCard = document.getElementById("loginCard");
+    const appCard = document.getElementById("appCard");
+    const loginStatus = document.getElementById("loginStatus");
+    const emailEl = document.getElementById("email");
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const userEmailEl = document.getElementById("userEmail");
 
-    const emailEl      = document.getElementById("email");
-    const loginBtn     = document.getElementById("loginBtn");
-    const logoutBtn    = document.getElementById("logoutBtn");
-    const userEmailEl  = document.getElementById("userEmail");
-    const authPillEl   = document.getElementById("authPill");
+    const authDot = document.getElementById("authDot");
+    const authText = document.getElementById("authText");
 
+    const tabs = Array.from(document.querySelectorAll(".tab"));
+    const tabPlayers = document.getElementById("tabPlayers");
+    const tabGen = document.getElementById("tabGen");
+    const tabMatch = document.getElementById("tabMatch");
+    const tabDebug = document.getElementById("tabDebug");
+
+    const debugEl = document.getElementById("debug");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const clearLocalBtn = document.getElementById("clearLocalBtn");
+
+    // Players
     const playerNameEl = document.getElementById("playerName");
     const addPlayerBtn = document.getElementById("addPlayerBtn");
-    const playersList  = document.getElementById("playersList");
+    const playersWrap = document.getElementById("playersWrap");
+    const playersEmpty = document.getElementById("playersEmpty");
 
-    const courtEl      = document.getElementById("court");
-    const statusMatchEl= document.getElementById("statusMatch");
+    // Generator
+    const nbCourtsEl = document.getElementById("nbCourts");
+    const modeGenEl = document.getElementById("modeGen");
+    const genBtn = document.getElementById("genBtn");
+    const genOutput = document.getElementById("genOutput");
+
+    // Match
+    const roundIdEl = document.getElementById("roundId");
+    const newRoundBtn = document.getElementById("newRoundBtn");
+    const courtEl = document.getElementById("court");
+    const statusMatchEl = document.getElementById("statusMatch");
     const createMatchBtn = document.getElementById("createMatchBtn");
-    const matchesList  = document.getElementById("matchesList");
 
-    const toggleDebugBtn = document.getElementById("toggleDebugBtn");
+    const a1El = document.getElementById("a1");
+    const a2El = document.getElementById("a2");
+    const b1El = document.getElementById("b1");
+    const b2El = document.getElementById("b2");
 
-    function setStatus(msg) { statusEl.textContent = msg || ""; }
-    function setAppStatus(msg) { appStatusEl.textContent = msg || ""; }
-    function logDebug(msg) {
+    const matchesWrap = document.getElementById("matchesWrap");
+    const matchesEmpty = document.getElementById("matchesEmpty");
+
+    const teamAName = document.getElementById("teamAName");
+    const teamBName = document.getElementById("teamBName");
+    const scoreAEl = document.getElementById("scoreA");
+    const scoreBEl = document.getElementById("scoreB");
+    const applyScoreBtn = document.getElementById("applyScoreBtn");
+
+    // ============================
+    // STATE / STORAGE
+    // ============================
+    const LS_ACCESS = "pb_access_token";
+    const LS_HISTORY = "pb_history_v1";      // partners/opponents history (local)
+    const LS_SCORE = "pb_score_local_v1";    // local scores per match id
+
+    let cachedPlayers = [];
+    let cachedMatches = [];
+    let lastCreatedMatch = null; // last match object returned
+
+    function log(msg){
       debugEl.textContent = (debugEl.textContent ? debugEl.textContent + "\n" : "") + msg;
     }
+    function setAuth(isAuthed, email){
+      authDot.className = "dot" + (isAuthed ? " ok" : "");
+      authText.textContent = isAuthed ? (email || "Connecté") : "Non connecté";
+    }
+    function showLogin(msg){
+      loginCard.classList.remove("hidden");
+      appCard.classList.add("hidden");
+      loginStatus.textContent = msg || "Prêt.";
+      setAuth(false);
+    }
+    function showApp(){
+      loginCard.classList.add("hidden");
+      appCard.classList.remove("hidden");
+    }
+    function saveToken(t){ localStorage.setItem(LS_ACCESS, t); }
+    function getToken(){ return localStorage.getItem(LS_ACCESS); }
+    function clearToken(){ localStorage.removeItem(LS_ACCESS); }
 
-    function showLogin(msg) {
-      appSection.classList.add("hidden");
-      loginSection.classList.remove("hidden");
-      if (msg) setStatus(msg);
+    function getHistory(){
+      try { return JSON.parse(localStorage.getItem(LS_HISTORY) || "{}"); }
+      catch { return {}; }
+    }
+    function saveHistory(h){
+      localStorage.setItem(LS_HISTORY, JSON.stringify(h));
     }
 
-    function showApp() {
-      loginSection.classList.add("hidden");
-      appSection.classList.remove("hidden");
-      setStatus("");
+    function getScoreMap(){
+      try { return JSON.parse(localStorage.getItem(LS_SCORE) || "{}"); }
+      catch { return {}; }
+    }
+    function saveScoreMap(m){
+      localStorage.setItem(LS_SCORE, JSON.stringify(m));
     }
 
-    // ====== TOKEN STORAGE ======
-    const LS_ACCESS = "pb_access_token";
-    function saveAccessToken(token) { localStorage.setItem(LS_ACCESS, token); }
-    function getAccessToken() { return localStorage.getItem(LS_ACCESS); }
-    function clearTokens() { localStorage.removeItem(LS_ACCESS); }
+    function newUUID(){
+      return crypto.randomUUID();
+    }
 
-    // ====== MAGIC LINK PARSE ======
-    function parseHashParams() {
-      const hash = window.location.hash?.startsWith("#") ? window.location.hash.slice(1) : "";
+    // ============================
+    // URL HASH PARSE (magic link)
+    // ============================
+    function parseHash(){
+      const hash = (window.location.hash || "").startsWith("#") ? window.location.hash.slice(1) : "";
       if (!hash) return null;
-      const params = new URLSearchParams(hash);
+      const p = new URLSearchParams(hash);
       return {
-        access_token: params.get("access_token"),
-        error: params.get("error"),
-        error_description: params.get("error_description"),
-        raw: hash
+        access_token: p.get("access_token"),
+        error: p.get("error"),
+        error_description: p.get("error_description")
       };
     }
 
-    // ====== LOW-LEVEL FETCH ======
-    async function apiFetch(path, { method="GET", headers={}, body=null } = {}) {
-      const token = getAccessToken();
+    // ============================
+    // SUPABASE REST FETCH
+    // ============================
+    async function apiFetch(path, { method="GET", headers={}, body=null } = {}){
+      const token = getToken();
       const url = `${SUPABASE_URL}${path}`;
-
       const finalHeaders = {
         apikey: SUPABASE_ANON_KEY,
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...headers
       };
-
       const opts = { method, headers: finalHeaders };
       if (body !== null) opts.body = body;
 
       let r, text;
-      try {
+      try{
         r = await fetch(url, opts);
         text = await r.text();
-      } catch (e) {
+      }catch(e){
         throw new Error(`FETCH FAILED: ${e?.message || e}`);
       }
-
-      if (!r.ok) {
+      if(!r.ok){
         throw new Error(`${method} ${path} -> ${r.status}\n${text}`);
       }
-
-      // certaines routes renvoient "{}"
       const trimmed = (text || "").trim();
-      const json = trimmed ? JSON.parse(trimmed) : null;
-      return json;
+      return trimmed ? JSON.parse(trimmed) : null;
     }
 
-    // ====== AUTH: SEND OTP ======
-    async function sendMagicLink(email) {
+    // ============================
+    // AUTH
+    // ============================
+    async function sendMagicLink(email){
       loginBtn.disabled = true;
-      setStatus("Envoi du lien…");
-
-      try {
-        // GoTrue endpoint direct
+      loginStatus.textContent = "Envoi du lien…";
+      try{
         await apiFetch("/auth/v1/otp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
           body: JSON.stringify({
             email,
             create_user: true,
             redirect_to: window.location.origin + window.location.pathname
           })
         });
-
-        setStatus("Lien envoyé. Vérifie ton courriel et clique sur le lien.");
-      } catch (e) {
-        setStatus("Erreur: " + e.message);
-        logDebug("[OTP ERROR]\n" + e.message);
-      } finally {
+        loginStatus.textContent = "Lien envoyé. Vérifie ton courriel.";
+      }catch(e){
+        loginStatus.textContent = "Erreur: " + e.message;
+        log("[OTP ERROR]\n" + e.message);
+      }finally{
         loginBtn.disabled = false;
       }
     }
 
-    // ====== AUTH: GET USER ======
-    async function loadUserEmail() {
-      const data = await apiFetch("/auth/v1/user", { method: "GET" });
-      userEmailEl.textContent = data?.email || "(email inconnu)";
-      authPillEl.textContent = "authenticated";
-      return data;
+    async function loadUser(){
+      const me = await apiFetch("/auth/v1/user");
+      return me;
     }
 
-    // ====== DATA: PLAYERS ======
-    async function loadPlayers() {
-      playersList.innerHTML = "";
-      try {
-        const rows = await apiFetch("/rest/v1/players?select=id,name,created_at&order=created_at.desc");
-        if (!rows || rows.length === 0) {
-          playersList.innerHTML = "<li class='muted'>(aucun joueur)</li>";
-          return;
-        }
-        for (const p of rows) {
-          const li = document.createElement("li");
-          li.textContent = `${p.name} `;
-          const small = document.createElement("span");
-          small.className = "muted";
-          small.textContent = `(${p.id.slice(0,8)})`;
-          li.appendChild(small);
-          playersList.appendChild(li);
-        }
-      } catch (e) {
-        playersList.innerHTML = "<li class='err'>Erreur chargement joueurs (voir debug)</li>";
-        logDebug("[PLAYERS LOAD ERROR]\n" + e.message);
+    // ============================
+    // PLAYERS
+    // ============================
+    function fillPlayerSelect(sel){
+      sel.innerHTML = "";
+      const opt0 = document.createElement("option");
+      opt0.value = "";
+      opt0.textContent = "(choisir)";
+      sel.appendChild(opt0);
+
+      for(const p of cachedPlayers){
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = p.name;
+        sel.appendChild(opt);
       }
     }
 
-    async function addPlayer(name) {
-      try {
-        const inserted = await apiFetch("/rest/v1/players?select=id,name,created_at", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Prefer": "return=representation"
-          },
-          body: JSON.stringify({ name })
-        });
-        logDebug("[PLAYER INSERT OK]\n" + JSON.stringify(inserted, null, 2));
-        await loadPlayers();
-      } catch (e) {
-        logDebug("[PLAYER INSERT ERROR]\n" + e.message);
-        throw e;
-      }
-    }
-
-    // ====== DATA: MATCHES ======
-    async function loadMatches() {
-      matchesList.innerHTML = "";
-      try {
-        const rows = await apiFetch("/rest/v1/matches?select=id,court,status,created_at&order=created_at.desc");
-        if (!rows || rows.length === 0) {
-          matchesList.innerHTML = "<li class='muted'>(aucun match)</li>";
-          return;
-        }
-        for (const m of rows) {
-          const li = document.createElement("li");
-          li.textContent = `Terrain ${m.court} — ${m.status} `;
-          const small = document.createElement("span");
-          small.className = "muted";
-          small.textContent = `(${m.id.slice(0,8)})`;
-          li.appendChild(small);
-          matchesList.appendChild(li);
-        }
-      } catch (e) {
-        matchesList.innerHTML = "<li class='err'>Erreur chargement matchs (voir debug)</li>";
-        logDebug("[MATCHES LOAD ERROR]\n" + e.message);
-      }
-    }
-
-    async function createMatch(court, status) {
-      try {
-        const inserted = await apiFetch("/rest/v1/matches?select=id,court,status,created_at", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Prefer": "return=representation"
-          },
-          body: JSON.stringify({ court, status })
-        });
-        logDebug("[MATCH INSERT OK]\n" + JSON.stringify(inserted, null, 2));
-        await loadMatches();
-      } catch (e) {
-        logDebug("[MATCH INSERT ERROR]\n" + e.message);
-        throw e;
-      }
-    }
-
-    // ====== INIT ======
-    (async function init() {
-      debugEl.textContent = "";
-
-      // retour magic link
-      const hp = parseHashParams();
-      if (hp?.error) {
-        showLogin(`Erreur auth: ${hp.error}\n${hp.error_description || ""}`);
-        history.replaceState(null, "", window.location.pathname + window.location.search);
+    function renderPlayers(){
+      playersWrap.innerHTML = "";
+      if(!cachedPlayers.length){
+        playersEmpty.textContent = "(aucun joueur)";
         return;
       }
-      if (hp?.access_token) {
-        saveAccessToken(hp.access_token);
-        history.replaceState(null, "", window.location.pathname + window.location.search);
-      }
+      playersEmpty.textContent = "";
 
-      const token = getAccessToken();
-      if (!token) {
-        showLogin();
+      for(const p of cachedPlayers){
+        const row = document.createElement("div");
+        row.className = "listItem";
+
+        const left = document.createElement("div");
+        left.innerHTML = `<div class="name">${escapeHtml(p.name)}</div><div class="meta">${p.id.slice(0,8)}</div>`;
+
+        const actions = document.createElement("div");
+        actions.className = "actions";
+
+        const del = document.createElement("button");
+        del.className = "miniBtn btnDanger";
+        del.textContent = "Suppr.";
+        del.onclick = async () => {
+          if(!confirm(`Supprimer "${p.name}" ?`)) return;
+          try{
+            await apiFetch(`/rest/v1/players?id=eq.${p.id}`, { method:"DELETE" });
+            log(`[PLAYER DELETE OK] ${p.id}`);
+            await refreshAll();
+          }catch(e){
+            log("[PLAYER DELETE ERROR]\n" + e.message);
+            alert("Suppression refusée. Probable: joueur utilisé dans un match (clé étrangère).");
+          }
+        };
+
+        actions.appendChild(del);
+        row.appendChild(left);
+        row.appendChild(actions);
+        playersWrap.appendChild(row);
+      }
+    }
+
+    async function loadPlayers(){
+      cachedPlayers = await apiFetch("/rest/v1/players?select=id,name,created_at&order=created_at.asc") || [];
+      renderPlayers();
+      fillPlayerSelect(a1El); fillPlayerSelect(a2El); fillPlayerSelect(b1El); fillPlayerSelect(b2El);
+    }
+
+    async function addPlayer(name){
+      const inserted = await apiFetch("/rest/v1/players?select=id,name,created_at", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", "Prefer":"return=representation" },
+        body: JSON.stringify({ name })
+      });
+      log("[PLAYER INSERT OK]\n" + JSON.stringify(inserted, null, 2));
+    }
+
+    // ============================
+    // MATCHES
+    // ============================
+    function playerNameById(id){
+      const p = cachedPlayers.find(x => x.id === id);
+      return p ? p.name : "(?)";
+    }
+
+    function renderMatches(){
+      matchesWrap.innerHTML = "";
+      if(!cachedMatches.length){
+        matchesEmpty.textContent = "(aucun match)";
         return;
       }
+      matchesEmpty.textContent = "";
 
-      showApp();
-      setAppStatus("Chargement du profil…");
+      const scoreMap = getScoreMap();
 
-      try {
-        await loadUserEmail();
-        setAppStatus("Connecté ✓");
-        await loadPlayers();
-        await loadMatches();
-      } catch (e) {
-        logDebug("[INIT ERROR]\n" + e.message);
-        clearTokens();
-        showLogin("Session invalide ou accès refusé. Reconnecte-toi.");
+      for(const m of cachedMatches.slice(0, 10)){
+        const box = document.createElement("div");
+        box.className = "card";
+        box.style.padding = "12px";
+
+        const title = document.createElement("div");
+        title.style.fontWeight = "900";
+        title.textContent = `Terrain ${m.court} — ${m.status || "?"} — ${m.id.slice(0,8)}`;
+
+        const a = `${playerNameById(m.a1)} + ${playerNameById(m.a2)}`;
+        const b = `${playerNameById(m.b1)} + ${playerNameById(m.b2)}`;
+
+        const localScore = scoreMap[m.id];
+        const scoreText = localScore ? `${localScore.score_a} - ${localScore.score_b}` : "(pas de score)";
+
+        const sub = document.createElement("div");
+        sub.className = "small";
+        sub.textContent = `A: ${a} | B: ${b} | Score: ${scoreText}`;
+
+        const useBtn = document.createElement("button");
+        useBtn.className = "btnPrimary";
+        useBtn.style.marginTop = "10px";
+        useBtn.textContent = "Utiliser pour pointage";
+        useBtn.onclick = () => {
+          lastCreatedMatch = m;
+          teamAName.textContent = a;
+          teamBName.textContent = b;
+          if(localScore){
+            scoreAEl.value = localScore.score_a;
+            scoreBEl.value = localScore.score_b;
+          }else{
+            scoreAEl.value = 0;
+            scoreBEl.value = 0;
+          }
+          switchTab("tabMatch");
+          window.scrollTo({ top: 0, behavior:"smooth" });
+        };
+
+        box.appendChild(title);
+        box.appendChild(sub);
+        box.appendChild(useBtn);
+        matchesWrap.appendChild(box);
       }
-    })();
+    }
 
-    // ====== EVENTS ======
+    async function loadMatches(){
+      // suppose columns exist: id, round_id, court, status, a1,a2,b1,b2
+      cachedMatches = await apiFetch("/rest/v1/matches?select=id,round_id,court,status,a1,a2,b1,b2,created_at&order=created_at.desc") || [];
+      renderMatches();
+    }
+
+    async function createMatch(payload){
+      const inserted = await apiFetch("/rest/v1/matches?select=id,round_id,court,status,a1,a2,b1,b2,created_at", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", "Prefer":"return=representation" },
+        body: JSON.stringify(payload)
+      });
+      log("[MATCH INSERT OK]\n" + JSON.stringify(inserted, null, 2));
+      lastCreatedMatch = (inserted && inserted[0]) ? inserted[0] : null;
+      return lastCreatedMatch;
+    }
+
+    async function tryUpdateMatchScore(matchId, scoreA, scoreB){
+      // optionnel: si la table matches a score_a/score_b, ça va marcher, sinon ça échoue => on ignore.
+      try{
+        await apiFetch(`/rest/v1/matches?id=eq.${matchId}`, {
+          method:"PATCH",
+          headers:{ "Content-Type":"application/json", "Prefer":"return=representation" },
+          body: JSON.stringify({ score_a: scoreA, score_b: scoreB })
+        });
+        log(`[MATCH SCORE DB OK] ${matchId} -> ${scoreA}-${scoreB}`);
+      }catch(e){
+        log("[MATCH SCORE DB SKIP]\n" + e.message);
+      }
+    }
+
+    // ============================
+    // GENERATOR (random / avoid duplicates local)
+    // ============================
+    function shuffle(arr){
+      const a = arr.slice();
+      for(let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i],a[j]]=[a[j],a[i]];
+      }
+      return a;
+    }
+
+    function pairKey(x,y){
+      return [x,y].sort().join("|");
+    }
+    function oppKey(a1,a2,b1,b2){
+      // stable keys (team vs team)
+      const teamA = [a1,a2].sort().join("&");
+      const teamB = [b1,b2].sort().join("&");
+      return [teamA, teamB].sort().join(" VS ");
+    }
+
+    function scoreForCombo(history, a1,a2,b1,b2){
+      // lower is better
+      const p1 = pairKey(a1,a2);
+      const p2 = pairKey(b1,b2);
+      const o = oppKey(a1,a2,b1,b2);
+      const pairCount = (history.pair?.[p1]||0) + (history.pair?.[p2]||0);
+      const oppCount  = (history.opp?.[o]||0);
+      return pairCount*3 + oppCount*2;
+    }
+
+    function updateHistoryForCombo(history, a1,a2,b1,b2){
+      history.pair ||= {};
+      history.opp ||= {};
+      const p1 = pairKey(a1,a2);
+      const p2 = pairKey(b1,b2);
+      const o = oppKey(a1,a2,b1,b2);
+      history.pair[p1] = (history.pair[p1]||0)+1;
+      history.pair[p2] = (history.pair[p2]||0)+1;
+      history.opp[o] = (history.opp[o]||0)+1;
+    }
+
+    function generateCourts(nbCourts, mode){
+      const ids = cachedPlayers.map(p => p.id);
+      const need = nbCourts * 4;
+      if(ids.length < need){
+        throw new Error(`Pas assez de joueurs: ${ids.length} disponibles, il en faut ${need} (4 par terrain).`);
+      }
+
+      const picked = shuffle(ids).slice(0, need);
+
+      const courts = [];
+      const history = getHistory();
+
+      for(let c=0;c<nbCourts;c++){
+        const chunk = picked.slice(c*4, c*4+4);
+
+        // random by default
+        let best = { a1:chunk[0], a2:chunk[1], b1:chunk[2], b2:chunk[3], s: 999999 };
+
+        // evaluate few permutations if "avoid"
+        const perms = [
+          [0,1,2,3],[0,2,1,3],[0,3,1,2],[1,2,0,3],[1,3,0,2],[2,3,0,1]
+        ];
+        if(mode === "avoid"){
+          for(const p of perms){
+            const a1=chunk[p[0]], a2=chunk[p[1]], b1=chunk[p[2]], b2=chunk[p[3]];
+            const s = scoreForCombo(history, a1,a2,b1,b2);
+            if(s < best.s) best = { a1,a2,b1,b2,s };
+          }
+        }else{
+          best = { a1:chunk[0], a2:chunk[1], b1:chunk[2], b2:chunk[3], s: 0 };
+        }
+
+        courts.push({ court: c+1, ...best });
+        if(mode === "avoid"){
+          updateHistoryForCombo(history, best.a1,best.a2,best.b1,best.b2);
+        }
+      }
+
+      if(mode === "avoid") saveHistory(history);
+      return courts;
+    }
+
+    function renderGen(courts){
+      genOutput.innerHTML = "";
+      for(const ct of courts){
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const a = `${playerNameById(ct.a1)} + ${playerNameById(ct.a2)}`;
+        const b = `${playerNameById(ct.b1)} + ${playerNameById(ct.b2)}`;
+
+        card.innerHTML = `
+          <div style="font-weight:900; font-size:16px;">Terrain ${ct.court}</div>
+          <div class="sep" style="margin:10px 0;"></div>
+          <div class="teamRow"><div><div class="small">Équipe A</div><strong>${escapeHtml(a)}</strong></div></div>
+          <div class="teamRow" style="margin-top:10px;"><div><div class="small">Équipe B</div><strong>${escapeHtml(b)}</strong></div></div>
+          <div class="help">Score combo (éviter doublons): ${ct.s}</div>
+        `;
+
+        const use = document.createElement("button");
+        use.className = "btnPrimary";
+        use.style.marginTop = "10px";
+        use.textContent = "Mettre dans Création de match";
+        use.onclick = () => {
+          // prefill match tab
+          a1El.value = ct.a1; a2El.value = ct.a2; b1El.value = ct.b1; b2El.value = ct.b2;
+          courtEl.value = ct.court;
+          if(!roundIdEl.value.trim()) roundIdEl.value = newUUID();
+          teamAName.textContent = a;
+          teamBName.textContent = b;
+          switchTab("tabMatch");
+          window.scrollTo({ top: 0, behavior:"smooth" });
+        };
+
+        card.appendChild(use);
+        genOutput.appendChild(card);
+      }
+    }
+
+    // ============================
+    // UI Tabs
+    // ============================
+    function switchTab(tabId){
+      const map = { tabPlayers, tabGen, tabMatch, tabDebug };
+      for(const k in map){
+        map[k].classList.toggle("hidden", k !== tabId);
+      }
+      tabs.forEach(b => b.classList.toggle("active", b.dataset.tab === tabId));
+    }
+    tabs.forEach(b => b.addEventListener("click", () => switchTab(b.dataset.tab)));
+
+    // ============================
+    // HELPERS
+    // ============================
+    function escapeHtml(s){
+      return String(s || "")
+        .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    }
+
+    // ============================
+    // REFRESH ALL
+    // ============================
+    async function refreshAll(){
+      await loadPlayers();
+      await loadMatches();
+    }
+
+    // ============================
+    // EVENTS
+    // ============================
     loginBtn.addEventListener("click", async () => {
-      const email = emailEl.value.trim();
-      if (!email) return alert("Courriel requis");
+      const email = (emailEl.value || "").trim();
+      if(!email) return alert("Courriel requis");
       await sendMagicLink(email);
     });
 
     logoutBtn.addEventListener("click", () => {
-      clearTokens();
-      window.location.href = window.location.origin + window.location.pathname;
+      clearToken();
+      location.href = window.location.origin + window.location.pathname;
     });
 
     addPlayerBtn.addEventListener("click", async () => {
-      const name = playerNameEl.value.trim();
-      if (!name) return alert("Nom requis");
+      const name = (playerNameEl.value || "").trim();
+      if(!name) return alert("Nom requis");
       addPlayerBtn.disabled = true;
-      try {
+      try{
         await addPlayer(name);
         playerNameEl.value = "";
-      } catch (e) {
-        alert("Erreur ajout joueur. Ouvre le debug.");
-      } finally {
+        await refreshAll();
+      }catch(e){
+        log("[ADD PLAYER ERROR]\n" + e.message);
+        alert("Erreur ajout joueur. Voir Debug.");
+      }finally{
         addPlayerBtn.disabled = false;
       }
     });
 
+    genBtn.addEventListener("click", () => {
+      try{
+        const nb = Number(nbCourtsEl.value);
+        if(!Number.isFinite(nb) || nb <= 0) return alert("Nombre de terrains invalide");
+        const mode = modeGenEl.value;
+        const courts = generateCourts(nb, mode);
+        renderGen(courts);
+      }catch(e){
+        alert(e.message);
+      }
+    });
+
+    newRoundBtn.addEventListener("click", () => {
+      roundIdEl.value = newUUID();
+    });
+
     createMatchBtn.addEventListener("click", async () => {
+      const round_id = (roundIdEl.value || "").trim();
       const court = Number(courtEl.value);
       const status = statusMatchEl.value;
-      if (!Number.isFinite(court) || court <= 0) return alert("Terrain invalide");
+
+      const a1 = a1El.value || null;
+      const a2 = a2El.value || null;
+      const b1 = b1El.value || null;
+      const b2 = b2El.value || null;
+
+      if(!round_id) return alert("Round ID requis (bouton 'Nouveau round')");
+      if(!Number.isFinite(court) || court <= 0) return alert("Terrain invalide");
+      // ta DB a déjà NOT NULL sur a1 (et souvent a2,b1,b2). On les impose.
+      if(!a1 || !a2 || !b1 || !b2) return alert("A1, A2, B1 et B2 sont requis.");
+
       createMatchBtn.disabled = true;
-      try {
-        await createMatch(court, status);
-      } catch (e) {
-        alert("Erreur création match. Ouvre le debug.");
-      } finally {
+      try{
+        const m = await createMatch({ round_id, court, status, a1, a2, b1, b2 });
+        await loadMatches();
+
+        // Prefill scoring UI with created teams
+        teamAName.textContent = `${playerNameById(a1)} + ${playerNameById(a2)}`;
+        teamBName.textContent = `${playerNameById(b1)} + ${playerNameById(b2)}`;
+        scoreAEl.value = 0; scoreBEl.value = 0;
+
+        alert("Match créé.");
+      }catch(e){
+        log("[MATCH INSERT ERROR]\n" + e.message);
+        alert("Erreur création match. Voir Debug.");
+      }finally{
         createMatchBtn.disabled = false;
       }
     });
 
-    toggleDebugBtn.addEventListener("click", () => {
-      debugEl.classList.toggle("hidden");
+    applyScoreBtn.addEventListener("click", async () => {
+      if(!lastCreatedMatch?.id){
+        alert("Sélectionne d’abord un match (bouton 'Utiliser pour pointage') ou crée un match.");
+        return;
+      }
+      const id = lastCreatedMatch.id;
+      const score_a = Number(scoreAEl.value);
+      const score_b = Number(scoreBEl.value);
+      if(!Number.isFinite(score_a) || score_a < 0) return alert("Score A invalide");
+      if(!Number.isFinite(score_b) || score_b < 0) return alert("Score B invalide");
+
+      // Save local
+      const map = getScoreMap();
+      map[id] = { score_a, score_b, updated_at: new Date().toISOString() };
+      saveScoreMap(map);
+      log(`[SCORE LOCAL OK] ${id} -> ${score_a}-${score_b}`);
+
+      // Try DB (optional)
+      await tryUpdateMatchScore(id, score_a, score_b);
+
+      await loadMatches();
+      alert("Score enregistré.");
     });
+
+    refreshBtn.addEventListener("click", async () => {
+      try{
+        await refreshAll();
+        alert("Données rafraîchies.");
+      }catch(e){
+        log("[REFRESH ERROR]\n" + e.message);
+        alert("Erreur refresh. Voir Debug.");
+      }
+    });
+
+    clearLocalBtn.addEventListener("click", () => {
+      if(!confirm("Vider l’historique LOCAL (doublons + scores) ?")) return;
+      localStorage.removeItem(LS_HISTORY);
+      localStorage.removeItem(LS_SCORE);
+      alert("LOCAL vidé.");
+    });
+
+    // ============================
+    // INIT
+    // ============================
+    (async function init(){
+      debugEl.textContent = "";
+
+      // Handle magic link return
+      const hp = parseHash();
+      if(hp?.error){
+        showLogin(`Erreur auth: ${hp.error}\n${hp.error_description || ""}`);
+        history.replaceState(null, "", window.location.pathname + window.location.search);
+        return;
+      }
+      if(hp?.access_token){
+        saveToken(hp.access_token);
+        history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+
+      const token = getToken();
+      if(!token){
+        showLogin();
+        return;
+      }
+
+      // Load user + app
+      showApp();
+      try{
+        const me = await loadUser();
+        userEmailEl.textContent = me?.email || "(email inconnu)";
+        setAuth(true, me?.email || "Connecté");
+        log("[AUTH OK] " + (me?.email || ""));
+
+        // default values
+        if(!roundIdEl.value.trim()) roundIdEl.value = newUUID();
+
+        await refreshAll();
+
+        // initialize names in scoring box
+        teamAName.textContent = "(choisir A1/A2)";
+        teamBName.textContent = "(choisir B1/B2)";
+      }catch(e){
+        log("[INIT ERROR]\n" + e.message);
+        clearToken();
+        showLogin("Session invalide ou accès refusé. Reconnecte-toi.");
+      }
+    })();
   </script>
 </body>
 </html>
