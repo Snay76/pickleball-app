@@ -11,7 +11,6 @@
 
 <body>
   <h1>Pickleball</h1>
-
   <hr />
 
   <h2>Connexion</h2>
@@ -23,10 +22,12 @@
     type="email"
     placeholder="nom@exemple.com"
     autocomplete="email"
+    inputmode="email"
+    required
   />
   <button id="loginBtn" type="button">Recevoir un lien</button>
 
-  <p id="status"></p>
+  <p id="status" aria-live="polite"></p>
 
   <hr />
 
@@ -35,10 +36,11 @@
   <script>
     // === CONFIG SUPABASE ===
     const SUPABASE_URL = "https://cehqaxtcfmgjajmmcccz.supabase.co";
-    const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlaHFheHRjZm1namFqbW1jY2N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5NTQ1OTUsImV4cCI6MjA4NDUzMDU5NX0.U0IiTLx1_Vd4D8WBkhkO8KOrl3w_ftbPtcIWs_n1KmA"
+    const SUPABASE_ANON_KEY = "REMPLACE_PAR_TA_CLE_ANON_ICI";
 
     const statusEl = document.getElementById("status");
     const emailEl = document.getElementById("email");
+    const btnEl = document.getElementById("loginBtn");
 
     function setStatus(msg) {
       statusEl.textContent = msg || "";
@@ -49,30 +51,39 @@
       throw new Error("Supabase CDN non chargé");
     }
 
-    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     document.getElementById("test").addEventListener("click", () => {
       alert("JavaScript chargé correctement");
     });
 
     async function sendMagicLink(email) {
+      btnEl.disabled = true;
       setStatus("Envoi du lien…");
 
-      const { error } = await client.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: "https://pickleball-ccyp.pages.dev"
-        }
-      });
+      try {
+        const { error } = await client.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo: "https://pickleball-ccyp.pages.dev"
+          }
+        });
 
-      if (error) {
-        setStatus("Erreur: " + error.message);
-      } else {
-        setStatus("Lien envoyé. Vérifiez votre courriel.");
+        if (error) {
+          setStatus("Erreur: " + error.message);
+        } else {
+          setStatus("Lien envoyé. Vérifiez votre courriel.");
+        }
+      } catch (e) {
+        // Ici tu verras “Failed to fetch” si Cloudflare / réseau bloque
+        setStatus("Erreur réseau (Failed to fetch). Vérifie que Supabase est joignable et pas bloqué.");
+        console.error(e);
+      } finally {
+        btnEl.disabled = false;
       }
     }
 
-    document.getElementById("loginBtn").addEventListener("click", async () => {
+    btnEl.addEventListener("click", async () => {
       const email = emailEl.value.trim();
       if (!email) {
         alert("Courriel requis");
