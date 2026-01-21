@@ -60,6 +60,34 @@
     // - Tu as publié cette clé dans la conversation. Après que tout marche, rotate-la dans Supabase.
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlaHFheHRjZm1namFqbW1jY2N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5NTQ1OTUsImV4cCI6MjA4NDUzMDU5NX0.U0IiTLx1_Vd4D8WBkhkO8KOrl3w_ftbPtcIWs_n1KmA";
 
+    console.log("SUPABASE_URL =", SUPABASE_URL);
+console.log("KEY starts with =", SUPABASE_ANON_KEY.slice(0, 12));
+
+async function testOtpFromPage() {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email: emailEl.value.trim(),
+        create_user: true,
+        redirect_to: "https://pickleball-ccyp.pages.dev"
+      })
+    });
+
+    const text = await r.text();
+    console.log("OTP RESULT:", r.status, text);
+    setStatus(`OTP RESULT: ${r.status} ${text}`);
+  } catch (e) {
+    console.error("OTP FETCH ERROR:", e, e?.message);
+    setStatus("OTP FETCH ERROR: " + (e?.message || e));
+  }
+}
+
     // === DOM ===
     const loginSection = document.getElementById("loginSection");
     const appSection = document.getElementById("appSection");
