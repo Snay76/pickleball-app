@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pickleball</title>
+
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
+    .hidden { display: none; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; margin-top: 16px; max-width: 720px; }
+    label { display:block; margin-top: 10px; font-weight: 600; }
+    input, select { padding: 8px; width: min(520px, 100%); }
+    button { padding: 8px 12px; margin-top: 10px; cursor: pointer; }
+    #status, #appStatus, #playerStatus, #matchStatus { white-space: pre-wrap; }
+    .row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+    .row > div { flex: 1 1 220px; }
+    .muted { color:#666; }
+    .ok { color: #0a7a2f; font-weight: 600; }
+    .err { color: #b00020; font-weight: 600; }
+    hr { border: none; border-top: 1px solid #eee; margin: 16px 0; }
+    .version { color:red; font-weight:bold; font-size:20px; margin: 0 0 10px 0; }
+  </style>
+</head>
+
+<body>
+  <p class="version">VERSION ROUGE: 2026-01-21-XYZ</p>
+
+  <h1>Pickleball</h1>
+
+  <!-- ===== LOGIN ===== -->
+  <div id="loginSection" class="card">
+    <h2>Connexion</h2>
+
+    <label for="email">Courriel</label>
+    <input id="email" type="email" placeholder="nom@exemple.com" autocomplete="email" required />
+
+    <button id="loginBtn" type="button">Recevoir un lien</button>
+
+    <p id="status" aria-live="polite"></p>
+
+    <p class="muted">
+      Le lien “magic link” ouvre cette page, récupère le token, puis affiche l’app automatiquement.
+    </p>
+  </div>
+
+  <!-- ===== APP ===== -->
+  <div id="appSection" class="card hidden">
+    <h2>Application</h2>
+
+    <p>Connecté : <strong id="userEmail">(chargement…)</strong></p>
+
+    <div class="row">
+      <div>
+        <button id="logoutBtn" type="button">Se déconnecter</button>
+      </div>
+      <div>
+        <button id="refreshBtn" type="button">Rafraîchir listes</button>
+      </div>
+    </div>
+
+    <p id="appStatus" aria-live="polite"></p>
+
+    <hr />
+
+    <!-- ===== PLAYERS ===== -->
+    <h3>Joueurs</h3>
+    <div class="row">
+      <div>
+        <label for="playerName">Nom du joueur</label>
+        <input id="playerName" placeholder="Ex: Alex" />
+      </div>
+      <div>
+        <button id="addPlayerBtn" type="button">Ajouter</button>
+      </div>
+    </div>
+
+    <p id="playerStatus" aria-live="polite"></p>
+
+    <div class="row">
+      <div>
+        <label>Liste des joueurs</label>
+        <select id="playersSelect" size="6" style="width:min(520px,100%)"></select>
+      </div>
+    </div>
+
+    <hr />
+
+    <!-- ===== MATCHES ===== -->
+    <h3>Match (test simple)</h3>
+    <div class="row">
+      <div>
+        <label for="court">Terrain</label>
+        <input id="court" type="number" min="1" value="1" />
+      </div>
+      <div>
+        <label for="matchStatusInput">Statut</label>
+        <select id="matchStatusInput">
+          <option value="draft" selected>draft</option>
+          <option value="live">live</option>
+          <option value="done">done</option>
+        </select>
+      </div>
+      <div>
+        <button id="createMatchBtn" type="button">Créer un match</button>
+      </div>
+    </div>
+
+    <p id="matchStatus" aria-live="polite"></p>
+
+    <div class="row">
+      <div>
+        <label>Liste des matchs</label>
+        <select id="matchesSelect" size="6" style="width:min(520px,100%)"></select>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ====== CONFIG ======
+    const SUPABASE_URL = "https://cehqaxtcfmgjajmmcccz.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlaHFheHRjZm1namFqbW1jY2N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5NTQ1OTUsImV4cCI6MjA4NDUzMDU5NX0.U0IiTLx1_Vd4D8WBkhkO8KOrl3w_ftbPtcIWs_n1KmA";
+
+    // ====== DOM ======
+    const loginSection   = document.getElementById("loginSection");
+    const appSection     = document.getElementById("appSection");
+    const statusEl       = document.getElementById("status");
+    const appStatusEl    = document.getElementById("appStatus");
+    const emailEl        = document.getElementById("email");
+    const loginBtn       = document.getElementById("loginBtn");
+    const logoutBtn      = document.getElementById("logoutBtn");
+    const refreshBtn     = document.getElementById("refreshBtn");
+    const userEmailEl    = document.getElementById("userEmail");
+
+    const playerNameEl   = document.getElementById("playerName");
+    const addPlayerBtn   = document.getElementById("addPlayerBtn");
+    const playerStatusEl = document.getElementById("playerStatus");
+    const playersSelect  = document.getElementById("playersSelect");
+
+    const courtEl        = document.getElementById("court");
+    const matchStatusIn  = document.getElementById("matchStatusInput");
+    const createMatchBtn = document.getElementById("createMatchBtn");
+    const matchStatusEl  = document.getElementById("matchStatus");
+    const matchesSelect  = document.getElementById("matchesSelect");
+
+    function setStatus(msg, cls) {
+      statusEl.className = cls || "";
+      statusEl.textContent = msg || "";
+    }
+    function setAppStatus(msg, cls) {
+      appStatusEl.className = cls || "";
+      appStatusEl.textContent = msg || "";
+    }
+    function setPlayerStatus(msg, cls) {
+      playerStatusEl.className = cls || "";
+      playerStatusEl.textContent = msg || "";
+    }
+    function setMatchStatus(msg, cls) {
+      matchStatusEl.className = cls || "";
+      matchStatusEl.textContent = msg || "";
+    }
+
+    function showLogin(msg) {
+      appSection.classList.add("hidden");
+      loginSection.classList.remove("hidden");
+      if (msg) setStatus(msg, "err");
+    }
+
+    function showApp() {
+      loginSection.classList.add("hidden");
+      appSection.classList.remove("hidden");
+      setStatus("");
+    }
+
+    // ====== STORAGE ======
+    const LS_ACCESS = "pb_access_token";
+
+    function saveAccessToken(token) {
+      localStorage.setItem(LS_ACCESS, token);
+    }
+    function getAccessToken() {
+      return localStorage.getItem(LS_ACCESS);
+    }
+    function clearTokens() {
+      localStorage.removeItem(LS_ACCESS);
+    }
+
+    // ====== HASH PARAMS (MAGIC LINK) ======
+    function parseHashParams() {
+      const hash = window.location.hash?.startsWith("#") ? window.location.hash.slice(1) : "";
+      if (!hash) return null;
+      const params = new URLSearchParams(hash);
+      return {
+        access_token: params.get("access_token"),
+        error: params.get("error"),
+        error_description: params.get("error_description"),
+        raw: hash
+      };
+    }
+
+    // ====== REST HELPERS ======
+    function authHeaders() {
+      const token = getAccessToken();
+      return {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${token}`,
+      };
+    }
+
+    async function supaGet(path) {
+      const r = await fetch(`${SUPABASE_URL}${path}`, {
+        method: "GET",
+        headers: { ...authHeaders() }
+      });
+      const text = await r.text();
+      if (!r.ok) throw new Error(`${r.status} ${text}`);
+      return text ? JSON.parse(text) : null;
+    }
+
+    async function supaPost(path, bodyObj) {
+      const r = await fetch(`${SUPABASE_URL}${path}`, {
+        method: "POST",
+        headers: {
+          ...authHeaders(),
+          "Content-Type": "application/json",
+          Prefer: "return=representation"
+        },
+        body: JSON.stringify(bodyObj)
+      });
+      const text = await r.text();
+      if (!r.ok) throw new Error(`${r.status} ${text}`);
+      return text ? JSON.parse(text) : null;
+    }
+
+    // ====== AUTH: /auth/v1/user (email) ======
+    async function fetchUserEmail() {
+      const token = getAccessToken();
+      const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+        method: "GET",
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const text = await r.text();
+      if (!r.ok) throw new Error(`USER ${r.status}: ${text}`);
+      const data = JSON.parse(text);
+      return data?.email || "(email inconnu)";
+    }
+
+    // ====== SEND MAGIC LINK ======
+    async function sendMagicLink(email) {
+      loginBtn.disabled = true;
+      setStatus("Envoi du lien…");
+
+      try {
+        const r = await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email,
+            create_user: true,
+            redirect_to: window.location.origin + window.location.pathname
+          })
+        });
+
+        const text = await r.text();
+
+        if (!r.ok) {
+          setStatus(`Erreur (${r.status}): ${text}`, "err");
+          return;
+        }
+
+        setStatus("Lien envoyé. Vérifie ton courriel et clique sur le lien.", "ok");
+      } catch (e) {
+        console.error("OTP FETCH ERROR:", e);
+        setStatus("Erreur: Load failed", "err");
+      } finally {
+        loginBtn.disabled = false;
+      }
+    }
+
+    // ====== LOAD DATA ======
+    async function loadPlayers() {
+      // nécessite table players exposée via PostgREST (/rest/v1)
+      // et RLS/policies OK pour l'utilisateur connecté.
+      const data = await supaGet(`/rest/v1/players?select=id,name&order=created_at.desc.nullslast`);
+      playersSelect.innerHTML = "";
+      (data || []).forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = `${p.name} (${p.id.slice(0,8)})`;
+        playersSelect.appendChild(opt);
+      });
+    }
+
+    async function loadMatches() {
+      // nécessite table matches exposée et RLS/policies OK
+      const data = await supaGet(`/rest/v1/matches?select=id,court,status,created_at&order=created_at.desc.nullslast`);
+      matchesSelect.innerHTML = "";
+      (data || []).forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m.id;
+        opt.textContent = `Court ${m.court} | ${m.status} | ${m.id.slice(0,8)}`;
+        matchesSelect.appendChild(opt);
+      });
+    }
+
+    async function refreshLists() {
+      setAppStatus("Rafraîchissement…");
+      try {
+        await Promise.all([loadPlayers(), loadMatches()]);
+        setAppStatus("Listes à jour ✔", "ok");
+      } catch (e) {
+        console.error(e);
+        setAppStatus(
+          "Erreur chargement listes. Vérifie:\n- tables players/matches existent\n- Data API exposée\n- RLS/policies autorisent select pour l'utilisateur connecté",
+          "err"
+        );
+      }
+    }
+
+    // ====== INIT ======
+    (async function init() {
+      const hp = parseHashParams();
+
+      if (hp?.error) {
+        showLogin(`Erreur auth: ${hp.error}\n${hp.error_description || ""}`);
+        history.replaceState(null, "", window.location.pathname + window.location.search);
+        return;
+      }
+
+      if (hp?.access_token) {
+        saveAccessToken(hp.access_token);
+        history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+
+      const token = getAccessToken();
+      if (!token) {
+        showLogin();
+        return;
+      }
+
+      showApp();
+      setAppStatus("Chargement du profil…");
+
+      try {
+        const email = await fetchUserEmail();
+        userEmailEl.textContent = email;
+        setAppStatus("Connecté ✔", "ok");
+      } catch (e) {
+        console.error(e);
+        clearTokens();
+        showLogin("Session invalide. Reconnecte-toi.");
+        return;
+      }
+
+      await refreshLists();
+    })();
+
+    // ====== EVENTS ======
+    loginBtn.addEventListener("click", async () => {
+      const email = emailEl.value.trim();
+      if (!email) return alert("Courriel requis");
+      await sendMagicLink(email);
+    });
+
+    logoutBtn.addEventListener("click", () => {
+      clearTokens();
+      window.location.href = window.location.origin + window.location.pathname;
+    });
+
+    refreshBtn.addEventListener("click", async () => {
+      await refreshLists();
+    });
+
+    addPlayerBtn.addEventListener("click", async () => {
+      const name = playerNameEl.value.trim();
+      if (!name) return alert("Nom requis");
+
+      addPlayerBtn.disabled = true;
+      setPlayerStatus("Ajout…");
+
+      try {
+        await supaPost(`/rest/v1/players`, { name });
+        setPlayerStatus("Joueur ajouté ✔", "ok");
+        playerNameEl.value = "";
+        await loadPlayers();
+      } catch (e) {
+        console.error(e);
+        setPlayerStatus("Erreur ajout joueur. Vérifie RLS/policies et colonnes.", "err");
+      } finally {
+        addPlayerBtn.disabled = false;
+      }
+    });
+
+    createMatchBtn.addEventListener("click", async () => {
+      const court = Number(courtEl.value || 1);
+      const status = matchStatusIn.value || "draft";
+
+      createMatchBtn.disabled = true;
+      setMatchStatus("Création…");
+
+      try {
+        await supaPost(`/rest/v1/matches`, { court, status });
+        setMatchStatus("Match créé ✔", "ok");
+        await loadMatches();
+      } catch (e) {
+        console.error(e);
+        setMatchStatus("Erreur création match. Vérifie RLS/policies et colonnes.", "err");
+      } finally {
+        createMatchBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
