@@ -2,37 +2,55 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <title>Pickleball</title>
-  <hr />
-<h2>Connexion</h2>
-<input 
-  id="email" 
-  name="email"
-  type="email" 
-  placeholder="nom@exemple.com"
-  autocomplete="email"
-/>
-<button id="loginBtn">Recevoir un lien</button>
-<p id="status"></p>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pickleball</title>
+
+  <!-- Supabase (chargé une seule fois) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
-  <h1>Pickleball – Frontend OK</h1>
-  <p>Le site est bien déployé sur Cloudflare Pages.</p>
+  <h1>Pickleball</h1>
 
-  <button id="test">Tester JavaScript</button>
+  <hr />
 
-  <script src="app.js"></script>
-<script>
-  document.getElementById("loginBtn").addEventListener("click", () => {
-    const email = document.getElementById("email").value.trim();
-    if (!email) return alert("Email requis");
-    window.sendMagicLink(email);
-  });
-</script>
+  <h2>Connexion</h2>
+
+  <label for="email">Courriel</label><br />
+  <input
+    id="email"
+    name="email"
+    type="email"
+    placeholder="nom@exemple.com"
+    autocomplete="email"
+  />
+  <button id="loginBtn" type="button">Recevoir un lien</button>
+
+  <p id="status"></p>
+
+  <hr />
+
+  <button id="test" type="button">Tester JavaScript</button>
+
+  <!-- Ton code (chargé une seule fois) -->
+  <script src="/app.js?v=1"></script>
+
+  <!-- Wiring des boutons -->
+  <script>
+    document.getElementById("test").addEventListener("click", () => {
+      alert("JavaScript chargé correctement");
+    });
+
+    document.getElementById("loginBtn").addEventListener("click", () => {
+      const email = document.getElementById("email").value.trim();
+      if (!email) return alert("Courriel requis");
+
+      if (typeof window.sendMagicLink !== "function") {
+        return alert("Erreur: app.js n'est pas chargé (sendMagicLink introuvable).");
+      }
+
+      window.sendMagicLink(email);
+    });
+  </script>
 </body>
 </html>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/app.js?v=1"></script>
-</body>
