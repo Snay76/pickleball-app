@@ -9,11 +9,15 @@ async function sendMagicLink(email) {
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: window.location.origin
+      emailRedirectTo: "https://pickleball-app.pages.dev"
     }
   });
-  if (error) alert(error.message);
-  else alert("Lien envoyé. Vérifie tes emails.");
+
+  if (error) {
+    alert(error.message);
+  } else {
+    alert("Lien envoyé. Vérifie ton email.");
+  }
 }
 
 window.sendMagicLink = sendMagicLink;
