@@ -1,19 +1,153 @@
-<script>
-  const SUPABASE_URL = "https://cehqaxtcfmgjajmmcccz.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlaHFheHRjZm1namFqbW1jY2N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5NTQ1OTUsImV4cCI6MjA4NDUzMDU5NX0.U0IiTLx1_Vd4D8WBkhkO8KOrl3w_ftbPtcIWs_n1KmA";
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pickleball</title>
 
-  const supabase = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  );
+  <!-- Supabase (une seule fois) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  document.getElementById("loginBtn").addEventListener("click", async () => {
-    const email = document.getElementById("email").value.trim();
-    document.getElementById("status").textContent = "Envoi…";
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
+    .hidden { display: none; }
+    label { display: inline-block; margin-top: 8px; }
+    input { padding: 8px; width: min(420px, 100%); }
+    button { padding: 8px 12px; margin-top: 8px; }
+    #status { white-space: pre-wrap; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin-top: 16px; }
+  </style>
+</head>
 
-    const { error } = await supabase.auth.signInWithOtp({ email });
+<body>
+  <h1>Pickleball</h1>
 
-    document.getElementById("status").textContent =
-      error ? "ERREUR : " + error.message : "EMAIL ENVOYÉ ✔";
-  });
-</script>
+  <div id="loginSection" class="card">
+    <h2>Connexion</h2>
+
+    <label for="email">Courriel</label><br />
+    <input
+      id="email"
+      name="email"
+      type="email"
+      placeholder="nom@exemple.com"
+      autocomplete="email"
+      inputmode="email"
+      required
+    />
+    <br />
+    <button id="loginBtn" type="button">Recevoir un lien</button>
+
+    <p id="status" aria-live="polite"></p>
+  </div>
+
+  <div id="appSection" class="card hidden">
+    <h2>Application</h2>
+    <p>Connecté : <strong id="userEmail"></strong></p>
+
+    <button id="logoutBtn" type="button">Se déconnecter</button>
+
+    <hr />
+
+    <button id="test" type="button">Tester JavaScript</button>
+  </div>
+
+  <script>
+    // === CONFIG SUPABASE ===
+    const SUPABASE_URL = "https://cehqaxtcfmgjajmmcccz.supabase.co";
+
+    // IMPORTANT:
+    // - Tu as publié cette clé dans la conversation. Après que tout marche, rotate-la dans Supabase.
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlaHFheHRjZm1namFqbW1jY2N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5NTQ1OTUsImV4cCI6MjA4NDUzMDU5NX0.U0IiTLx1_Vd4D8WBkhkO8KOrl3w_ftbPtcIWs_n1KmA";
+
+    // === DOM ===
+    const loginSection = document.getElementById("loginSection");
+    const appSection = document.getElementById("appSection");
+    const statusEl = document.getElementById("status");
+    const emailEl = document.getElementById("email");
+    const btnEl = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const userEmailEl = document.getElementById("userEmail");
+    const testBtn = document.getElementById("test");
+
+    function setStatus(msg) { statusEl.textContent = msg || ""; }
+
+    function showApp(session) {
+      loginSection.classList.add("hidden");
+      appSection.classList.remove("hidden");
+      userEmailEl.textContent = session?.user?.email || "(inconnu)";
+      setStatus("");
+    }
+
+    function showLogin(message) {
+      appSection.classList.add("hidden");
+      loginSection.classList.remove("hidden");
+      if (message) setStatus(message);
+    }
+
+    if (!window.supabase) {
+      showLogin("Erreur: la librairie Supabase n'est pas chargée (CDN).");
+      throw new Error("Supabase CDN non chargé");
+    }
+
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // === 1) Au chargement: détecter une session existante (après clic du magic link) ===
+    (async () => {
+      const { data, error } = await client.auth.getSession();
+      if (error) {
+        showLogin("Erreur session: " + error.message);
+        return;
+      }
+      if (data?.session) showApp(data.session);
+      else showLogin();
+    })();
+
+    // === 2) Écouter les changements d'état auth (SIGNED_IN après magic link) ===
+    client.auth.onAuthStateChange((_event, session) => {
+      if (session) showApp(session);
+      else showLogin();
+    });
+
+    // === 3) Envoi du magic link ===
+    async function sendMagicLink(email) {
+      btnEl.disabled = true;
+      setStatus("Envoi du lien…");
+
+      try {
+        const { error } = await client.auth.signInWithOtp({
+          email,
+          options: {
+            // Assure-toi que ces URLs sont autorisées dans Supabase:
+            // Auth > URL Configuration > Site URL + Redirect URLs
+            emailRedirectTo: "https://pickleball-ccyp.pages.dev"
+          }
+        });
+
+        if (error) setStatus("Erreur: " + error.message);
+        else setStatus("Lien envoyé. Vérifiez votre courriel, puis cliquez sur le lien.");
+      } catch (e) {
+        setStatus("Erreur réseau (Failed to fetch).");
+        console.error(e);
+      } finally {
+        btnEl.disabled = false;
+      }
+    }
+
+    btnEl.addEventListener("click", async () => {
+      const email = emailEl.value.trim();
+      if (!email) return alert("Courriel requis");
+      await sendMagicLink(email);
+    });
+
+    // === 4) Déconnexion ===
+    logoutBtn.addEventListener("click", async () => {
+      await client.auth.signOut();
+      // onAuthStateChange ramènera à l'écran login
+    });
+
+    // === 5) Test JS ===
+    testBtn.addEventListener("click", () => alert("JavaScript chargé correctement"));
+  </script>
+</body>
+</html>
