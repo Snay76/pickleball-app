@@ -3,6 +3,8 @@ const SUPABASE_URL = "https://cehqaxtcfmgjajmmcccz.supabase.co";
 const SUPABASE_ANON_KEY = "re_AD2aSkEc_HakFbmU8gFQQ8WBPh9MqtFH6";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const fmtDate = new Intl.DateTimeFormat("fr-CA", { dateStyle: "medium", timeStyle: "short" });
+const fmtNum = new Intl.NumberFormat("fr-CA");
 
 // 2) Test login magic link
 async function sendMagicLink(email) {
