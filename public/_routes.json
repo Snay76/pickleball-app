@@ -1,5 +1,5 @@
 {
   "version": 1,
   "include": ["/*"],
-  "exclude": ["/app.js", "/_headers"]
+  "exclude": ["/app.js", "/app.js?v=1", "/_headers", "/_routes.json"]
 }
