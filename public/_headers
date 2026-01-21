@@ -1,2 +1,0 @@
-/*
-  Content-Security-Policy: default-src 'self'; frame-ancestors 'self' https://sites.google.com https://*.googleusercontent.com; script-src 'self' 'unsafe-inline'; connect-src 'self' https://*.supabase.co; img-src 'self' data:; style-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self'
