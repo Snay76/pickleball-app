@@ -3,6 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <title>Pickleball</title>
+  <hr />
+<h2>Connexion</h2>
+<input id="email" type="email" placeholder="ton@email.com" />
+<button id="loginBtn">Recevoir un lien</button>
+<p id="status"></p>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -13,5 +18,12 @@
   <button id="test">Tester JavaScript</button>
 
   <script src="app.js"></script>
+<script>
+  document.getElementById("loginBtn").addEventListener("click", () => {
+    const email = document.getElementById("email").value.trim();
+    if (!email) return alert("Email requis");
+    window.sendMagicLink(email);
+  });
+</script>
 </body>
 </html>
