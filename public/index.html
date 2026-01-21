@@ -110,29 +110,40 @@
     });
 
     // === 3) Envoi du magic link ===
-    async function sendMagicLink(email) {
-      btnEl.disabled = true;
-      setStatus("Envoi du lien…");
+   async function sendMagicLink(email) {
+  btnEl.disabled = true;
+  setStatus("Envoi du lien…");
 
-      try {
-        const { error } = await client.auth.signInWithOtp({
-          email,
-          options: {
-            // Assure-toi que ces URLs sont autorisées dans Supabase:
-            // Auth > URL Configuration > Site URL + Redirect URLs
-            emailRedirectTo: "https://pickleball-ccyp.pages.dev"
-          }
-        });
+  try {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        create_user: true,
+        // IMPORTANT: redirection après clic du lien
+        redirect_to: "https://pickleball-ccyp.pages.dev",
+      }),
+    });
 
-        if (error) setStatus("Erreur: " + error.message);
-        else setStatus("Lien envoyé. Vérifiez votre courriel, puis cliquez sur le lien.");
-      } catch (e) {
-        setStatus("Erreur réseau (Failed to fetch).");
-        console.error(e);
-      } finally {
-        btnEl.disabled = false;
-      }
+    const text = await r.text();
+    if (!r.ok) {
+      setStatus(`Erreur (${r.status}): ${text}`);
+      return;
     }
+
+    setStatus("Lien envoyé. Vérifiez votre courriel.");
+  } catch (e) {
+    setStatus("Erreur réseau (Failed to fetch).");
+    console.error("FETCH OTP ERROR:", e);
+  } finally {
+    btnEl.disabled = false;
+  }
+}
 
     btnEl.addEventListener("click", async () => {
       const email = emailEl.value.trim();
