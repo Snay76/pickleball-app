@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Pickleball</title>
 
-  <!-- Supabase (chargé une seule fois) -->
+  <!-- Supabase (une seule fois) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
@@ -32,24 +32,55 @@
 
   <button id="test" type="button">Tester JavaScript</button>
 
-  <!-- Ton code (chargé une seule fois) -->
-  <script src="/app.js?v=1"></script>
-
-  <!-- Wiring des boutons -->
   <script>
+    // === CONFIG SUPABASE (tes valeurs) ===
+    const SUPABASE_URL = "https://cehqaxctcfmgjajmmcccz.supabase.co";
+    const SUPABASE_ANON_KEY = "re_AD2aSkEc_HakFbmU8gFQQ8WBPh9M9qtFH6";
+
+    // === INIT ===
+    const statusEl = document.getElementById("status");
+
+    function setStatus(msg) {
+      statusEl.textContent = msg || "";
+    }
+
+    // Vérifie que Supabase CDN est chargé
+    if (!window.supabase) {
+      setStatus("Erreur: la librairie Supabase n'est pas chargée (CDN).");
+      throw new Error("Supabase CDN non chargé");
+    }
+
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // === UI ===
     document.getElementById("test").addEventListener("click", () => {
       alert("JavaScript chargé correctement");
     });
 
-    document.getElementById("loginBtn").addEventListener("click", () => {
-      const email = document.getElementById("email").value.trim();
-      if (!email) return alert("Courriel requis");
+    async function sendMagicLink(email) {
+      setStatus("Envoi du lien…");
 
-      if (typeof window.sendMagicLink !== "function") {
-        return alert("Erreur: app.js n'est pas chargé (sendMagicLink introuvable).");
+      const { error } = await client.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: "https://pickleball-app.pages.dev"
+        }
+      });
+
+      if (error) {
+        setStatus("Erreur: " + error.message);
+      } else {
+        setStatus("Lien envoyé. Vérifiez votre courriel.");
       }
+    }
 
-      window.sendMagicLink(email);
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+      const email = document.getElementById("email").value.trim();
+      if (!email) {
+        alert("Courriel requis");
+        return;
+      }
+      await sendMagicLink(email);
     });
   </script>
 </body>
