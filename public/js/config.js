@@ -6,4 +6,4 @@ export const LS_REFRESH = "pb_refresh_token";
 export const LS_EXPIRES_AT = "pb_expires_at";
 export const LS_VENUE_ID = "pb_venue_id";
 
-export const APP_VERSION = "2026-01-22-APP-REFAC-001";
+export const APP_VERSION = "2026-01-22-APP-REFAC-003";
