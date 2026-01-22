@@ -1,4 +1,4 @@
-import { parseHash, saveTokens, refreshSessionIfNeeded, loadUser } from "./auth.js";
+import { parseHash, saveTokens, refreshSessionIfNeeded, loadUser, sendMagicLink } from "./auth.js";
 import { bindMainUI } from "./ui-main.js";
 
 // petit logger optionnel
@@ -25,7 +25,38 @@ function setAuthUI(isAuthed, email){
   if (em) em.textContent = isAuthed ? (email || "(connecté)") : "(non connecté)";
 }
 
+function wireLogin(){
+  const emailEl = document.getElementById("email");
+  const loginBtn = document.getElementById("loginBtn");
+  const loginStatus = document.getElementById("loginStatus");
+
+  if(!loginBtn) return;
+
+  loginBtn.addEventListener("click", async () => {
+    const email = (emailEl?.value || "").trim();
+    if(!email) return alert("Courriel requis");
+
+    loginBtn.disabled = true;
+    if(loginStatus) loginStatus.textContent = "Envoi du lien…";
+
+    try{
+      await sendMagicLink(email);
+      if(loginStatus) loginStatus.textContent = "Lien envoyé. Vérifie ton courriel.";
+    }catch(e){
+      const msg = e?.message || String(e);
+      if(loginStatus) loginStatus.textContent = "Erreur: " + msg;
+      log("[OTP ERROR]\n" + msg);
+      alert("Erreur envoi lien.\n\n" + msg);
+    }finally{
+      loginBtn.disabled = false;
+    }
+  });
+}
+
 (async function init(){
+  // IMPORTANT: brancher le bouton login dès le départ
+  wireLogin();
+
   // 1) handle magic link return
   const hp = parseHash();
   if(hp?.error){
