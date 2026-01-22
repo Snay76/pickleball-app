@@ -1,10 +1,9 @@
-import { escapeHtml } from "./ui-utils.js"; // si tu as; sinon recopie une escapeHtml locale
 import { listVenues, createVenue, fillVenueSelect, getSelectedVenueId, setSelectedVenueId } from "./venues.js";
 import { listPlayersForVenue, createPlayerGlobal, addPlayerToVenue, removePlayerFromVenue } from "./players.js";
 import { listMatchesForVenue, createMatchForVenue } from "./matches.js";
 
 export function bindMainUI(ctx) {
-  // ctx attendu: { me, log, initCourtSelect, ... } selon ton app
+  // ctx attendu: { me, log }
   const { me, log } = ctx;
 
   const venueSelect = document.getElementById("venueSelect");
@@ -31,14 +30,25 @@ export function bindMainUI(ctx) {
   let cachedPlayers = [];
   let cachedMatches = [];
 
-  function escapeHtmlLocal(s){
+  function esc(s){
     return String(s || "")
       .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
       .replaceAll('"',"&quot;").replaceAll("'","&#039;");
   }
-  const esc = (typeof escapeHtml === "function") ? escapeHtml : escapeHtmlLocal;
+
+  function initCourtSelect(max=12){
+    if(!courtEl) return;
+    courtEl.innerHTML = "";
+    for(let i=1;i<=max;i++){
+      const o = document.createElement("option");
+      o.value = String(i);
+      o.textContent = `Terrain ${i}`;
+      courtEl.appendChild(o);
+    }
+  }
 
   function fillPlayerSelect(sel) {
+    if(!sel) return;
     sel.innerHTML = "";
     const o0 = document.createElement("option");
     o0.value = "";
@@ -62,19 +72,21 @@ export function bindMainUI(ctx) {
   }
 
   async function refreshPlayers() {
-    playersWrap.innerHTML = "";
+    if(playersWrap) playersWrap.innerHTML = "";
+
     if (!currentVenueId) {
-      playersEmpty.textContent = "Choisis un lieu.";
+      if(playersEmpty) playersEmpty.textContent = "Choisis un lieu.";
       cachedPlayers = [];
       fillPlayerSelect(a1El); fillPlayerSelect(a2El); fillPlayerSelect(b1El); fillPlayerSelect(b2El);
       return;
     }
 
     cachedPlayers = await listPlayersForVenue(currentVenueId);
+
     if (!cachedPlayers.length) {
-      playersEmpty.textContent = "(aucun joueur dans ce lieu)";
+      if(playersEmpty) playersEmpty.textContent = "(aucun joueur dans ce lieu)";
     } else {
-      playersEmpty.textContent = "";
+      if(playersEmpty) playersEmpty.textContent = "";
       for (const p of cachedPlayers) {
         const row = document.createElement("div");
         row.className = "listItem";
@@ -105,7 +117,7 @@ export function bindMainUI(ctx) {
         actions.appendChild(del);
         row.appendChild(left);
         row.appendChild(actions);
-        playersWrap.appendChild(row);
+        playersWrap?.appendChild(row);
       }
     }
 
@@ -113,19 +125,21 @@ export function bindMainUI(ctx) {
   }
 
   async function refreshMatches() {
-    matchesWrap.innerHTML = "";
+    if(matchesWrap) matchesWrap.innerHTML = "";
+
     if (!currentVenueId) {
-      matchesEmpty.textContent = "Choisis un lieu.";
+      if(matchesEmpty) matchesEmpty.textContent = "Choisis un lieu.";
       cachedMatches = [];
       return;
     }
 
     cachedMatches = await listMatchesForVenue(currentVenueId);
+
     if (!cachedMatches.length) {
-      matchesEmpty.textContent = "(aucun match)";
+      if(matchesEmpty) matchesEmpty.textContent = "(aucun match)";
       return;
     }
-    matchesEmpty.textContent = "";
+    if(matchesEmpty) matchesEmpty.textContent = "";
 
     const byId = (id) => cachedPlayers.find(p => p.id === id)?.name || "(?)";
 
@@ -147,19 +161,19 @@ export function bindMainUI(ctx) {
           <div class="muted" style="font-size:12px">${esc(new Date(m.created_at).toLocaleString())}</div>
         </div>
       `;
-      matchesWrap.appendChild(box);
+      matchesWrap?.appendChild(box);
     }
   }
 
   // Events
-  venueSelect.addEventListener("change", async () => {
+  venueSelect?.addEventListener("change", async () => {
     currentVenueId = venueSelect.value || "";
     setSelectedVenueId(me?.id, currentVenueId);
     await refreshPlayers();
     await refreshMatches();
   });
 
-  addVenueBtn.addEventListener("click", async () => {
+  addVenueBtn?.addEventListener("click", async () => {
     const name = prompt("Nom du lieu (ex: Ste-Élie Débutant-2026) :");
     if (!name) return;
     try {
@@ -178,16 +192,16 @@ export function bindMainUI(ctx) {
     }
   });
 
-  addPlayerBtn.addEventListener("click", async () => {
+  addPlayerBtn?.addEventListener("click", async () => {
     if (!currentVenueId) return alert("Choisis un lieu d’abord.");
-    const name = (playerNameEl.value || "").trim();
+    const name = (playerNameEl?.value || "").trim();
     if (!name) return alert("Nom requis");
 
     addPlayerBtn.disabled = true;
     try {
-      const player = await createPlayerGlobal(name);    // joueur global
-      await addPlayerToVenue(currentVenueId, player.id); // inscription lieu
-      playerNameEl.value = "";
+      const player = await createPlayerGlobal(name);       // joueur global
+      await addPlayerToVenue(currentVenueId, player.id);   // inscription lieu
+      if(playerNameEl) playerNameEl.value = "";
       await refreshPlayers();
       await refreshMatches();
     } catch (e) {
@@ -198,17 +212,17 @@ export function bindMainUI(ctx) {
     }
   });
 
-  createMatchBtn.addEventListener("click", async () => {
+  createMatchBtn?.addEventListener("click", async () => {
     if (!currentVenueId) return alert("Choisis un lieu d’abord.");
     createMatchBtn.disabled = true;
     try {
-      const court = Number(courtEl.value);
-      const status = statusMatchEl.value;
+      const court = Number(courtEl?.value);
+      const status = statusMatchEl?.value;
 
-      const a1 = a1El.value || null;
-      const a2 = a2El.value || null;
-      const b1 = b1El.value || null;
-      const b2 = b2El.value || null;
+      const a1 = a1El?.value || null;
+      const a2 = a2El?.value || null;
+      const b1 = b1El?.value || null;
+      const b2 = b2El?.value || null;
 
       if (!Number.isFinite(court) || court <= 0) return alert("Terrain invalide");
       if (!a1 || !a2 || !b1 || !b2) return alert("A1, A2, B1, B2 requis.");
@@ -226,6 +240,7 @@ export function bindMainUI(ctx) {
 
   // Init
   async function initVenuesFlow() {
+    initCourtSelect(12);
     await refreshVenues();
     await refreshPlayers();
     await refreshMatches();
