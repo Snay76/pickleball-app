@@ -22,7 +22,6 @@
       color:var(--text);
       padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
     }
-    h1{ margin: 6px 0 2px; font-size: 22px; letter-spacing:.2px; }
     h2{ margin: 0 0 10px; font-size: 18px; }
     h3{ margin: 16px 0 10px; font-size: 16px; color: #d7e3ff; }
 
@@ -34,8 +33,7 @@
       backdrop-filter: blur(8px);
     }
     .brand{ display:flex; flex-direction:column; gap:2px; }
-    .brand small{ color:var(--muted); font-size:12px; white-space:normal; overflow:visible; }
-    .rightTop{ display:flex; align-items:center; gap:10px; }
+    .brand small{ color:var(--muted); font-size:12px; }
 
     .authMini{
       display:flex; align-items:center; gap:10px;
@@ -76,7 +74,6 @@
       outline: none;
       font-size: 16px;
     }
-    input::placeholder{ color: rgba(232,239,255,.45); }
     button{
       height: var(--tap);
       border-radius: 16px;
@@ -99,7 +96,6 @@
       background: linear-gradient(180deg, rgba(239,68,68,.28), rgba(239,68,68,.10));
       border-color: rgba(239,68,68,.40);
     }
-    .btnGhost{ background: rgba(255,255,255,.03); }
     .help{ color: var(--muted); font-size: 13px; margin-top: 6px; line-height:1.35; }
     .status{
       font-family: var(--mono);
@@ -113,6 +109,7 @@
     }
     .hidden{ display:none !important; }
     .muted{ color: var(--muted); }
+    .hr{ height:1px; background: var(--line); margin: 12px 0; }
 
     .tabs{
       display:grid;
@@ -140,34 +137,38 @@
       margin-top: 10px;
     }
     .name{ font-weight: 950; }
-    .miniBtn{ height: 44px; min-width: 44px; border-radius: 14px; font-size: 14px; padding: 0 12px; }
 
-    .hr{ height:1px; background: var(--line); margin: 12px 0; }
+    /* Modal score */
+    .overlay{
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.55);
+      display:flex; align-items:flex-end; justify-content:center;
+      padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+      z-index: 1000;
+    }
+    .modal{
+      width: min(900px, 100%);
+      border:1px solid var(--line);
+      background: rgba(18,27,47,.98);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+    .modalHead{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .iconBtn{
+      width: 46px; height: 46px; border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      display:inline-flex; align-items:center; justify-content:center;
+      cursor:pointer; user-select:none; touch-action: manipulation;
+      font-size: 18px;
+    }
 
     @media (min-width: 840px){
       body{ max-width: 860px; margin: 0 auto; }
-      .tabs{ grid-template-columns: repeat(3, 1fr); }
     }
-  
-/* Modal (score) */
-.overlay{
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,.55);
-  display:flex; align-items:flex-end; justify-content:center;
-  padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
-  z-index: 1000;
-}
-.modal{
-  width: min(900px, 100%);
-  border:1px solid var(--line);
-  background: rgba(18,27,47,.98);
-  border-radius: 22px;
-  box-shadow: var(--shadow);
-  padding: 14px;
-}
-.modalHead{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
-.modalHead strong{ font-size: 16px; }
-</style>
+  </style>
 </head>
 
 <body>
@@ -177,20 +178,15 @@
       <div style="font-weight:950">Pickleball</div>
       <small id="versionText">Version: …</small>
     </div>
-
-    <div class="rightTop">
-      <!-- Email badge: clique = page compte -->
-      <div id="authBadge" class="authMini" title="Compte (clique pour configurer)">
-        <span id="authDot" class="dot"></span>
-        <span id="authEmail" class="authEmail">(non connecté)</span>
-      </div>
+    <div id="authBadge" class="authMini" title="Compte (clique)">
+      <span id="authDot" class="dot"></span>
+      <span id="authEmail" class="authEmail">(non connecté)</span>
     </div>
   </div>
 
   <!-- LOGIN -->
   <div id="loginCard" class="card">
     <h2>Connexion</h2>
-
     <div class="row">
       <div class="col">
         <label for="email">Courriel</label>
@@ -200,11 +196,9 @@
         <button id="loginBtn" class="btnPrimary" type="button">Recevoir un lien</button>
       </div>
     </div>
-
     <div class="help">
-      Tu reçois un lien par courriel. Clique-le pour ouvrir l’app (session conservée).
+      Tu reçois un lien par courriel. Clique-le pour ouvrir l’app.
     </div>
-
     <div class="hr"></div>
     <div id="loginStatus" class="status">Prêt.</div>
   </div>
@@ -229,22 +223,16 @@
           <button id="addVenueBtn" class="btnPrimary" type="button">+ Ajouter un lieu</button>
         </div>
       </div>
-      <div class="help">
-        Le lieu filtre l’affichage. Les joueurs et matchs visibles appartiennent à ce lieu.
-      </div>
 
-      <h3>Ajouter un joueur</h3>
+      <h3>Ajouter un joueur au lieu</h3>
       <div class="row">
         <div class="col">
           <label for="playerName">Nom complet</label>
-          <input id="playerName" type="text" placeholder="Ex: Titi Pellerin" />
+          <input id="playerName" type="text" placeholder="Ex: Yans Côté" />
         </div>
         <div class="col" style="flex:0 0 240px;">
           <button id="addPlayerBtn" class="btnPrimary" type="button">Ajouter joueur</button>
         </div>
-      </div>
-      <div class="help">
-        La corbeille retire le joueur de ce lieu (le joueur global reste disponible pour d’autres lieux).
       </div>
 
       <h3>Liste des joueurs</h3>
@@ -254,6 +242,35 @@
 
     <!-- Matchs -->
     <div id="tabMatches" class="hidden" style="margin-top:12px;">
+      <h3>Affichage</h3>
+      <div class="row">
+        <div class="col">
+          <label for="matchFilter">Filtres</label>
+          <select id="matchFilter">
+            <option value="today_all">Aujourd’hui – tous</option>
+            <option value="today_inprogress">Aujourd’hui – en cours</option>
+            <option value="today_mine">Aujourd’hui – mes matchs</option>
+          </select>
+        </div>
+        <div class="col">
+          <label for="matchMode">Type de partie</label>
+          <select id="matchMode">
+            <option value="2">Simple (2 joueurs)</option>
+            <option value="4" selected>Double (4 joueurs)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div class="col" style="flex:0 0 260px;">
+          <button id="suggestTeamsBtn" type="button">Proposer équipes (aléatoire)</button>
+        </div>
+        <div class="col" style="flex:0 0 320px;">
+          <button id="finishAllTodayBtn" class="btnDanger" type="button">Terminer tous les matchs du jour</button>
+        </div>
+      </div>
+
+      <div class="hr"></div>
       <h3>Créer un match</h3>
 
       <div class="row">
@@ -269,35 +286,7 @@
             <option value="done">done</option>
           </select>
         </div>
-      
-<div class="row">
-  <div class="col">
-    <label for="matchMode">Type de partie</label>
-    <select id="matchMode">
-      <option value="4" selected>4 joueurs (double)</option>
-      <option value="2">2 joueurs (simple)</option>
-    </select>
-  </div>
-  <div class="col">
-    <label for="matchFilter">Affichage</label>
-    <select id="matchFilter">
-      <option value="today_all" selected>Session du jour – tous</option>
-      <option value="today_inprogress">Session du jour – en cours</option>
-      <option value="today_mine">Session du jour – mes matchs</option>
-    </select>
-  </div>
-</div>
-
-<div class="row">
-  <div class="col" style="flex:0 0 240px;">
-    <button id="suggestTeamsBtn" type="button">Proposer équipes (aléatoire)</button>
-  </div>
-  <div class="col" style="flex:0 0 260px;">
-    <button id="finishAllTodayBtn" class="btnDanger" type="button">Terminer tous les matchs du jour</button>
-  </div>
-</div>
-
-</div>
+      </div>
 
       <div class="row">
         <div class="col">
@@ -328,7 +317,7 @@
       </div>
 
       <div class="hr"></div>
-      <h3>Matchs du lieu</h3>
+      <h3>Matchs</h3>
       <div id="matchesEmpty" class="muted">Chargement…</div>
       <div id="matchesWrap"></div>
     </div>
@@ -336,33 +325,57 @@
     <!-- Debug -->
     <div id="tabDebug" class="hidden" style="margin-top:12px;">
       <h3>Debug</h3>
-      <div class="help">
-        (Tech) Ce panneau sert au diagnostic.
-      </div>
-      <div class="hr"></div>
       <div id="debug" class="status">…</div>
     </div>
   </div>
 
-  
-<!-- SCORE MODAL -->
-<div id="scoreOverlay" class="overlay hidden" role="dialog" aria-modal="true">
-  <div class="modal">
-    <div class="modalHead">
-      <strong>Terminer le match</strong>
-      <button id="scoreCloseBtn" class="iconBtn" type="button" title="Fermer">✕</button>
+  <!-- SCORE OVERLAY -->
+  <div id="scoreOverlay" class="overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modalHead">
+        <strong>Terminer le match</strong>
+        <button id="scoreCloseBtn" class="iconBtn" type="button" title="Fermer">✕</button>
+      </div>
+      <div class="hr"></div>
+
+      <div id="scoreMatchInfo" class="status">…</div>
+
+      <div class="row" style="margin-top:10px;">
+        <div class="col">
+          <label for="scoreA">Score Équipe A</label>
+          <input id="scoreA" type="number" inputmode="numeric" placeholder="0" />
+        </div>
+        <div class="col">
+          <label for="scoreB">Score Équipe B</label>
+          <input id="scoreB" type="number" inputmode="numeric" placeholder="0" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div class="col">
+          <label for="finishStatus">Statut</label>
+          <select id="finishStatus">
+            <option value="done" selected>terminée</option>
+            <option value="abandoned">abandonnée</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div class="col" style="flex:0 0 260px;">
+          <button id="scoreConfirmBtn" class="btnPrimary" type="button">Confirmer (Enter)</button>
+        </div>
+        <div class="col" style="flex:0 0 260px;">
+          <button id="scoreNoScoreBtn" type="button">Confirmer sans score</button>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+      <div id="scoreStatus" class="status">…</div>
     </div>
-    <div class="hr"></div>
-
-   
-<div class="row" style="margin-top:10px;">
-  <div class="col">
-    <label for="finishStatus">Statut</label>
-    <select id="finishStatus">
-      <option value="done" selected>terminée</option>
-      <option value="abandoned">abandonnée</option>
-    </select>
   </div>
-</div>
 
- 
+  <!-- IMPORTANT: charge ton app -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
