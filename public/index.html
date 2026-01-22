@@ -4,195 +4,27 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Pickleball</title>
-
-  <style>
-    :root{
-      --bg:#0b1220; --card:#121b2f; --muted:#9fb0d0; --text:#e8efff;
-      --line:rgba(255,255,255,.12);
-      --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --accent:#60a5fa;
-      --radius:16px; --pad:16px; --tap:58px;
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    }
-    *{ box-sizing:border-box; }
-    body{
-      margin:0; font-family:var(--sans);
-      background:linear-gradient(180deg,#070b14, var(--bg));
-      color:var(--text);
-      padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
-    }
-    h1{ margin: 6px 0 2px; font-size: 22px; letter-spacing:.2px; }
-    h2{ margin: 0 0 10px; font-size: 18px; }
-    h3{ margin: 16px 0 10px; font-size: 16px; color: #d7e3ff; }
-    .topbar{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:12px; padding: 10px 12px; border:1px solid var(--line);
-      border-radius: 18px; background: rgba(255,255,255,.04); box-shadow: var(--shadow);
-      position: sticky; top: 10px; z-index: 10;
-      backdrop-filter: blur(8px);
-    }
-    .brand{ display:flex; flex-direction:column; gap:2px; }
-    .brand small{ color:var(--muted); font-size:12px; }
-    .rightTop{ display:flex; align-items:center; gap:10px; }
-    .iconBtn{
-      width: 46px; height: 46px; border-radius: 14px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.05);
-      color: var(--text);
-      display:inline-flex; align-items:center; justify-content:center;
-      cursor:pointer; user-select:none; touch-action: manipulation;
-      font-size: 18px;
-    }
-    .authMini{
-      display:flex; align-items:center; gap:10px;
-      padding: 8px 10px; border:1px solid var(--line); border-radius: 999px;
-      background: rgba(255,255,255,.03);
-      max-width: 58vw;
-    }
-    .dot{ width:10px; height:10px; border-radius:999px; background: var(--warn); flex:0 0 auto; }
-    .dot.ok{ background: var(--ok); }
-    .dot.bad{ background: var(--bad); }
-    .authEmail{
-      font-size: 12px; color: var(--muted);
-      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-    }
-
-    .card{
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.04);
-      border-radius: var(--radius);
-      padding: var(--pad);
-      box-shadow: var(--shadow);
-      margin-top: 14px;
-    }
-    .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:end; }
-    .col{ display:flex; flex-direction:column; gap:8px; flex:1 1 220px; }
-    label{ font-weight:800; font-size: 13px; color:#d7e3ff; }
-    input, select{
-      width:100%;
-      height: var(--tap);
-      padding: 12px 14px;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: rgba(0,0,0,.2);
-      color: var(--text);
-      outline: none;
-      font-size: 16px;
-    }
-    input::placeholder{ color: rgba(232,239,255,.45); }
-    button{
-      height: var(--tap);
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
-      color: var(--text);
-      font-weight: 900;
-      font-size: 16px;
-      padding: 0 14px;
-      cursor:pointer;
-      user-select:none;
-      touch-action: manipulation;
-    }
-    button:disabled{ opacity:.55; cursor:not-allowed; }
-    .btnPrimary{
-      background: linear-gradient(180deg, rgba(96,165,250,.35), rgba(96,165,250,.14));
-      border-color: rgba(96,165,250,.45);
-    }
-    .btnDanger{
-      background: linear-gradient(180deg, rgba(239,68,68,.28), rgba(239,68,68,.10));
-      border-color: rgba(239,68,68,.40);
-    }
-    .btnGhost{ background: rgba(255,255,255,.03); }
-    .help{ color: var(--muted); font-size: 13px; margin-top: 6px; line-height:1.35; }
-    .status{
-      font-family: var(--mono);
-      font-size: 12px;
-      white-space: pre-wrap;
-      color: #d7e3ff;
-      border:1px dashed rgba(255,255,255,.18);
-      border-radius: 14px;
-      padding: 10px 12px;
-      background: rgba(0,0,0,.18);
-    }
-    .hidden{ display:none !important; }
-    .muted{ color: var(--muted); }
-
-    .tabs{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 12px;
-    }
-    .tab{
-      height: 52px;
-      border-radius: 16px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
-      font-weight: 900;
-      font-size: 14px;
-    }
-    .tab.active{
-      background: linear-gradient(180deg, rgba(96,165,250,.35), rgba(96,165,250,.14));
-      border-color: rgba(96,165,250,.55);
-    }
-
-    .listItem{
-      display:flex; justify-content:space-between; align-items:center; gap:10px;
-      padding: 10px 12px; border:1px solid var(--line); border-radius: 14px;
-      background: rgba(0,0,0,.12);
-      margin-top: 10px;
-    }
-    .name{ font-weight: 950; }
-    .miniBtn{ height: 44px; min-width: 44px; border-radius: 14px; font-size: 14px; padding: 0 12px; }
-
-    /* Modal */
-    .overlay{
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.55);
-      display:flex; align-items:flex-end; justify-content:center;
-      padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
-      z-index: 1000;
-    }
-    .modal{
-      width: min(900px, 100%);
-      border:1px solid var(--line);
-      background: rgba(18,27,47,.98);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-      padding: 14px;
-    }
-    .modalHead{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
-    .modalHead strong{ font-size: 16px; }
-    .hr{ height:1px; background: var(--line); margin: 12px 0; }
-
-    @media (min-width: 840px){
-      body{ max-width: 860px; margin: 0 auto; }
-      .tabs{ grid-template-columns: repeat(3, 1fr); }
-    }
-  </style>
+  <link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
+
   <div class="topbar">
     <div class="brand">
       <div style="font-weight:950">Pickleball</div>
-      <small id="versionText">Version: 2026-01-21-APP-SESSION-003</small>
+      <small id="versionText"></small>
     </div>
 
     <div class="rightTop">
-      <div class="authMini" title="Statut d'authentification">
+      <div id="authMini" class="authMini" title="Compte">
         <span id="authDot" class="dot"></span>
         <span id="authEmail" class="authEmail">(non connecté)</span>
       </div>
-      <button id="gearBtn" class="iconBtn" type="button" title="Configuration">⚙️</button>
     </div>
   </div>
 
   <!-- LOGIN -->
   <div id="loginCard" class="card">
     <h2>Connexion</h2>
-
     <div class="row">
       <div class="col">
         <label for="email">Courriel</label>
@@ -202,26 +34,40 @@
         <button id="loginBtn" class="btnPrimary" type="button">Recevoir un lien</button>
       </div>
     </div>
-
     <div class="help">
-      Tu reçois un lien par courriel. Clique-le. La session restera active (refresh token) pour éviter les déconnexions.
+      Tu reçois un lien par courriel. Clique-le pour te connecter.
     </div>
-
     <div class="hr"></div>
     <div id="loginStatus" class="status">Prêt.</div>
   </div>
 
   <!-- APP -->
   <div id="appCard" class="card hidden">
-    <div class="tabs">
-      <button class="tab active" data-tab="tabPlayers">Joueurs</button>
-      <button class="tab" data-tab="tabMatches">Matchs</button>
-      <button class="tab" data-tab="tabDebug">Debug</button>
+    <h2>Session</h2>
+
+    <!-- Lieu -->
+    <div class="row">
+      <div class="col">
+        <label for="venueSelect">Lieu (obligatoire)</label>
+        <select id="venueSelect"></select>
+        <div class="help">Seuls les joueurs du lieu sélectionné sont visibles. Ton compte reste le même partout.</div>
+      </div>
+      <div class="col" style="flex:0 0 240px;">
+        <button id="reloadBtn" type="button">Rafraîchir</button>
+      </div>
     </div>
 
-    <!-- Joueurs -->
-    <div id="tabPlayers" style="margin-top:12px;">
-      <h3>Ajouter un joueur</h3>
+    <!-- Menu affichage -->
+    <div class="menuGrid">
+      <button class="menuBtn active" data-view="addPlayer">Ajout de joueur</button>
+      <button class="menuBtn" data-view="listPlayers">Liste de joueurs</button>
+      <button class="menuBtn" data-view="allMatches">Tous les matchs</button>
+      <button class="menuBtn" data-view="myMatches">Mes matchs</button>
+    </div>
+
+    <!-- View: add player -->
+    <div id="view_addPlayer" style="margin-top:12px;">
+      <h3>Ajouter un joueur (dans ce lieu)</h3>
       <div class="row">
         <div class="col">
           <label for="playerName">Nom complet</label>
@@ -231,718 +77,65 @@
           <button id="addPlayerBtn" class="btnPrimary" type="button">Ajouter</button>
         </div>
       </div>
-      <div class="help">
-        IDs masqués. La DB peut refuser la suppression si une contrainte (foreign key) existe.
-      </div>
+      <div class="help">Le joueur est lié au lieu sélectionné.</div>
+    </div>
 
-      <h3>Liste des joueurs</h3>
+    <!-- View: list players -->
+    <div id="view_listPlayers" class="hidden" style="margin-top:12px;">
+      <h3>Liste des joueurs (ce lieu)</h3>
       <div id="playersEmpty" class="muted">Chargement…</div>
       <div id="playersWrap"></div>
     </div>
 
-    <!-- Matchs -->
-    <div id="tabMatches" class="hidden" style="margin-top:12px;">
-      <h3>Créer un match</h3>
+    <!-- View: matches -->
+    <div id="view_matches" class="hidden" style="margin-top:12px;">
+      <h3>Matchs (session du jour)</h3>
 
-      <!-- iOS wheel: select -->
       <div class="row">
         <div class="col">
           <label for="court">Terrain</label>
           <select id="court"></select>
         </div>
         <div class="col">
-          <label for="statusMatch">Statut</label>
-          <select id="statusMatch">
-            <option value="open">open</option>
-            <option value="locked">locked</option>
-            <option value="done">done</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col">
           <label for="a1">A1</label>
           <select id="a1"></select>
         </div>
         <div class="col">
-          <label for="a2">A2</label>
-          <select id="a2"></select>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col">
           <label for="b1">B1</label>
           <select id="b1"></select>
         </div>
-        <div class="col">
-          <label for="b2">B2</label>
-          <select id="b2"></select>
-        </div>
       </div>
 
       <div class="row">
+        <div class="col">
+          <label for="a2">A2 (optionnel)</label>
+          <select id="a2"></select>
+        </div>
+        <div class="col">
+          <label for="b2">B2 (optionnel)</label>
+          <select id="b2"></select>
+        </div>
         <div class="col" style="flex:0 0 240px;">
           <button id="createMatchBtn" class="btnPrimary" type="button">Créer match</button>
         </div>
       </div>
 
-      <div class="hr"></div>
-      <h3>Derniers matchs</h3>
-      <div id="matchesEmpty" class="muted">Chargement…</div>
-      <div id="matchesWrap"></div>
-    </div>
-
-    <!-- Debug -->
-    <div id="tabDebug" class="hidden" style="margin-top:12px;">
-      <h3>Debug</h3>
       <div class="row">
-        <div class="col" style="flex:0 0 240px;">
-          <button id="refreshBtn" type="button">Rafraîchir</button>
-        </div>
-        <div class="col" style="flex:0 0 240px;">
-          <button id="logoutBtn" class="btnDanger" type="button">Se déconnecter</button>
+        <div class="col" style="flex:0 0 320px;">
+          <button id="finishAllBtn" class="btnDanger" type="button">Terminer tous les matchs en cours</button>
         </div>
       </div>
+
+      <div class="hr"></div>
+
+      <div id="matchesEmpty" class="muted">Chargement…</div>
+      <div id="matchesWrap"></div>
+
       <div class="hr"></div>
       <div id="debug" class="status">…</div>
     </div>
   </div>
 
-  <!-- SETTINGS MODAL -->
-  <div id="settingsOverlay" class="overlay hidden" role="dialog" aria-modal="true">
-    <div class="modal">
-      <div class="modalHead">
-        <strong>Configuration</strong>
-        <button id="settingsCloseBtn" class="iconBtn" type="button" title="Fermer">✕</button>
-      </div>
-      <div class="hr"></div>
-
-      <div class="row">
-        <div class="col">
-          <label for="cfgFullName">Nom complet</label>
-          <input id="cfgFullName" type="text" placeholder="Prénom Nom" />
-          <div class="help">Obligatoire au premier login. Le nom de joueur ne vient pas de l’email.</div>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col">
-          <label for="cfgEmail">Courriel (auth)</label>
-          <input id="cfgEmail" type="email" disabled />
-          <div class="help">Le courriel vient de l’auth. Pour le changer: reconnecte-toi avec un autre email.</div>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col">
-          <label>Rapport par email en fin de session</label>
-          <select id="cfgWantsEmail">
-            <option value="true">Oui</option>
-            <option value="false">Non</option>
-          </select>
-          <div class="help">Sur iPhone, ce select s’ouvre en “roue”.</div>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col" style="flex:0 0 240px;">
-          <button id="saveProfileBtn" class="btnPrimary" type="button">Enregistrer</button>
-        </div>
-      </div>
-
-      <div class="hr"></div>
-      <div id="settingsStatus" class="status">…</div>
-    </div>
-  </div>
-
-  <script>
-    // ============================
-    // CONFIG
-    // ============================
-    const SUPABASE_URL = "https://cehqaxtcfmgjajmmcccz.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlaHFheHRjZm1namFqbW1jY2N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5NTQ1OTUsImV4cCI6MjA4NDUzMDU5NX0.U0IiTLx1_Vd4D8WBkhkO8KOrl3w_ftbPtcIWs_n1KmA"; // <-- mets ta clé ici
-
-    // ============================
-    // STORAGE KEYS
-    // ============================
-    const LS_ACCESS = "pb_access_token";
-    const LS_REFRESH = "pb_refresh_token";
-    const LS_EXPIRES_AT = "pb_expires_at"; // ms epoch
-
-    // ============================
-    // DOM
-    // ============================
-    const loginCard = document.getElementById("loginCard");
-    const appCard = document.getElementById("appCard");
-    const loginStatus = document.getElementById("loginStatus");
-
-    const emailEl = document.getElementById("email");
-    const loginBtn = document.getElementById("loginBtn");
-
-    const authDot = document.getElementById("authDot");
-    const authEmail = document.getElementById("authEmail");
-    const gearBtn = document.getElementById("gearBtn");
-
-    const logoutBtn = document.getElementById("logoutBtn");
-    const refreshBtn = document.getElementById("refreshBtn");
-    const debugEl = document.getElementById("debug");
-
-    const tabs = Array.from(document.querySelectorAll(".tab"));
-    const tabPlayers = document.getElementById("tabPlayers");
-    const tabMatches = document.getElementById("tabMatches");
-    const tabDebug = document.getElementById("tabDebug");
-
-    // Players UI
-    const playerNameEl = document.getElementById("playerName");
-    const addPlayerBtn = document.getElementById("addPlayerBtn");
-    const playersWrap = document.getElementById("playersWrap");
-    const playersEmpty = document.getElementById("playersEmpty");
-
-    // Matches UI
-    const courtEl = document.getElementById("court");
-    const statusMatchEl = document.getElementById("statusMatch");
-    const a1El = document.getElementById("a1");
-    const a2El = document.getElementById("a2");
-    const b1El = document.getElementById("b1");
-    const b2El = document.getElementById("b2");
-    const createMatchBtn = document.getElementById("createMatchBtn");
-    const matchesWrap = document.getElementById("matchesWrap");
-    const matchesEmpty = document.getElementById("matchesEmpty");
-
-    // Settings modal
-    const settingsOverlay = document.getElementById("settingsOverlay");
-    const settingsCloseBtn = document.getElementById("settingsCloseBtn");
-    const cfgFullName = document.getElementById("cfgFullName");
-    const cfgEmail = document.getElementById("cfgEmail");
-    const cfgWantsEmail = document.getElementById("cfgWantsEmail");
-    const saveProfileBtn = document.getElementById("saveProfileBtn");
-    const settingsStatus = document.getElementById("settingsStatus");
-
-    // ============================
-    // STATE
-    // ============================
-    let me = null;
-    let myProfile = null;
-    let cachedPlayers = [];
-    let cachedMatches = [];
-
-    function log(msg){
-      debugEl.textContent = (debugEl.textContent ? debugEl.textContent + "\\n" : "") + msg;
-    }
-
-    function setAuthUI(isAuthed, email){
-      authDot.className = "dot" + (isAuthed ? " ok" : "");
-      authEmail.textContent = isAuthed ? (email || "(connecté)") : "(non connecté)";
-    }
-
-    function showLogin(msg){
-      loginCard.classList.remove("hidden");
-      appCard.classList.add("hidden");
-      loginStatus.textContent = msg || "Prêt.";
-      setAuthUI(false, "");
-    }
-
-    function showApp(){
-      loginCard.classList.add("hidden");
-      appCard.classList.remove("hidden");
-    }
-
-    function openSettings(){
-      settingsOverlay.classList.remove("hidden");
-      settingsStatus.textContent = "…";
-    }
-
-    function closeSettings(){
-      settingsOverlay.classList.add("hidden");
-    }
-
-    function saveTokens({ access_token, refresh_token, expires_in }){
-      if (access_token) localStorage.setItem(LS_ACCESS, access_token);
-      if (refresh_token) localStorage.setItem(LS_REFRESH, refresh_token);
-      if (typeof expires_in === "number"){
-        const expiresAt = Date.now() + (expires_in * 1000);
-        localStorage.setItem(LS_EXPIRES_AT, String(expiresAt));
-      }
-    }
-    function getAccessToken(){ return localStorage.getItem(LS_ACCESS); }
-    function getRefreshToken(){ return localStorage.getItem(LS_REFRESH); }
-    function getExpiresAt(){ return Number(localStorage.getItem(LS_EXPIRES_AT) || "0"); }
-    function clearTokens(){
-      localStorage.removeItem(LS_ACCESS);
-      localStorage.removeItem(LS_REFRESH);
-      localStorage.removeItem(LS_EXPIRES_AT);
-    }
-
-    // ============================
-    // HASH PARSE (magic link)
-    // Supabase renvoie souvent access_token + refresh_token + expires_in
-    // ============================
-    function parseHash(){
-      const hash = (window.location.hash || "").startsWith("#") ? window.location.hash.slice(1) : "";
-      if(!hash) return null;
-      const p = new URLSearchParams(hash);
-      return {
-        access_token: p.get("access_token"),
-        refresh_token: p.get("refresh_token"),
-        expires_in: p.get("expires_in") ? Number(p.get("expires_in")) : null,
-        error: p.get("error"),
-        error_description: p.get("error_description")
-      };
-    }
-
-    // ============================
-    // REST Fetch
-    // ============================
-    async function apiFetch(path, { method="GET", headers={}, body=null } = {}){
-      const token = getAccessToken();
-      const url = `${SUPABASE_URL}${path}`;
-      const finalHeaders = {
-        apikey: SUPABASE_ANON_KEY,
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...headers
-      };
-      const opts = { method, headers: finalHeaders };
-      if(body !== null) opts.body = body;
-
-      let r, text;
-      try{
-        r = await fetch(url, opts);
-        text = await r.text();
-      }catch(e){
-        throw new Error(`FETCH FAILED: ${e?.message || e}`);
-      }
-      if(!r.ok){
-        throw new Error(`${method} ${path} -> ${r.status}\\n${text}`);
-      }
-      const trimmed = (text || "").trim();
-      return trimmed ? JSON.parse(trimmed) : null;
-    }
-
-    // ============================
-    // Auth: send magic link
-    // ============================
-    async function sendMagicLink(email){
-      loginBtn.disabled = true;
-      loginStatus.textContent = "Envoi du lien…";
-      try{
-        await apiFetch("/auth/v1/otp", {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({
-            email,
-            create_user: true,
-            redirect_to: window.location.origin + window.location.pathname
-          })
-        });
-        loginStatus.textContent = "Lien envoyé. Vérifie ton courriel.";
-      }catch(e){
-        loginStatus.textContent = "Erreur: " + e.message;
-        log("[OTP ERROR]\\n" + e.message);
-      }finally{
-        loginBtn.disabled = false;
-      }
-    }
-
-    // ============================
-    // Auth: refresh token (keeps session alive)
-    // ============================
-    async function refreshSessionIfNeeded(){
-      const access = getAccessToken();
-      const refresh = getRefreshToken();
-      const exp = getExpiresAt();
-
-      if(!access || !refresh) return false;
-
-      // refresh si expire dans < 5 minutes
-      const msLeft = exp - Date.now();
-      if(msLeft > 5 * 60 * 1000) return true;
-
-      try{
-        const url = `${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`;
-        const r = await fetch(url, {
-          method: "POST",
-          headers: {
-            apikey: SUPABASE_ANON_KEY,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ refresh_token: refresh })
-        });
-        const text = await r.text();
-        if(!r.ok) throw new Error(`REFRESH -> ${r.status}\\n${text}`);
-        const data = JSON.parse(text);
-
-        // data: access_token, refresh_token, expires_in
-        saveTokens(data);
-        log("[AUTH REFRESH OK]");
-        return true;
-      }catch(e){
-        log("[AUTH REFRESH ERROR]\\n" + e.message);
-        clearTokens();
-        return false;
-      }
-    }
-
-    // ============================
-    // Load user + profile
-    // ============================
-    async function loadUser(){
-      me = await apiFetch("/auth/v1/user");
-      return me;
-    }
-
-    async function loadMyProfile(){
-      // profile key = auth.uid
-      const rows = await apiFetch(`/rest/v1/profiles?select=user_id,email,full_name,wants_email,is_admin&user_id=eq.${me.id}`);
-      myProfile = (rows && rows[0]) ? rows[0] : null;
-      return myProfile;
-    }
-
-    async function upsertProfile({ full_name, wants_email }){
-      // upsert: insert if missing else update
-      const payload = {
-        user_id: me.id,
-        email: me.email,
-        full_name: full_name,
-        wants_email: wants_email
-      };
-
-      // Try INSERT first, if conflict then PATCH via upsert header
-      const inserted = await apiFetch(`/rest/v1/profiles?select=user_id,email,full_name,wants_email,is_admin`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Prefer": "resolution=merge-duplicates,return=representation"
-        },
-        body: JSON.stringify(payload)
-      });
-      myProfile = (inserted && inserted[0]) ? inserted[0] : myProfile;
-      return myProfile;
-    }
-
-    // ============================
-    // Players
-    // ============================
-    function escapeHtml(s){
-      return String(s || "")
-        .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;").replaceAll("'","&#039;");
-    }
-
-    function fillPlayerSelect(sel){
-      sel.innerHTML = "";
-      const opt0 = document.createElement("option");
-      opt0.value = "";
-      opt0.textContent = "(choisir)";
-      sel.appendChild(opt0);
-
-      for(const p of cachedPlayers){
-        const opt = document.createElement("option");
-        opt.value = p.id;
-        opt.textContent = p.name; // name only, no id
-        sel.appendChild(opt);
-      }
-    }
-
-    async function loadPlayers(){
-      cachedPlayers = await apiFetch("/rest/v1/players?select=id,name,created_at&order=created_at.asc") || [];
-
-      playersWrap.innerHTML = "";
-      if(!cachedPlayers.length){
-        playersEmpty.textContent = "(aucun joueur)";
-      }else{
-        playersEmpty.textContent = "";
-        for(const p of cachedPlayers){
-          const row = document.createElement("div");
-          row.className = "listItem";
-
-          const left = document.createElement("div");
-          left.innerHTML = `<div class="name">${escapeHtml(p.name)}</div>`;
-
-          const actions = document.createElement("div");
-
-          const del = document.createElement("button");
-          del.className = "miniBtn btnDanger";
-          del.textContent = "Suppr.";
-          del.onclick = async () => {
-            if(!confirm(`Supprimer "${p.name}" ?`)) return;
-            try{
-              await apiFetch(`/rest/v1/players?id=eq.${p.id}`, { method:"DELETE" });
-              log(`[PLAYER DELETE OK] ${p.name}`);
-              await refreshAll();
-            }catch(e){
-              log("[PLAYER DELETE ERROR]\\n" + e.message);
-              alert("Suppression refusée. Probable: joueur utilisé ailleurs (clé étrangère).");
-            }
-          };
-
-          actions.appendChild(del);
-          row.appendChild(left);
-          row.appendChild(actions);
-          playersWrap.appendChild(row);
-        }
-      }
-
-      fillPlayerSelect(a1El); fillPlayerSelect(a2El); fillPlayerSelect(b1El); fillPlayerSelect(b2El);
-    }
-
-    async function addPlayer(name){
-      const inserted = await apiFetch("/rest/v1/players?select=id,name,created_at", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json", "Prefer":"return=representation" },
-        body: JSON.stringify({ name })
-      });
-      log("[PLAYER INSERT OK]\\n" + JSON.stringify(inserted, null, 2));
-    }
-
-    // ============================
-    // Matches (simple version: requires your table columns NOT NULL)
-    // ============================
-    function initCourtSelect(max=8){
-      courtEl.innerHTML = "";
-      for(let i=1;i<=max;i++){
-        const o = document.createElement("option");
-        o.value = String(i);
-        o.textContent = `Terrain ${i}`;
-        courtEl.appendChild(o);
-      }
-    }
-
-    async function loadMatches(){
-      cachedMatches = await apiFetch("/rest/v1/matches?select=id,court,status,a1,a2,b1,b2,created_at&order=created_at.desc") || [];
-      matchesWrap.innerHTML = "";
-
-      if(!cachedMatches.length){
-        matchesEmpty.textContent = "(aucun match)";
-        return;
-      }
-      matchesEmpty.textContent = "";
-
-      const byId = (id)=> (cachedPlayers.find(p=>p.id===id)?.name || "(?)");
-
-      for(const m of cachedMatches.slice(0, 10)){
-        const box = document.createElement("div");
-        box.className = "listItem";
-        box.style.flexDirection = "column";
-        box.style.alignItems = "stretch";
-
-        const top = document.createElement("div");
-        top.style.display = "flex";
-        top.style.justifyContent = "space-between";
-        top.style.gap = "10px";
-
-        const t = document.createElement("div");
-        t.innerHTML = `<div class="name">Terrain ${m.court} — ${escapeHtml(m.status || "")}</div>
-                       <div class="muted" style="font-size:12px;margin-top:2px">
-                         A: ${escapeHtml(byId(m.a1))} + ${escapeHtml(byId(m.a2))} •
-                         B: ${escapeHtml(byId(m.b1))} + ${escapeHtml(byId(m.b2))}
-                       </div>`;
-
-        top.appendChild(t);
-        box.appendChild(top);
-        matchesWrap.appendChild(box);
-      }
-    }
-
-    async function createMatch(){
-      const court = Number(courtEl.value);
-      const status = statusMatchEl.value;
-      const a1 = a1El.value || null;
-      const a2 = a2El.value || null;
-      const b1 = b1El.value || null;
-      const b2 = b2El.value || null;
-
-      if(!Number.isFinite(court) || court <= 0) return alert("Terrain invalide");
-      if(!a1 || !a2 || !b1 || !b2) return alert("A1, A2, B1, B2 requis.");
-
-      const payload = { court, status, a1, a2, b1, b2 };
-
-      const inserted = await apiFetch("/rest/v1/matches?select=id,court,status,a1,a2,b1,b2,created_at", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json", "Prefer":"return=representation" },
-        body: JSON.stringify(payload)
-      });
-
-      log("[MATCH INSERT OK]\\n" + JSON.stringify(inserted, null, 2));
-    }
-
-    // ============================
-    // Tabs
-    // ============================
-    function switchTab(tabId){
-      tabPlayers.classList.toggle("hidden", tabId !== "tabPlayers");
-      tabMatches.classList.toggle("hidden", tabId !== "tabMatches");
-      tabDebug.classList.toggle("hidden", tabId !== "tabDebug");
-      tabs.forEach(b => b.classList.toggle("active", b.dataset.tab === tabId));
-    }
-    tabs.forEach(b => b.addEventListener("click", () => switchTab(b.dataset.tab)));
-
-    // ============================
-    // Refresh all
-    // ============================
-    async function refreshAll(){
-      await loadPlayers();
-      await loadMatches();
-    }
-
-    // ============================
-    // Events
-    // ============================
-    loginBtn.addEventListener("click", async () => {
-      const email = (emailEl.value || "").trim();
-      if(!email) return alert("Courriel requis");
-      await sendMagicLink(email);
-    });
-
-    logoutBtn.addEventListener("click", () => {
-      clearTokens();
-      location.href = window.location.origin + window.location.pathname;
-    });
-
-    refreshBtn.addEventListener("click", async () => {
-      try{
-        await refreshAll();
-        alert("OK");
-      }catch(e){
-        log("[REFRESH ERROR]\\n" + e.message);
-        alert("Erreur refresh (voir debug).");
-      }
-    });
-
-    addPlayerBtn.addEventListener("click", async () => {
-      const name = (playerNameEl.value || "").trim();
-      if(!name) return alert("Nom requis");
-      addPlayerBtn.disabled = true;
-      try{
-        await addPlayer(name);
-        playerNameEl.value = "";
-        await refreshAll();
-      }catch(e){
-        log("[ADD PLAYER ERROR]\\n" + e.message);
-        alert("Erreur ajout joueur (voir debug).");
-      }finally{
-        addPlayerBtn.disabled = false;
-      }
-    });
-
-    createMatchBtn.addEventListener("click", async () => {
-      createMatchBtn.disabled = true;
-      try{
-        await createMatch();
-        await loadMatches();
-        alert("Match créé.");
-      }catch(e){
-        log("[MATCH INSERT ERROR]\\n" + e.message);
-        alert("Erreur création match (voir debug).");
-      }finally{
-        createMatchBtn.disabled = false;
-      }
-    });
-
-    gearBtn.addEventListener("click", async () => {
-      // Pre-fill modal
-      cfgEmail.value = me?.email || "";
-      cfgFullName.value = myProfile?.full_name || "";
-      cfgWantsEmail.value = String(!!myProfile?.wants_email);
-      openSettings();
-    });
-
-    settingsCloseBtn.addEventListener("click", closeSettings);
-    settingsOverlay.addEventListener("click", (e) => {
-      if(e.target === settingsOverlay) closeSettings();
-    });
-
-    saveProfileBtn.addEventListener("click", async () => {
-      const fullName = (cfgFullName.value || "").trim();
-      if(!fullName){
-        settingsStatus.textContent = "Nom complet requis.";
-        return;
-      }
-      const wantsEmail = (cfgWantsEmail.value === "true");
-      saveProfileBtn.disabled = true;
-      settingsStatus.textContent = "Enregistrement…";
-      try{
-        const p = await upsertProfile({ full_name: fullName, wants_email: wantsEmail });
-        settingsStatus.textContent = "OK.";
-        // show name somewhere later; for now auth badge stays email
-        myProfile = p;
-        closeSettings();
-      }catch(e){
-        settingsStatus.textContent = "Erreur sauvegarde profil.\\n" + e.message;
-        alert("Erreur sauvegarde profil (voir le message).\\n\\nSi ça dit 404 profiles: tu n'as pas exécuté le SQL.");
-      }finally{
-        saveProfileBtn.disabled = false;
-      }
-    });
-
-    // ============================
-    // Init
-    // ============================
-    (async function init(){
-      debugEl.textContent = "";
-      initCourtSelect(12);
-
-      // handle magic link return
-      const hp = parseHash();
-      if(hp?.error){
-        showLogin(`Erreur auth: ${hp.error}\\n${hp.error_description || ""}`);
-        history.replaceState(null, "", window.location.pathname + window.location.search);
-        return;
-      }
-      if(hp?.access_token){
-        saveTokens({
-          access_token: hp.access_token,
-          refresh_token: hp.refresh_token,
-          expires_in: hp.expires_in ?? 3600
-        });
-        history.replaceState(null, "", window.location.pathname + window.location.search);
-      }
-
-      // refresh if needed before loading user
-      const ok = await refreshSessionIfNeeded();
-      const token = getAccessToken();
-      if(!token){
-        showLogin();
-        return;
-      }
-
-      showApp();
-      try{
-        await loadUser();
-        setAuthUI(true, me.email);
-        log("[AUTH OK] " + me.email);
-
-        // load profile; if missing => force settings open
-        try{
-          await loadMyProfile();
-        }catch(e){
-          // If profiles table missing you'll see it here too
-          log("[PROFILE LOAD ERROR]\\n" + e.message);
-        }
-
-        if(!myProfile || !myProfile.full_name){
-          // force user to set it
-          cfgEmail.value = me.email;
-          cfgFullName.value = "";
-          cfgWantsEmail.value = "false";
-          openSettings();
-          settingsStatus.textContent = "Au premier login, tu dois définir ton nom complet.";
-        }
-
-        await refreshAll();
-
-        // Keep session alive: refresh every 10 minutes
-        setInterval(async () => {
-          await refreshSessionIfNeeded();
-        }, 10 * 60 * 1000);
-
-      }catch(e){
-        log("[INIT ERROR]\\n" + e.message);
-        clearTokens();
-        showLogin("Session invalide. Reconnecte-toi.");
-      }
-    })();
-  </script>
+  <script type="module" src="js/ui-main.js"></script>
 </body>
 </html>
