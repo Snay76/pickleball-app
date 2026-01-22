@@ -1,3 +1,5 @@
+import { APP_VERSION } from "./config.js";
+
 function wireLogin(){
   const emailEl = document.getElementById("email");
   const loginBtn = document.getElementById("loginBtn");
