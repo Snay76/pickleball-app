@@ -10,10 +10,7 @@
       --bg:#0b1220; --card:#121b2f; --muted:#9fb0d0; --text:#e8efff;
       --line:rgba(255,255,255,.12);
       --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --accent:#60a5fa;
-      --btn:#1f2a44; --btn2:#223357;
-      --radius:16px;
-      --pad:16px;
-      --tap:56px;
+      --radius:16px; --pad:16px; --tap:58px;
       --shadow: 0 10px 30px rgba(0,0,0,.35);
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       --sans: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -25,9 +22,9 @@
       color:var(--text);
       padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
     }
-    h1{ margin: 8px 0 4px; font-size: 22px; letter-spacing:.2px; }
-    h2{ margin: 0 0 8px; font-size: 18px; }
-    h3{ margin: 16px 0 8px; font-size: 16px; color: #d7e3ff; }
+    h1{ margin: 6px 0 2px; font-size: 22px; letter-spacing:.2px; }
+    h2{ margin: 0 0 10px; font-size: 18px; }
+    h3{ margin: 16px 0 10px; font-size: 16px; color: #d7e3ff; }
     .topbar{
       display:flex; align-items:center; justify-content:space-between;
       gap:12px; padding: 10px 12px; border:1px solid var(--line);
@@ -37,45 +34,44 @@
     }
     .brand{ display:flex; flex-direction:column; gap:2px; }
     .brand small{ color:var(--muted); font-size:12px; }
-
-    /* Right side topbar: email + tiny connected icon + gear */
-    .topActions{ display:flex; align-items:center; gap:10px; }
-    .topEmail{ color:var(--muted); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 190px; }
-    .connIcon{
-      width:10px; height:10px; border-radius:999px; background: var(--warn);
-      box-shadow: 0 0 0 4px rgba(255,255,255,.06);
-    }
-    .connIcon.ok{ background: var(--ok); }
-    .connIcon.bad{ background: var(--bad); }
-
+    .rightTop{ display:flex; align-items:center; gap:10px; }
     .iconBtn{
-      height: 44px; min-width:44px;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.04);
+      width: 46px; height: 46px; border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
       color: var(--text);
-      font-weight: 900;
-      cursor: pointer;
-      display:flex; align-items:center; justify-content:center;
-      user-select:none;
-      touch-action: manipulation;
+      display:inline-flex; align-items:center; justify-content:center;
+      cursor:pointer; user-select:none; touch-action: manipulation;
+      font-size: 18px;
     }
-    .iconBtn:disabled{ opacity:.55; cursor:not-allowed; }
+    .authMini{
+      display:flex; align-items:center; gap:10px;
+      padding: 8px 10px; border:1px solid var(--line); border-radius: 999px;
+      background: rgba(255,255,255,.03);
+      max-width: 58vw;
+    }
+    .dot{ width:10px; height:10px; border-radius:999px; background: var(--warn); flex:0 0 auto; }
+    .dot.ok{ background: var(--ok); }
+    .dot.bad{ background: var(--bad); }
+    .authEmail{
+      font-size: 12px; color: var(--muted);
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
 
-    .grid{ display:grid; gap: 12px; margin-top: 14px; }
     .card{
       border:1px solid var(--line);
       background: rgba(255,255,255,.04);
       border-radius: var(--radius);
       padding: var(--pad);
       box-shadow: var(--shadow);
+      margin-top: 14px;
     }
     .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:end; }
     .col{ display:flex; flex-direction:column; gap:8px; flex:1 1 220px; }
     label{ font-weight:800; font-size: 13px; color:#d7e3ff; }
-    input, textarea{
+    input, select{
       width:100%;
-      min-height: var(--tap);
+      height: var(--tap);
       padding: 12px 14px;
       border-radius: 14px;
       border: 1px solid var(--line);
@@ -84,7 +80,6 @@
       outline: none;
       font-size: 16px;
     }
-    textarea{ min-height: 120px; resize: vertical; }
     input::placeholder{ color: rgba(232,239,255,.45); }
     button{
       height: var(--tap);
@@ -108,9 +103,7 @@
       background: linear-gradient(180deg, rgba(239,68,68,.28), rgba(239,68,68,.10));
       border-color: rgba(239,68,68,.40);
     }
-    .btnGhost{
-      background: rgba(255,255,255,.03);
-    }
+    .btnGhost{ background: rgba(255,255,255,.03); }
     .help{ color: var(--muted); font-size: 13px; margin-top: 6px; line-height:1.35; }
     .status{
       font-family: var(--mono);
@@ -122,12 +115,12 @@
       padding: 10px 12px;
       background: rgba(0,0,0,.18);
     }
-    .muted{ color: var(--muted); }
     .hidden{ display:none !important; }
+    .muted{ color: var(--muted); }
 
     .tabs{
       display:grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 10px;
       margin-top: 12px;
     }
@@ -148,127 +141,34 @@
       display:flex; justify-content:space-between; align-items:center; gap:10px;
       padding: 10px 12px; border:1px solid var(--line); border-radius: 14px;
       background: rgba(0,0,0,.12);
+      margin-top: 10px;
     }
-    .listItem .name{ font-weight:900; }
-    .listItem .meta{ font-family: var(--mono); font-size: 11px; color: var(--muted); }
-    .listItem .actions{ display:flex; gap:10px; }
-    .miniBtn{
-      height: 44px; min-width: 44px;
-      border-radius: 14px;
-      font-size: 14px;
-      padding: 0 12px;
-    }
-
-    .sep{ height:1px; background: var(--line); margin: 14px 0; }
-
-    .matchBox{
-      border:1px solid var(--line);
-      border-radius: 16px;
-      padding: 12px;
-      background: rgba(0,0,0,.12);
-    }
-    .teams{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:10px;
-    }
-    .teamRow{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      padding: 10px 12px; border-radius: 14px;
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.10);
-    }
-    .teamRow strong{ font-size: 15px; }
-    .scoreInput{
-      width: 100px;
-      text-align:center;
-      min-height: 48px;
-      border-radius: 14px;
-      font-weight: 900;
-      font-size: 20px;
-    }
-    .small{ font-size: 12px; color: var(--muted); }
-
-    /* "Picker" fake input */
-    .pickInput{
-      display:flex; align-items:center; justify-content:space-between;
-      min-height: var(--tap);
-      padding: 12px 14px;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: rgba(0,0,0,.2);
-      cursor:pointer;
-      user-select:none;
-    }
-    .pickInput .value{ font-size:16px; }
-    .pickInput .chev{ color: rgba(232,239,255,.55); font-weight: 900; }
+    .name{ font-weight: 950; }
+    .miniBtn{ height: 44px; min-width: 44px; border-radius: 14px; font-size: 14px; padding: 0 12px; }
 
     /* Modal */
-    .modalBackdrop{
-      position:fixed; inset:0;
+    .overlay{
+      position: fixed; inset: 0;
       background: rgba(0,0,0,.55);
       display:flex; align-items:flex-end; justify-content:center;
-      z-index: 9999;
-      padding: 12px;
+      padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+      z-index: 1000;
     }
     .modal{
-      width:min(920px, 100%);
+      width: min(900px, 100%);
       border:1px solid var(--line);
-      border-radius: 18px;
-      background: rgba(18,27,47,.95);
+      background: rgba(18,27,47,.98);
+      border-radius: 22px;
       box-shadow: var(--shadow);
-      overflow:hidden;
+      padding: 14px;
     }
-    .modalHeader{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      padding: 12px;
-      border-bottom: 1px solid var(--line);
-    }
-    .modalHeader .title{ font-weight: 900; }
-    .modalBody{ padding: 12px; }
-    .modalFooter{
-      display:flex; gap:10px; justify-content:flex-end;
-      padding: 12px;
-      border-top: 1px solid var(--line);
-    }
-
-    /* Wheel picker (iOS-ish) */
-    .wheelWrap{
-      position:relative;
-      height: 220px;
-      border:1px solid var(--line);
-      border-radius: 16px;
-      background: rgba(0,0,0,.18);
-      overflow:hidden;
-    }
-    .wheel{
-      height: 220px;
-      overflow-y: auto;
-      scroll-snap-type: y mandatory;
-      -webkit-overflow-scrolling: touch;
-      padding: 88px 0; /* centers items */
-    }
-    .wheelItem{
-      height: 44px;
-      display:flex; align-items:center; justify-content:center;
-      scroll-snap-align: center;
-      font-weight: 900;
-      color: rgba(232,239,255,.85);
-    }
-    .wheelItem.dim{ color: rgba(232,239,255,.40); font-weight: 800; }
-    .wheelHighlight{
-      position:absolute; left:0; right:0;
-      top: calc(50% - 22px);
-      height: 44px;
-      border-top: 1px solid rgba(255,255,255,.14);
-      border-bottom: 1px solid rgba(255,255,255,.14);
-      pointer-events:none;
-      background: rgba(255,255,255,.04);
-    }
+    .modalHead{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .modalHead strong{ font-size: 16px; }
+    .hr{ height:1px; background: var(--line); margin: 12px 0; }
 
     @media (min-width: 840px){
       body{ max-width: 860px; margin: 0 auto; }
-      .teams{ grid-template-columns: 1fr 1fr; }
+      .tabs{ grid-template-columns: repeat(3, 1fr); }
     }
   </style>
 </head>
@@ -276,350 +176,184 @@
 <body>
   <div class="topbar">
     <div class="brand">
-      <div style="font-weight:900">Pickleball</div>
-      <small id="versionText">Version: 2026-01-21-APP-SESSION-002</small>
+      <div style="font-weight:950">Pickleball</div>
+      <small id="versionText">Version: 2026-01-21-APP-SESSION-003</small>
     </div>
 
-    <div class="topActions">
-      <div id="topEmail" class="topEmail">(non connecté)</div>
-      <div id="connIcon" class="connIcon"></div>
-      <button id="gearBtn" class="iconBtn" type="button" title="Configuration">⚙︎</button>
+    <div class="rightTop">
+      <div class="authMini" title="Statut d'authentification">
+        <span id="authDot" class="dot"></span>
+        <span id="authEmail" class="authEmail">(non connecté)</span>
+      </div>
+      <button id="gearBtn" class="iconBtn" type="button" title="Configuration">⚙️</button>
     </div>
   </div>
 
-  <!-- ===== LOGIN / ONBOARDING ===== -->
-  <div id="loginCard" class="card" style="margin-top:14px;">
+  <!-- LOGIN -->
+  <div id="loginCard" class="card">
     <h2>Connexion</h2>
 
+    <div class="row">
+      <div class="col">
+        <label for="email">Courriel</label>
+        <input id="email" type="email" placeholder="nom@exemple.com" autocomplete="email" inputmode="email" />
+      </div>
+      <div class="col" style="flex:0 0 240px;">
+        <button id="loginBtn" class="btnPrimary" type="button">Recevoir un lien</button>
+      </div>
+    </div>
+
     <div class="help">
-      Inscription/connexion par courriel. Au premier login, tu dois définir <b>Prénom Nom</b> (pas de nom auto basé sur l’email).
+      Tu reçois un lien par courriel. Clique-le. La session restera active (refresh token) pour éviter les déconnexions.
     </div>
 
-    <div class="sep"></div>
-
-    <div class="row">
-      <div class="col">
-        <label for="authEmail">Courriel</label>
-        <input id="authEmail" type="email" placeholder="nom@exemple.com" autocomplete="email" inputmode="email" />
-      </div>
-      <div class="col" style="flex:0 0 220px;">
-        <button id="sendLinkBtn" class="btnPrimary" type="button">Recevoir un lien</button>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col">
-        <label for="fullNameFirst">Nom complet (pour ton profil)</label>
-        <input id="fullNameFirst" type="text" placeholder="Ex: Yans Côté" />
-        <div class="help">Obligatoire au premier login (et modifiable via ⚙︎).</div>
-      </div>
-    </div>
-
-    <div class="sep"></div>
-
+    <div class="hr"></div>
     <div id="loginStatus" class="status">Prêt.</div>
   </div>
 
-  <!-- ===== APP ===== -->
-  <div id="appCard" class="card hidden" style="margin-top:14px;">
-    <div class="row" style="align-items:center;">
-      <div class="col">
-        <div style="font-weight:900; font-size:16px;">
-          Session active : <span id="sessionNameTop" class="muted">(aucune)</span>
-        </div>
-        <div class="small">Sélectionne/Crée une session. Une session ne peut pas être créée deux fois (nom unique).</div>
-      </div>
-      <div class="col" style="flex:0 0 220px;">
-        <button id="logoutBtn" class="btnDanger" type="button">Se déconnecter</button>
-      </div>
-    </div>
-
+  <!-- APP -->
+  <div id="appCard" class="card hidden">
     <div class="tabs">
-      <button class="tab active" data-tab="tabSessions">Sessions</button>
-      <button class="tab" data-tab="tabPlayers">Joueurs</button>
-      <button class="tab" data-tab="tabGen">Générateur</button>
-      <button class="tab" data-tab="tabMatch">Match</button>
-      <button class="tab" data-tab="tabReports">Rapports</button>
+      <button class="tab active" data-tab="tabPlayers">Joueurs</button>
+      <button class="tab" data-tab="tabMatches">Matchs</button>
+      <button class="tab" data-tab="tabDebug">Debug</button>
     </div>
 
-    <!-- ===== TAB: Sessions ===== -->
-    <div id="tabSessions" class="grid">
-      <div class="card" style="padding:0; background:transparent; border:none; box-shadow:none;">
-        <h3>Créer / sélectionner une session</h3>
-
-        <div class="row">
-          <div class="col">
-            <label>Session (nom unique)</label>
-            <div id="sessionPick" class="pickInput" role="button" tabindex="0">
-              <div class="value" id="sessionPickVal">(choisir)</div>
-              <div class="chev">›</div>
-            </div>
-            <div class="help">
-              Format recommandé: <b>Ste-Élie Débutant - 2026</b>. Nom unique: si existe déjà, impossible de recréer.
-            </div>
-          </div>
-
-          <div class="col" style="flex:0 0 220px;">
-            <button id="newSessionBtn" class="btnPrimary" type="button">Créer session</button>
-          </div>
+    <!-- Joueurs -->
+    <div id="tabPlayers" style="margin-top:12px;">
+      <h3>Ajouter un joueur</h3>
+      <div class="row">
+        <div class="col">
+          <label for="playerName">Nom complet</label>
+          <input id="playerName" type="text" placeholder="Ex: Yans Côté" />
         </div>
-
-        <div class="row">
-          <div class="col">
-            <label for="sessionName">Nom de la session</label>
-            <input id="sessionName" type="text" placeholder="Ex: Ste-Élie Débutant - 2026" />
-          </div>
-          <div class="col">
-            <label for="sessionEnded">Saison terminée</label>
-            <div id="sessionEndedPick" class="pickInput" role="button" tabindex="0">
-              <div class="value" id="sessionEndedVal">Non</div>
-              <div class="chev">›</div>
-            </div>
-          </div>
+        <div class="col" style="flex:0 0 240px;">
+          <button id="addPlayerBtn" class="btnPrimary" type="button">Ajouter</button>
         </div>
-
-        <div class="row">
-          <div class="col" style="flex:0 0 220px;">
-            <button id="setDefaultSessionBtn" type="button">Définir par défaut</button>
-          </div>
-          <div class="col" style="flex:0 0 220px;">
-            <button id="markSessionCompleteBtn" class="btnPrimary" type="button">Session complétée</button>
-          </div>
-        </div>
-
-        <div class="sep"></div>
-        <div id="sessionsStatus" class="status">…</div>
       </div>
+      <div class="help">
+        IDs masqués. La DB peut refuser la suppression si une contrainte (foreign key) existe.
+      </div>
+
+      <h3>Liste des joueurs</h3>
+      <div id="playersEmpty" class="muted">Chargement…</div>
+      <div id="playersWrap"></div>
     </div>
 
-    <!-- ===== TAB: Players ===== -->
-    <div id="tabPlayers" class="grid hidden">
-      <div class="card" style="padding:0; background:transparent; border:none; box-shadow:none;">
-        <h3>Ajouter un joueur à la session</h3>
+    <!-- Matchs -->
+    <div id="tabMatches" class="hidden" style="margin-top:12px;">
+      <h3>Créer un match</h3>
 
-        <div class="row">
-          <div class="col">
-            <label for="playerFullName">Nom complet</label>
-            <input id="playerFullName" type="text" placeholder="Ex: Prénom Nom" />
-          </div>
-          <div class="col">
-            <label for="playerEmail">Courriel (optionnel)</label>
-            <input id="playerEmail" type="email" placeholder="nom@exemple.com" />
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col">
-            <label>Recevoir les résultats par email</label>
-            <div id="wantsEmailPick" class="pickInput" role="button" tabindex="0">
-              <div class="value" id="wantsEmailVal">Non</div>
-              <div class="chev">›</div>
-            </div>
-          </div>
-          <div class="col" style="flex:0 0 220px;">
-            <button id="addPlayerToSessionBtn" class="btnPrimary" type="button">Ajouter</button>
-          </div>
-        </div>
-
-        <div class="help">
-          Chaque joueur peut s’ajouter lui-même. Les admins peuvent en ajouter d’autres. Les IDs sont masqués dans l’UI.
-        </div>
-
-        <div class="sep"></div>
-
-        <h3>Joueurs de la session</h3>
-        <div id="playersEmpty" class="muted">Chargement…</div>
-        <div id="playersWrap"></div>
-      </div>
-    </div>
-
-    <!-- ===== TAB: Generator ===== -->
-    <div id="tabGen" class="grid hidden">
-      <h3>Générateur d’équipes</h3>
-
+      <!-- iOS wheel: select -->
       <div class="row">
         <div class="col">
-          <label>Mode de jeu</label>
-          <div id="gameTypePick" class="pickInput" role="button" tabindex="0">
-            <div class="value" id="gameTypeVal">Double</div>
-            <div class="chev">›</div>
-          </div>
+          <label for="court">Terrain</label>
+          <select id="court"></select>
         </div>
-
         <div class="col">
-          <label>Nombre de terrains</label>
-          <div id="courtsPick" class="pickInput" role="button" tabindex="0">
-            <div class="value" id="courtsVal">1</div>
-            <div class="chev">›</div>
-          </div>
-        </div>
-
-        <div class="col">
-          <label>Répartition</label>
-          <div id="assignModePick" class="pickInput" role="button" tabindex="0">
-            <div class="value" id="assignModeVal">Au hasard</div>
-            <div class="chev">›</div>
-          </div>
+          <label for="statusMatch">Statut</label>
+          <select id="statusMatch">
+            <option value="open">open</option>
+            <option value="locked">locked</option>
+            <option value="done">done</option>
+          </select>
         </div>
       </div>
 
       <div class="row">
         <div class="col">
-          <label>Algorithme</label>
-          <div id="algoPick" class="pickInput" role="button" tabindex="0">
-            <div class="value" id="algoVal">Aléatoire</div>
-            <div class="chev">›</div>
-          </div>
-          <div class="help">
-            “Performance” utilise une formule X basée sur les scores précédents (expliquée dans le code; ajustable).
-          </div>
-        </div>
-
-        <div class="col" style="flex:0 0 220px;">
-          <button id="genBtn" class="btnPrimary" type="button">Générer</button>
-        </div>
-      </div>
-
-      <div id="genOutput" class="grid"></div>
-    </div>
-
-    <!-- ===== TAB: Match ===== -->
-    <div id="tabMatch" class="grid hidden">
-      <h3>Créer un match + pointage</h3>
-
-      <div class="row">
-        <div class="col">
-          <label>Terrain</label>
-          <div id="matchCourtPick" class="pickInput" role="button" tabindex="0">
-            <div class="value" id="matchCourtVal">1</div>
-            <div class="chev">›</div>
-          </div>
+          <label for="a1">A1</label>
+          <select id="a1"></select>
         </div>
         <div class="col">
-          <label>Mode</label>
-          <div id="matchTypePick" class="pickInput" role="button" tabindex="0">
-            <div class="value" id="matchTypeVal">Double</div>
-            <div class="chev">›</div>
-          </div>
-        </div>
-        <div class="col">
-          <label>Statut</label>
-          <div id="matchStatusPick" class="pickInput" role="button" tabindex="0">
-            <div class="value" id="matchStatusVal">open</div>
-            <div class="chev">›</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="sep"></div>
-
-      <div class="row">
-        <div class="col">
-          <label>A1</label>
-          <div id="pickA1" class="pickInput" role="button" tabindex="0"><div class="value" id="valA1">(choisir)</div><div class="chev">›</div></div>
-        </div>
-        <div class="col" id="colA2">
-          <label>A2</label>
-          <div id="pickA2" class="pickInput" role="button" tabindex="0"><div class="value" id="valA2">(choisir)</div><div class="chev">›</div></div>
-        </div>
-        <div class="col">
-          <label>B1</label>
-          <div id="pickB1" class="pickInput" role="button" tabindex="0"><div class="value" id="valB1">(choisir)</div><div class="chev">›</div></div>
-        </div>
-        <div class="col" id="colB2">
-          <label>B2</label>
-          <div id="pickB2" class="pickInput" role="button" tabindex="0"><div class="value" id="valB2">(choisir)</div><div class="chev">›</div></div>
+          <label for="a2">A2</label>
+          <select id="a2"></select>
         </div>
       </div>
 
       <div class="row">
-        <div class="col" style="flex:0 0 220px;">
+        <div class="col">
+          <label for="b1">B1</label>
+          <select id="b1"></select>
+        </div>
+        <div class="col">
+          <label for="b2">B2</label>
+          <select id="b2"></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col" style="flex:0 0 240px;">
           <button id="createMatchBtn" class="btnPrimary" type="button">Créer match</button>
         </div>
       </div>
 
-      <div class="sep"></div>
-
-      <div class="matchBox">
-        <div class="teams">
-          <div class="teamRow">
-            <div>
-              <div class="small">Équipe A</div>
-              <strong id="teamAName">(non défini)</strong>
-            </div>
-            <input id="scoreA" class="scoreInput" type="number" min="0" step="1" value="0" />
-          </div>
-
-          <div class="teamRow">
-            <div>
-              <div class="small">Équipe B</div>
-              <strong id="teamBName">(non défini)</strong>
-            </div>
-            <input id="scoreB" class="scoreInput" type="number" min="0" step="1" value="0" />
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:12px;">
-          <div class="col" style="flex:0 0 220px;">
-            <button id="submitScoreBtn" class="btnPrimary" type="button">Soumettre (termine la partie)</button>
-          </div>
-          <div class="col">
-            <div class="help">
-              Quand tu soumets, le match passe à <code>done</code> et <code>completed_at</code> est rempli.
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="sep"></div>
-
-      <h3>Voir les matchs</h3>
-      <div class="row">
-        <div class="col">
-          <label>Filtre</label>
-          <div id="matchFilterPick" class="pickInput" role="button" tabindex="0">
-            <div class="value" id="matchFilterVal">Tous</div>
-            <div class="chev">›</div>
-          </div>
-        </div>
-        <div class="col" id="filterPlayerCol">
-          <label>Joueur</label>
-          <div id="filterPlayerPick" class="pickInput" role="button" tabindex="0">
-            <div class="value" id="filterPlayerVal">(choisir)</div>
-            <div class="chev">›</div>
-          </div>
-        </div>
-        <div class="col" style="flex:0 0 220px;">
-          <button id="refreshMatchesBtn" type="button">Rafraîchir</button>
-        </div>
-      </div>
-
-      <div id="matchesWrap" class="grid"></div>
+      <div class="hr"></div>
+      <h3>Derniers matchs</h3>
       <div id="matchesEmpty" class="muted">Chargement…</div>
-      <div class="sep"></div>
-      <div id="matchStatusBox" class="status">…</div>
+      <div id="matchesWrap"></div>
     </div>
 
-    <!-- ===== TAB: Reports ===== -->
-    <div id="tabReports" class="grid hidden">
-      <h3>Rapports & envoi email</h3>
+    <!-- Debug -->
+    <div id="tabDebug" class="hidden" style="margin-top:12px;">
+      <h3>Debug</h3>
+      <div class="row">
+        <div class="col" style="flex:0 0 240px;">
+          <button id="refreshBtn" type="button">Rafraîchir</button>
+        </div>
+        <div class="col" style="flex:0 0 240px;">
+          <button id="logoutBtn" class="btnDanger" type="button">Se déconnecter</button>
+        </div>
+      </div>
+      <div class="hr"></div>
+      <div id="debug" class="status">…</div>
+    </div>
+  </div>
 
-      <div class="help">
-        L’envoi email ne se fait pas côté navigateur (sinon tu exposes des secrets). Il faut une <b>Supabase Edge Function</b>
-        (ex: SendGrid/Mailgun) appelée par l’app.
+  <!-- SETTINGS MODAL -->
+  <div id="settingsOverlay" class="overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modalHead">
+        <strong>Configuration</strong>
+        <button id="settingsCloseBtn" class="iconBtn" type="button" title="Fermer">✕</button>
+      </div>
+      <div class="hr"></div>
+
+      <div class="row">
+        <div class="col">
+          <label for="cfgFullName">Nom complet</label>
+          <input id="cfgFullName" type="text" placeholder="Prénom Nom" />
+          <div class="help">Obligatoire au premier login. Le nom de joueur ne vient pas de l’email.</div>
+        </div>
       </div>
 
       <div class="row">
-        <div class="col" style="flex:0 0 260px;">
-          <button id="sendReportBtn" class="btnPrimary" type="button">Envoyer le rapport (aux opt-in)</button>
-        </div>
-        <div class="col" style="flex:0 0 220px;">
-          <button id="previewReportBtn" type="button">Prévisualiser</button>
+        <div class="col">
+          <label for="cfgEmail">Courriel (auth)</label>
+          <input id="cfgEmail" type="email" disabled />
+          <div class="help">Le courriel vient de l’auth. Pour le changer: reconnecte-toi avec un autre email.</div>
         </div>
       </div>
 
-      <div class="sep"></div>
-      <div id="reportBox" class="status">…</div>
+      <div class="row">
+        <div class="col">
+          <label>Rapport par email en fin de session</label>
+          <select id="cfgWantsEmail">
+            <option value="true">Oui</option>
+            <option value="false">Non</option>
+          </select>
+          <div class="help">Sur iPhone, ce select s’ouvre en “roue”.</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col" style="flex:0 0 240px;">
+          <button id="saveProfileBtn" class="btnPrimary" type="button">Enregistrer</button>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+      <div id="settingsStatus" class="status">…</div>
     </div>
   </div>
 
@@ -628,212 +362,141 @@
     // CONFIG
     // ============================
     const SUPABASE_URL = "https://cehqaxtcfmgjajmmcccz.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlaHFheHRjZm1namFqbW1jY2N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5NTQ1OTUsImV4cCI6MjA4NDUzMDU5NX0.U0IiTLx1_Vd4D8WBkhkO8KOrl3w_ftbPtcIWs_n1KmA";
-
-    // IMPORTANT:
-    // - Pour "ne pas déconnecter avant 12h": tu dois régler le TTL JWT dans Supabase Auth (Settings) à 12h
-    //   OU utiliser refresh_token + refresh automatique. Cette app supporte refresh si Supabase renvoie refresh_token dans le hash.
-    // - Si ton projet est configuré pour ne PAS donner refresh_token via magic link, tu devras passer à PKCE / supabase-js.
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlaHFheHRjZm1namFqbW1jY2N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5NTQ1OTUsImV4cCI6MjA4NDUzMDU5NX0.U0IiTLx1_Vd4D8WBkhkO8KOrl3w_ftbPtcIWs_n1KmA"; // <-- mets ta clé ici
 
     // ============================
-    // STORAGE
+    // STORAGE KEYS
     // ============================
-    const LS_ACCESS  = "pb_access_token";
+    const LS_ACCESS = "pb_access_token";
     const LS_REFRESH = "pb_refresh_token";
-    const LS_DEFAULT_SESSION = "pb_default_session_name";
-    const LS_PROFILE_FULLNAME = "pb_profile_fullname_draft";
-
-    function saveAccess(t){ localStorage.setItem(LS_ACCESS, t); }
-    function getAccess(){ return localStorage.getItem(LS_ACCESS); }
-    function clearAccess(){ localStorage.removeItem(LS_ACCESS); }
-
-    function saveRefresh(t){ localStorage.setItem(LS_REFRESH, t); }
-    function getRefresh(){ return localStorage.getItem(LS_REFRESH); }
-    function clearRefresh(){ localStorage.removeItem(LS_REFRESH); }
-
-    function setDefaultSessionName(n){ localStorage.setItem(LS_DEFAULT_SESSION, n); }
-    function getDefaultSessionName(){ return localStorage.getItem(LS_DEFAULT_SESSION); }
+    const LS_EXPIRES_AT = "pb_expires_at"; // ms epoch
 
     // ============================
     // DOM
     // ============================
     const loginCard = document.getElementById("loginCard");
     const appCard = document.getElementById("appCard");
+    const loginStatus = document.getElementById("loginStatus");
 
-    const topEmail = document.getElementById("topEmail");
-    const connIcon = document.getElementById("connIcon");
+    const emailEl = document.getElementById("email");
+    const loginBtn = document.getElementById("loginBtn");
+
+    const authDot = document.getElementById("authDot");
+    const authEmail = document.getElementById("authEmail");
     const gearBtn = document.getElementById("gearBtn");
 
-    const authEmailEl = document.getElementById("authEmail");
-    const fullNameFirstEl = document.getElementById("fullNameFirst");
-    const sendLinkBtn = document.getElementById("sendLinkBtn");
-    const loginStatus = document.getElementById("loginStatus");
     const logoutBtn = document.getElementById("logoutBtn");
-
-    const sessionNameTop = document.getElementById("sessionNameTop");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const debugEl = document.getElementById("debug");
 
     const tabs = Array.from(document.querySelectorAll(".tab"));
-    const tabSessions = document.getElementById("tabSessions");
-    const tabPlayers  = document.getElementById("tabPlayers");
-    const tabGen      = document.getElementById("tabGen");
-    const tabMatch    = document.getElementById("tabMatch");
-    const tabReports  = document.getElementById("tabReports");
+    const tabPlayers = document.getElementById("tabPlayers");
+    const tabMatches = document.getElementById("tabMatches");
+    const tabDebug = document.getElementById("tabDebug");
 
-    // Sessions
-    const sessionPick = document.getElementById("sessionPick");
-    const sessionPickVal = document.getElementById("sessionPickVal");
-    const newSessionBtn = document.getElementById("newSessionBtn");
-    const sessionNameEl = document.getElementById("sessionName");
-    const sessionsStatus = document.getElementById("sessionsStatus");
-    const setDefaultSessionBtn = document.getElementById("setDefaultSessionBtn");
-    const markSessionCompleteBtn = document.getElementById("markSessionCompleteBtn");
-
-    const sessionEndedPick = document.getElementById("sessionEndedPick");
-    const sessionEndedVal  = document.getElementById("sessionEndedVal");
-
-    // Players
-    const playerFullNameEl = document.getElementById("playerFullName");
-    const playerEmailEl = document.getElementById("playerEmail");
-    const wantsEmailPick = document.getElementById("wantsEmailPick");
-    const wantsEmailVal  = document.getElementById("wantsEmailVal");
-    const addPlayerToSessionBtn = document.getElementById("addPlayerToSessionBtn");
-    const playersEmpty = document.getElementById("playersEmpty");
+    // Players UI
+    const playerNameEl = document.getElementById("playerName");
+    const addPlayerBtn = document.getElementById("addPlayerBtn");
     const playersWrap = document.getElementById("playersWrap");
+    const playersEmpty = document.getElementById("playersEmpty");
 
-    // Generator
-    const gameTypePick = document.getElementById("gameTypePick");
-    const gameTypeVal  = document.getElementById("gameTypeVal");
-    const courtsPick   = document.getElementById("courtsPick");
-    const courtsVal    = document.getElementById("courtsVal");
-    const assignModePick = document.getElementById("assignModePick");
-    const assignModeVal  = document.getElementById("assignModeVal");
-    const algoPick = document.getElementById("algoPick");
-    const algoVal  = document.getElementById("algoVal");
-    const genBtn = document.getElementById("genBtn");
-    const genOutput = document.getElementById("genOutput");
-
-    // Match
-    const matchCourtPick = document.getElementById("matchCourtPick");
-    const matchCourtVal  = document.getElementById("matchCourtVal");
-    const matchTypePick  = document.getElementById("matchTypePick");
-    const matchTypeVal   = document.getElementById("matchTypeVal");
-    const matchStatusPick= document.getElementById("matchStatusPick");
-    const matchStatusVal = document.getElementById("matchStatusVal");
-
-    const colA2 = document.getElementById("colA2");
-    const colB2 = document.getElementById("colB2");
-    const pickA1 = document.getElementById("pickA1");
-    const pickA2 = document.getElementById("pickA2");
-    const pickB1 = document.getElementById("pickB1");
-    const pickB2 = document.getElementById("pickB2");
-    const valA1 = document.getElementById("valA1");
-    const valA2 = document.getElementById("valA2");
-    const valB1 = document.getElementById("valB1");
-    const valB2 = document.getElementById("valB2");
-
+    // Matches UI
+    const courtEl = document.getElementById("court");
+    const statusMatchEl = document.getElementById("statusMatch");
+    const a1El = document.getElementById("a1");
+    const a2El = document.getElementById("a2");
+    const b1El = document.getElementById("b1");
+    const b2El = document.getElementById("b2");
     const createMatchBtn = document.getElementById("createMatchBtn");
-    const teamAName = document.getElementById("teamAName");
-    const teamBName = document.getElementById("teamBName");
-    const scoreAEl = document.getElementById("scoreA");
-    const scoreBEl = document.getElementById("scoreB");
-    const submitScoreBtn = document.getElementById("submitScoreBtn");
-
-    const matchFilterPick = document.getElementById("matchFilterPick");
-    const matchFilterVal  = document.getElementById("matchFilterVal");
-    const filterPlayerCol = document.getElementById("filterPlayerCol");
-    const filterPlayerPick= document.getElementById("filterPlayerPick");
-    const filterPlayerVal = document.getElementById("filterPlayerVal");
-    const refreshMatchesBtn = document.getElementById("refreshMatchesBtn");
     const matchesWrap = document.getElementById("matchesWrap");
     const matchesEmpty = document.getElementById("matchesEmpty");
-    const matchStatusBox = document.getElementById("matchStatusBox");
 
-    // Reports
-    const sendReportBtn = document.getElementById("sendReportBtn");
-    const previewReportBtn = document.getElementById("previewReportBtn");
-    const reportBox = document.getElementById("reportBox");
+    // Settings modal
+    const settingsOverlay = document.getElementById("settingsOverlay");
+    const settingsCloseBtn = document.getElementById("settingsCloseBtn");
+    const cfgFullName = document.getElementById("cfgFullName");
+    const cfgEmail = document.getElementById("cfgEmail");
+    const cfgWantsEmail = document.getElementById("cfgWantsEmail");
+    const saveProfileBtn = document.getElementById("saveProfileBtn");
+    const settingsStatus = document.getElementById("settingsStatus");
 
     // ============================
     // STATE
     // ============================
     let me = null;
-    let profile = null; // profiles row
-    let sessions = [];
-    let currentSession = null; // sessions row
-    let sessionPlayers = [];   // joined list
-    let playersById = new Map(); // player_id -> {id, full_name, email}
-    let matches = [];
-    let draftMatch = {
-      court: 1,
-      match_type: "doubles",
-      status: "open",
-      a1: null, a2: null, b1: null, b2: null,
-      id: null
-    };
-    let uiFlags = {
-      sessionEnded: false,
-      wantsEmail: false,
-      genCourts: 1,
-      genGameType: "doubles",
-      assignMode: "random",
-      algo: "random",
-      matchFilter: "all",
-      filterPlayerId: null
-    };
+    let myProfile = null;
+    let cachedPlayers = [];
+    let cachedMatches = [];
 
-    // ============================
-    // HELPERS
-    // ============================
-    function escapeHtml(s){
-      return String(s || "")
-        .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    function log(msg){
+      debugEl.textContent = (debugEl.textContent ? debugEl.textContent + "\\n" : "") + msg;
     }
-    function setConn(ok){
-      connIcon.className = "connIcon" + (ok ? " ok" : "");
+
+    function setAuthUI(isAuthed, email){
+      authDot.className = "dot" + (isAuthed ? " ok" : "");
+      authEmail.textContent = isAuthed ? (email || "(connecté)") : "(non connecté)";
     }
+
     function showLogin(msg){
       loginCard.classList.remove("hidden");
       appCard.classList.add("hidden");
-      topEmail.textContent = "(non connecté)";
-      setConn(false);
       loginStatus.textContent = msg || "Prêt.";
+      setAuthUI(false, "");
     }
+
     function showApp(){
       loginCard.classList.add("hidden");
       appCard.classList.remove("hidden");
     }
-    function switchTab(tabId){
-      const map = { tabSessions, tabPlayers, tabGen, tabMatch, tabReports };
-      for(const k in map) map[k].classList.toggle("hidden", k !== tabId);
-      tabs.forEach(b => b.classList.toggle("active", b.dataset.tab === tabId));
-    }
-    tabs.forEach(b => b.addEventListener("click", () => switchTab(b.dataset.tab)));
 
-    function isoNow(){ return new Date().toISOString(); }
+    function openSettings(){
+      settingsOverlay.classList.remove("hidden");
+      settingsStatus.textContent = "…";
+    }
+
+    function closeSettings(){
+      settingsOverlay.classList.add("hidden");
+    }
+
+    function saveTokens({ access_token, refresh_token, expires_in }){
+      if (access_token) localStorage.setItem(LS_ACCESS, access_token);
+      if (refresh_token) localStorage.setItem(LS_REFRESH, refresh_token);
+      if (typeof expires_in === "number"){
+        const expiresAt = Date.now() + (expires_in * 1000);
+        localStorage.setItem(LS_EXPIRES_AT, String(expiresAt));
+      }
+    }
+    function getAccessToken(){ return localStorage.getItem(LS_ACCESS); }
+    function getRefreshToken(){ return localStorage.getItem(LS_REFRESH); }
+    function getExpiresAt(){ return Number(localStorage.getItem(LS_EXPIRES_AT) || "0"); }
+    function clearTokens(){
+      localStorage.removeItem(LS_ACCESS);
+      localStorage.removeItem(LS_REFRESH);
+      localStorage.removeItem(LS_EXPIRES_AT);
+    }
 
     // ============================
     // HASH PARSE (magic link)
+    // Supabase renvoie souvent access_token + refresh_token + expires_in
     // ============================
     function parseHash(){
       const hash = (window.location.hash || "").startsWith("#") ? window.location.hash.slice(1) : "";
-      if (!hash) return null;
+      if(!hash) return null;
       const p = new URLSearchParams(hash);
       return {
         access_token: p.get("access_token"),
         refresh_token: p.get("refresh_token"),
-        expires_in: p.get("expires_in"),
-        token_type: p.get("token_type"),
+        expires_in: p.get("expires_in") ? Number(p.get("expires_in")) : null,
         error: p.get("error"),
         error_description: p.get("error_description")
       };
     }
 
     // ============================
-    // SUPABASE REST
+    // REST Fetch
     // ============================
     async function apiFetch(path, { method="GET", headers={}, body=null } = {}){
-      const token = getAccess();
+      const token = getAccessToken();
       const url = `${SUPABASE_URL}${path}`;
       const finalHeaders = {
         apikey: SUPABASE_ANON_KEY,
@@ -843,18 +506,25 @@
       const opts = { method, headers: finalHeaders };
       if(body !== null) opts.body = body;
 
-      const r = await fetch(url, opts);
-      const text = await r.text();
-      if(!r.ok) throw new Error(`${method} ${path} -> ${r.status}\n${text}`);
+      let r, text;
+      try{
+        r = await fetch(url, opts);
+        text = await r.text();
+      }catch(e){
+        throw new Error(`FETCH FAILED: ${e?.message || e}`);
+      }
+      if(!r.ok){
+        throw new Error(`${method} ${path} -> ${r.status}\\n${text}`);
+      }
       const trimmed = (text || "").trim();
       return trimmed ? JSON.parse(trimmed) : null;
     }
 
     // ============================
-    // AUTH: login + refresh
+    // Auth: send magic link
     // ============================
     async function sendMagicLink(email){
-      sendLinkBtn.disabled = true;
+      loginBtn.disabled = true;
       loginStatus.textContent = "Envoi du lien…";
       try{
         await apiFetch("/auth/v1/otp", {
@@ -869,1264 +539,409 @@
         loginStatus.textContent = "Lien envoyé. Vérifie ton courriel.";
       }catch(e){
         loginStatus.textContent = "Erreur: " + e.message;
+        log("[OTP ERROR]\\n" + e.message);
       }finally{
-        sendLinkBtn.disabled = false;
+        loginBtn.disabled = false;
       }
     }
 
-    async function loadUser(){
-      return await apiFetch("/auth/v1/user");
-    }
+    // ============================
+    // Auth: refresh token (keeps session alive)
+    // ============================
+    async function refreshSessionIfNeeded(){
+      const access = getAccessToken();
+      const refresh = getRefreshToken();
+      const exp = getExpiresAt();
 
-    async function refreshTokenIfPossible(){
-      const rt = getRefresh();
-      if(!rt) return false;
+      if(!access || !refresh) return false;
+
+      // refresh si expire dans < 5 minutes
+      const msLeft = exp - Date.now();
+      if(msLeft > 5 * 60 * 1000) return true;
+
       try{
-        const data = await apiFetch("/auth/v1/token?grant_type=refresh_token", {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({ refresh_token: rt })
+        const url = `${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`;
+        const r = await fetch(url, {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ refresh_token: refresh })
         });
-        if(data?.access_token){
-          saveAccess(data.access_token);
-          if(data.refresh_token) saveRefresh(data.refresh_token);
-          return true;
-        }
+        const text = await r.text();
+        if(!r.ok) throw new Error(`REFRESH -> ${r.status}\\n${text}`);
+        const data = JSON.parse(text);
+
+        // data: access_token, refresh_token, expires_in
+        saveTokens(data);
+        log("[AUTH REFRESH OK]");
+        return true;
+      }catch(e){
+        log("[AUTH REFRESH ERROR]\\n" + e.message);
+        clearTokens();
         return false;
-      }catch{
-        return false;
-      }
-    }
-
-    // Auto refresh loop:
-    // - Si ton JWT expire avant 12h, cette boucle garde la session vivante si refresh_token est disponible.
-    // - Si refresh_token n’est pas fourni par ton flux magic link, tu dois régler Auth JWT expiry à 12h.
-    function startRefreshLoop(){
-      setInterval(async () => {
-        // refresh "best effort"
-        await refreshTokenIfPossible();
-      }, 8 * 60 * 1000); // toutes les 8 minutes
-    }
-
-    // ============================
-    // DB MODEL ASSUMED (SQL plus bas)
-    // Tables:
-    // - profiles(user_id, email, full_name, is_admin)
-    // - players(id, full_name, email)
-    // - sessions(id, name UNIQUE, season_ended, created_by, completed_at)
-    // - session_players(session_id, player_id, wants_email, created_by, UNIQUE(session_id,player_id))
-    // - matches(id, session_id, court, match_type, status, a1,a2,b1,b2, score_a,score_b, completed_at, created_at)
-    // ============================
-
-    // ============================
-    // PROFILES (name/email)
-    // ============================
-    async function upsertProfile(full_name){
-      const payload = { user_id: me.id, email: me.email, full_name };
-      const inserted = await apiFetch("/rest/v1/profiles?select=user_id,email,full_name,is_admin", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json", "Prefer":"resolution=merge-duplicates,return=representation" },
-        body: JSON.stringify(payload)
-      });
-      return inserted?.[0] || null;
-    }
-
-    async function loadProfile(){
-      const rows = await apiFetch(`/rest/v1/profiles?select=user_id,email,full_name,is_admin&user_id=eq.${me.id}`) || [];
-      return rows[0] || null;
-    }
-
-    // ============================
-    // SESSIONS
-    // ============================
-    async function loadSessions(){
-      sessions = await apiFetch("/rest/v1/sessions?select=id,name,season_ended,completed_at,created_at&order=created_at.desc") || [];
-      sessionsStatus.textContent = `Sessions: ${sessions.length}`;
-    }
-
-    function setCurrentSessionByName(name){
-      currentSession = sessions.find(s => s.name === name) || null;
-      sessionPickVal.textContent = currentSession ? currentSession.name : "(choisir)";
-      sessionNameTop.textContent = currentSession ? currentSession.name : "(aucune)";
-      if(currentSession){
-        uiFlags.sessionEnded = !!currentSession.season_ended;
-        sessionEndedVal.textContent = uiFlags.sessionEnded ? "Oui" : "Non";
-      }
-    }
-
-    async function createSession(name, season_ended){
-      // name unique enforced in DB
-      const inserted = await apiFetch("/rest/v1/sessions?select=id,name,season_ended,completed_at,created_at", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json", "Prefer":"return=representation" },
-        body: JSON.stringify({ name, season_ended, created_by: me.id })
-      });
-      return inserted?.[0] || null;
-    }
-
-    async function updateSession(id, patch){
-      const updated = await apiFetch(`/rest/v1/sessions?id=eq.${id}&select=id,name,season_ended,completed_at,created_at`, {
-        method:"PATCH",
-        headers:{ "Content-Type":"application/json", "Prefer":"return=representation" },
-        body: JSON.stringify(patch)
-      });
-      return updated?.[0] || null;
-    }
-
-    // ============================
-    // PLAYERS + SESSION_PLAYERS
-    // ============================
-    async function ensurePlayer(full_name, email){
-      // upsert by email when provided, else always create new (but in practice: require email for dedup)
-      if(email){
-        const existing = await apiFetch(`/rest/v1/players?select=id,full_name,email&email=eq.${encodeURIComponent(email)}`) || [];
-        if(existing[0]){
-          // update name if changed
-          if(existing[0].full_name !== full_name){
-            await apiFetch(`/rest/v1/players?id=eq.${existing[0].id}`, {
-              method:"PATCH",
-              headers:{ "Content-Type":"application/json" },
-              body: JSON.stringify({ full_name })
-            });
-            existing[0].full_name = full_name;
-          }
-          return existing[0];
-        }
-      }
-      const inserted = await apiFetch("/rest/v1/players?select=id,full_name,email,created_at", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json", "Prefer":"return=representation" },
-        body: JSON.stringify({ full_name, email: email || null })
-      });
-      return inserted?.[0] || null;
-    }
-
-    async function addPlayerToSession(player_id, wants_email){
-      const inserted = await apiFetch("/rest/v1/session_players?select=session_id,player_id,wants_email,created_at", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json", "Prefer":"return=representation" },
-        body: JSON.stringify({
-          session_id: currentSession.id,
-          player_id,
-          wants_email,
-          created_by: me.id
-        })
-      });
-      return inserted?.[0] || null;
-    }
-
-    async function loadSessionPlayers(){
-      if(!currentSession){
-        sessionPlayers = [];
-        playersById = new Map();
-        renderPlayers();
-        return;
-      }
-
-      // Load session_players, then load players
-      const sp = await apiFetch(`/rest/v1/session_players?select=session_id,player_id,wants_email,created_at&session_id=eq.${currentSession.id}&order=created_at.asc`) || [];
-      sessionPlayers = sp;
-
-      const playerIds = sp.map(x => x.player_id);
-      playersById = new Map();
-      if(playerIds.length){
-        // postgrest "in" syntax: id=in.(a,b,c)
-        const inList = playerIds.map(x => `"${x}"`).join(",");
-        const ps = await apiFetch(`/rest/v1/players?select=id,full_name,email&id=in.(${inList})`) || [];
-        for(const p of ps) playersById.set(p.id, p);
-      }
-      renderPlayers();
-    }
-
-    function renderPlayers(){
-      playersWrap.innerHTML = "";
-      if(!currentSession){
-        playersEmpty.textContent = "Sélectionne une session.";
-        return;
-      }
-      if(!sessionPlayers.length){
-        playersEmpty.textContent = "(aucun joueur)";
-        return;
-      }
-      playersEmpty.textContent = "";
-
-      for(const sp of sessionPlayers){
-        const p = playersById.get(sp.player_id) || { full_name:"(?)", email:null };
-
-        const row = document.createElement("div");
-        row.className = "listItem";
-
-        const left = document.createElement("div");
-        const emailLine = p.email ? ` <span class="muted">(${escapeHtml(p.email)})</span>` : "";
-        const wants = sp.wants_email ? "Email: Oui" : "Email: Non";
-        left.innerHTML = `<div class="name">${escapeHtml(p.full_name)}${emailLine}</div><div class="meta">${escapeHtml(wants)}</div>`;
-
-        const actions = document.createElement("div");
-        actions.className = "actions";
-
-        const del = document.createElement("button");
-        del.className = "miniBtn btnDanger";
-        del.textContent = "Retirer";
-        del.onclick = async () => {
-          if(!confirm(`Retirer "${p.full_name}" de la session ?`)) return;
-          try{
-            await apiFetch(`/rest/v1/session_players?session_id=eq.${currentSession.id}&player_id=eq.${sp.player_id}`, {
-              method:"DELETE"
-            });
-            await loadSessionPlayers();
-          }catch(e){
-            alert("Suppression refusée. Probable: joueur utilisé dans un match.");
-          }
-        };
-
-        actions.appendChild(del);
-        row.appendChild(left);
-        row.appendChild(actions);
-        playersWrap.appendChild(row);
       }
     }
 
     // ============================
-    // MATCHES
+    // Load user + profile
     // ============================
-    function playerName(id){
-      const p = playersById.get(id);
-      return p ? p.full_name : "(?)";
+    async function loadUser(){
+      me = await apiFetch("/auth/v1/user");
+      return me;
     }
 
-    function currentMatchTeamNames(){
-      const a = draftMatch.match_type === "singles"
-        ? `${playerName(draftMatch.a1)}`
-        : `${playerName(draftMatch.a1)} + ${playerName(draftMatch.a2)}`;
-      const b = draftMatch.match_type === "singles"
-        ? `${playerName(draftMatch.b1)}`
-        : `${playerName(draftMatch.b1)} + ${playerName(draftMatch.b2)}`;
-      teamAName.textContent = a.includes("(?)") ? "(non défini)" : a;
-      teamBName.textContent = b.includes("(?)") ? "(non défini)" : b;
+    async function loadMyProfile(){
+      // profile key = auth.uid
+      const rows = await apiFetch(`/rest/v1/profiles?select=user_id,email,full_name,wants_email,is_admin&user_id=eq.${me.id}`);
+      myProfile = (rows && rows[0]) ? rows[0] : null;
+      return myProfile;
     }
 
-    async function createMatch(){
-      if(!currentSession) throw new Error("Sélectionne une session.");
-
-      // enforce selection
-      if(!draftMatch.a1 || !draftMatch.b1) throw new Error("A1 et B1 requis.");
-      if(draftMatch.match_type === "doubles"){
-        if(!draftMatch.a2 || !draftMatch.b2) throw new Error("A2 et B2 requis en double.");
-        // disallow duplicates
-        const s = new Set([draftMatch.a1,draftMatch.a2,draftMatch.b1,draftMatch.b2]);
-        if(s.size !== 4) throw new Error("Joueurs en double: tous doivent être différents.");
-      }else{
-        // singles: clear a2/b2
-        draftMatch.a2 = null; draftMatch.b2 = null;
-        if(draftMatch.a1 === draftMatch.b1) throw new Error("Singles: A1 et B1 doivent être différents.");
-      }
-
+    async function upsertProfile({ full_name, wants_email }){
+      // upsert: insert if missing else update
       const payload = {
-        session_id: currentSession.id,
-        court: Number(draftMatch.court),
-        match_type: draftMatch.match_type,
-        status: draftMatch.status,
-        a1: draftMatch.a1,
-        a2: draftMatch.a2,
-        b1: draftMatch.b1,
-        b2: draftMatch.b2
+        user_id: me.id,
+        email: me.email,
+        full_name: full_name,
+        wants_email: wants_email
       };
 
-      const inserted = await apiFetch("/rest/v1/matches?select=id,session_id,court,match_type,status,a1,a2,b1,b2,score_a,score_b,completed_at,created_at", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json", "Prefer":"return=representation" },
+      // Try INSERT first, if conflict then PATCH via upsert header
+      const inserted = await apiFetch(`/rest/v1/profiles?select=user_id,email,full_name,wants_email,is_admin`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Prefer": "resolution=merge-duplicates,return=representation"
+        },
         body: JSON.stringify(payload)
       });
-      const m = inserted?.[0] || null;
-      if(!m) throw new Error("Insertion match: vide.");
-      draftMatch.id = m.id;
-      return m;
+      myProfile = (inserted && inserted[0]) ? inserted[0] : myProfile;
+      return myProfile;
     }
 
-    async function submitScore(){
-      if(!draftMatch.id) throw new Error("Crée d’abord un match (ou sélectionne-en un).");
-      const sa = Number(scoreAEl.value);
-      const sb = Number(scoreBEl.value);
-      if(!Number.isFinite(sa) || sa < 0) throw new Error("Score A invalide.");
-      if(!Number.isFinite(sb) || sb < 0) throw new Error("Score B invalide.");
+    // ============================
+    // Players
+    // ============================
+    function escapeHtml(s){
+      return String(s || "")
+        .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    }
 
-      const updated = await apiFetch(`/rest/v1/matches?id=eq.${draftMatch.id}&select=id,score_a,score_b,status,completed_at`, {
-        method:"PATCH",
+    function fillPlayerSelect(sel){
+      sel.innerHTML = "";
+      const opt0 = document.createElement("option");
+      opt0.value = "";
+      opt0.textContent = "(choisir)";
+      sel.appendChild(opt0);
+
+      for(const p of cachedPlayers){
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = p.name; // name only, no id
+        sel.appendChild(opt);
+      }
+    }
+
+    async function loadPlayers(){
+      cachedPlayers = await apiFetch("/rest/v1/players?select=id,name,created_at&order=created_at.asc") || [];
+
+      playersWrap.innerHTML = "";
+      if(!cachedPlayers.length){
+        playersEmpty.textContent = "(aucun joueur)";
+      }else{
+        playersEmpty.textContent = "";
+        for(const p of cachedPlayers){
+          const row = document.createElement("div");
+          row.className = "listItem";
+
+          const left = document.createElement("div");
+          left.innerHTML = `<div class="name">${escapeHtml(p.name)}</div>`;
+
+          const actions = document.createElement("div");
+
+          const del = document.createElement("button");
+          del.className = "miniBtn btnDanger";
+          del.textContent = "Suppr.";
+          del.onclick = async () => {
+            if(!confirm(`Supprimer "${p.name}" ?`)) return;
+            try{
+              await apiFetch(`/rest/v1/players?id=eq.${p.id}`, { method:"DELETE" });
+              log(`[PLAYER DELETE OK] ${p.name}`);
+              await refreshAll();
+            }catch(e){
+              log("[PLAYER DELETE ERROR]\\n" + e.message);
+              alert("Suppression refusée. Probable: joueur utilisé ailleurs (clé étrangère).");
+            }
+          };
+
+          actions.appendChild(del);
+          row.appendChild(left);
+          row.appendChild(actions);
+          playersWrap.appendChild(row);
+        }
+      }
+
+      fillPlayerSelect(a1El); fillPlayerSelect(a2El); fillPlayerSelect(b1El); fillPlayerSelect(b2El);
+    }
+
+    async function addPlayer(name){
+      const inserted = await apiFetch("/rest/v1/players?select=id,name,created_at", {
+        method:"POST",
         headers:{ "Content-Type":"application/json", "Prefer":"return=representation" },
-        body: JSON.stringify({
-          score_a: sa,
-          score_b: sb,
-          status: "done",
-          completed_at: isoNow()
-        })
+        body: JSON.stringify({ name })
       });
-      return updated?.[0] || null;
+      log("[PLAYER INSERT OK]\\n" + JSON.stringify(inserted, null, 2));
+    }
+
+    // ============================
+    // Matches (simple version: requires your table columns NOT NULL)
+    // ============================
+    function initCourtSelect(max=8){
+      courtEl.innerHTML = "";
+      for(let i=1;i<=max;i++){
+        const o = document.createElement("option");
+        o.value = String(i);
+        o.textContent = `Terrain ${i}`;
+        courtEl.appendChild(o);
+      }
     }
 
     async function loadMatches(){
-      if(!currentSession){
-        matches = [];
-        renderMatches();
-        return;
-      }
-      // load last 80
-      matches = await apiFetch(`/rest/v1/matches?select=id,session_id,court,match_type,status,a1,a2,b1,b2,score_a,score_b,completed_at,created_at&session_id=eq.${currentSession.id}&order=created_at.desc&limit=80`) || [];
-      renderMatches();
-    }
-
-    function matchInFilter(m){
-      if(uiFlags.matchFilter === "mine"){
-        // "mine": based on my profile email matching a player email in session (best effort)
-        const myEmail = (me?.email || "").toLowerCase();
-        const ids = [m.a1,m.a2,m.b1,m.b2].filter(Boolean);
-        return ids.some(id => (playersById.get(id)?.email || "").toLowerCase() === myEmail);
-      }
-      if(uiFlags.matchFilter === "player"){
-        const pid = uiFlags.filterPlayerId;
-        if(!pid) return false;
-        return [m.a1,m.a2,m.b1,m.b2].includes(pid);
-      }
-      return true; // all
-    }
-
-    function renderMatches(){
+      cachedMatches = await apiFetch("/rest/v1/matches?select=id,court,status,a1,a2,b1,b2,created_at&order=created_at.desc") || [];
       matchesWrap.innerHTML = "";
-      if(!currentSession){
-        matchesEmpty.textContent = "Sélectionne une session.";
-        return;
-      }
-      const shown = matches.filter(matchInFilter);
-      if(!shown.length){
+
+      if(!cachedMatches.length){
         matchesEmpty.textContent = "(aucun match)";
         return;
       }
       matchesEmpty.textContent = "";
 
-      for(const m of shown.slice(0, 20)){
+      const byId = (id)=> (cachedPlayers.find(p=>p.id===id)?.name || "(?)");
+
+      for(const m of cachedMatches.slice(0, 10)){
         const box = document.createElement("div");
-        box.className = "card";
-        box.style.padding = "12px";
+        box.className = "listItem";
+        box.style.flexDirection = "column";
+        box.style.alignItems = "stretch";
 
-        const title = document.createElement("div");
-        title.style.fontWeight = "900";
-        title.textContent = `Terrain ${m.court} — ${m.match_type} — ${m.status} — ${m.id.slice(0,8)}`;
+        const top = document.createElement("div");
+        top.style.display = "flex";
+        top.style.justifyContent = "space-between";
+        top.style.gap = "10px";
 
-        const a = m.match_type === "singles"
-          ? `${playerName(m.a1)}`
-          : `${playerName(m.a1)} + ${playerName(m.a2)}`;
-        const b = m.match_type === "singles"
-          ? `${playerName(m.b1)}`
-          : `${playerName(m.b1)} + ${playerName(m.b2)}`;
+        const t = document.createElement("div");
+        t.innerHTML = `<div class="name">Terrain ${m.court} — ${escapeHtml(m.status || "")}</div>
+                       <div class="muted" style="font-size:12px;margin-top:2px">
+                         A: ${escapeHtml(byId(m.a1))} + ${escapeHtml(byId(m.a2))} •
+                         B: ${escapeHtml(byId(m.b1))} + ${escapeHtml(byId(m.b2))}
+                       </div>`;
 
-        const scoreText = (m.score_a === null || m.score_b === null) ? "(pas de score)" : `${m.score_a} - ${m.score_b}`;
-
-        const sub = document.createElement("div");
-        sub.className = "small";
-        sub.textContent = `A: ${a} | B: ${b} | Score: ${scoreText}`;
-
-        const useBtn = document.createElement("button");
-        useBtn.className = "btnPrimary";
-        useBtn.style.marginTop = "10px";
-        useBtn.textContent = "Utiliser pour pointage";
-        useBtn.onclick = () => {
-          draftMatch.id = m.id;
-          draftMatch.court = m.court;
-          draftMatch.match_type = m.match_type;
-          draftMatch.status = m.status;
-          draftMatch.a1 = m.a1; draftMatch.a2 = m.a2;
-          draftMatch.b1 = m.b1; draftMatch.b2 = m.b2;
-
-          matchCourtVal.textContent = String(m.court);
-          matchTypeVal.textContent = (m.match_type === "singles") ? "Simple" : "Double";
-          matchStatusVal.textContent = m.status;
-
-          valA1.textContent = playerName(m.a1);
-          valA2.textContent = m.a2 ? playerName(m.a2) : "(n/a)";
-          valB1.textContent = playerName(m.b1);
-          valB2.textContent = m.b2 ? playerName(m.b2) : "(n/a)";
-
-          scoreAEl.value = (m.score_a ?? 0);
-          scoreBEl.value = (m.score_b ?? 0);
-
-          applyMatchTypeUI();
-          currentMatchTeamNames();
-          switchTab("tabMatch");
-          window.scrollTo({ top: 0, behavior:"smooth" });
-        };
-
-        box.appendChild(title);
-        box.appendChild(sub);
-        box.appendChild(useBtn);
+        top.appendChild(t);
+        box.appendChild(top);
         matchesWrap.appendChild(box);
       }
-
-      matchStatusBox.textContent = `Matchs chargés: ${matches.length} | Affichés: ${shown.length} | Filtre: ${uiFlags.matchFilter}`;
     }
 
-    // ============================
-    // PERFORMANCE FORMULA X (adjustable)
-    // ============================
-    function computePlayerRatings(){
-      // rating = (points_for - points_against) + 0.5*wins
-      const rating = new Map();
-      const wins = new Map();
+    async function createMatch(){
+      const court = Number(courtEl.value);
+      const status = statusMatchEl.value;
+      const a1 = a1El.value || null;
+      const a2 = a2El.value || null;
+      const b1 = b1El.value || null;
+      const b2 = b2El.value || null;
 
-      const done = matches.filter(m => m.status === "done" && m.score_a !== null && m.score_b !== null);
-      for(const m of done){
-        const aIds = m.match_type === "singles" ? [m.a1] : [m.a1,m.a2];
-        const bIds = m.match_type === "singles" ? [m.b1] : [m.b1,m.b2];
-        const sa = Number(m.score_a), sb = Number(m.score_b);
+      if(!Number.isFinite(court) || court <= 0) return alert("Terrain invalide");
+      if(!a1 || !a2 || !b1 || !b2) return alert("A1, A2, B1, B2 requis.");
 
-        const aWin = sa > sb;
-        for(const id of aIds){
-          rating.set(id, (rating.get(id)||0) + (sa - sb));
-          wins.set(id, (wins.get(id)||0) + (aWin ? 1 : 0));
-        }
-        for(const id of bIds){
-          rating.set(id, (rating.get(id)||0) + (sb - sa));
-          wins.set(id, (wins.get(id)||0) + (!aWin ? 1 : 0));
-        }
-      }
+      const payload = { court, status, a1, a2, b1, b2 };
 
-      const out = new Map();
-      for(const [id, r] of rating.entries()){
-        const w = wins.get(id)||0;
-        out.set(id, r + 0.5*w);
-      }
-      return out;
-    }
-
-    // ============================
-    // GENERATOR
-    // ============================
-    function shuffle(arr){
-      const a = arr.slice();
-      for(let i=a.length-1;i>0;i--){
-        const j = Math.floor(Math.random()*(i+1));
-        [a[i],a[j]]=[a[j],a[i]];
-      }
-      return a;
-    }
-
-    function genTeams(){
-      if(!currentSession) throw new Error("Sélectionne une session.");
-      const playerIds = sessionPlayers.map(x => x.player_id);
-
-      const courts = uiFlags.genCourts;
-      const mode = uiFlags.genGameType; // singles/doubles
-      const need = courts * (mode === "singles" ? 2 : 4);
-      if(playerIds.length < need) throw new Error(`Pas assez de joueurs: ${playerIds.length}, requis: ${need}.`);
-
-      let picked = shuffle(playerIds).slice(0, need);
-
-      // Assign mode:
-      // - random: just sequential
-      // - by_court: still sequential (same) but UI emphasizes courts
-      // - performance: sort by rating then split balanced
-      if(uiFlags.algo === "performance"){
-        const ratings = computePlayerRatings();
-        picked.sort((a,b) => (ratings.get(b)||0) - (ratings.get(a)||0));
-      }else{
-        // random default already shuffled
-      }
-
-      const out = [];
-      for(let c=0;c<courts;c++){
-        if(mode === "doubles"){
-          // If performance: balance -> take top+bottom pairs
-          let chunk;
-          if(uiFlags.algo === "performance"){
-            const slice = picked.slice(c*4, c*4+4);
-            const [p1,p2,p3,p4] = slice;
-            chunk = [p1,p4,p2,p3]; // balance-ish
-          }else{
-            chunk = picked.slice(c*4, c*4+4);
-          }
-          out.push({
-            court: c+1,
-            match_type: "doubles",
-            a1: chunk[0], a2: chunk[1],
-            b1: chunk[2], b2: chunk[3]
-          });
-        }else{
-          const slice = picked.slice(c*2, c*2+2);
-          out.push({
-            court: c+1,
-            match_type: "singles",
-            a1: slice[0], a2: null,
-            b1: slice[1], b2: null
-          });
-        }
-      }
-      return out;
-    }
-
-    function renderGen(sets){
-      genOutput.innerHTML = "";
-      for(const s of sets){
-        const card = document.createElement("div");
-        card.className = "card";
-
-        const a = s.match_type === "singles"
-          ? `${playerName(s.a1)}`
-          : `${playerName(s.a1)} + ${playerName(s.a2)}`;
-        const b = s.match_type === "singles"
-          ? `${playerName(s.b1)}`
-          : `${playerName(s.b1)} + ${playerName(s.b2)}`;
-
-        card.innerHTML = `
-          <div style="font-weight:900; font-size:16px;">Terrain ${s.court} — ${s.match_type}</div>
-          <div class="sep" style="margin:10px 0;"></div>
-          <div class="teamRow"><div><div class="small">Équipe A</div><strong>${escapeHtml(a)}</strong></div></div>
-          <div class="teamRow" style="margin-top:10px;"><div><div class="small">Équipe B</div><strong>${escapeHtml(b)}</strong></div></div>
-        `;
-
-        const use = document.createElement("button");
-        use.className = "btnPrimary";
-        use.style.marginTop = "10px";
-        use.textContent = "Mettre dans Match";
-        use.onclick = () => {
-          draftMatch.court = s.court;
-          draftMatch.match_type = s.match_type;
-          draftMatch.status = "open";
-          draftMatch.a1 = s.a1; draftMatch.a2 = s.a2;
-          draftMatch.b1 = s.b1; draftMatch.b2 = s.b2;
-          draftMatch.id = null; // new match
-
-          matchCourtVal.textContent = String(s.court);
-          matchTypeVal.textContent = (s.match_type === "singles") ? "Simple" : "Double";
-          matchStatusVal.textContent = "open";
-
-          valA1.textContent = playerName(s.a1);
-          valA2.textContent = s.a2 ? playerName(s.a2) : "(n/a)";
-          valB1.textContent = playerName(s.b1);
-          valB2.textContent = s.b2 ? playerName(s.b2) : "(n/a)";
-
-          scoreAEl.value = 0;
-          scoreBEl.value = 0;
-
-          applyMatchTypeUI();
-          currentMatchTeamNames();
-          switchTab("tabMatch");
-          window.scrollTo({ top: 0, behavior:"smooth" });
-        };
-
-        card.appendChild(use);
-        genOutput.appendChild(card);
-      }
-    }
-
-    // ============================
-    // iOS-ish WHEEL PICKER MODAL
-    // ============================
-    function openWheelPicker({ title, items, initialValue, onDone }){
-      // items: [{value,label,dim?}]
-      const backdrop = document.createElement("div");
-      backdrop.className = "modalBackdrop";
-
-      const modal = document.createElement("div");
-      modal.className = "modal";
-
-      const header = document.createElement("div");
-      header.className = "modalHeader";
-      header.innerHTML = `<div class="title">${escapeHtml(title)}</div>`;
-
-      const body = document.createElement("div");
-      body.className = "modalBody";
-
-      const wheelWrap = document.createElement("div");
-      wheelWrap.className = "wheelWrap";
-
-      const wheel = document.createElement("div");
-      wheel.className = "wheel";
-
-      const highlight = document.createElement("div");
-      highlight.className = "wheelHighlight";
-
-      for(const it of items){
-        const div = document.createElement("div");
-        div.className = "wheelItem" + (it.dim ? " dim" : "");
-        div.dataset.value = String(it.value);
-        div.textContent = it.label;
-        wheel.appendChild(div);
-      }
-
-      wheelWrap.appendChild(wheel);
-      wheelWrap.appendChild(highlight);
-      body.appendChild(wheelWrap);
-
-      const footer = document.createElement("div");
-      footer.className = "modalFooter";
-
-      const cancel = document.createElement("button");
-      cancel.className = "btnGhost";
-      cancel.textContent = "Annuler";
-
-      const ok = document.createElement("button");
-      ok.className = "btnPrimary";
-      ok.textContent = "OK";
-
-      footer.appendChild(cancel);
-      footer.appendChild(ok);
-
-      modal.appendChild(header);
-      modal.appendChild(body);
-      modal.appendChild(footer);
-
-      backdrop.appendChild(modal);
-      document.body.appendChild(backdrop);
-
-      function close(){
-        document.body.removeChild(backdrop);
-      }
-      cancel.onclick = close;
-      backdrop.addEventListener("click", (e) => {
-        if(e.target === backdrop) close();
+      const inserted = await apiFetch("/rest/v1/matches?select=id,court,status,a1,a2,b1,b2,created_at", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", "Prefer":"return=representation" },
+        body: JSON.stringify(payload)
       });
 
-      function nearestCenteredItem(){
-        const rect = wheel.getBoundingClientRect();
-        const centerY = rect.top + rect.height/2;
-        let best = null;
-        let bestDist = 1e9;
-        for(const el of wheel.querySelectorAll(".wheelItem")){
-          const r = el.getBoundingClientRect();
-          const cy = r.top + r.height/2;
-          const d = Math.abs(cy - centerY);
-          if(d < bestDist){
-            bestDist = d;
-            best = el;
-          }
-        }
-        return best;
-      }
-
-      function snapTo(el){
-        if(!el) return;
-        el.scrollIntoView({ block:"center", behavior:"smooth" });
-      }
-
-      // Initial position
-      setTimeout(() => {
-        const target = Array.from(wheel.querySelectorAll(".wheelItem"))
-          .find(x => x.dataset.value === String(initialValue));
-        snapTo(target || wheel.querySelector(".wheelItem"));
-      }, 0);
-
-      // On scroll end -> snap
-      let t = null;
-      wheel.addEventListener("scroll", () => {
-        if(t) clearTimeout(t);
-        t = setTimeout(() => snapTo(nearestCenteredItem()), 90);
-      });
-
-      ok.onclick = () => {
-        const el = nearestCenteredItem();
-        const val = el ? el.dataset.value : null;
-        const label = el ? el.textContent : null;
-        close();
-        onDone && onDone(val, label);
-      };
+      log("[MATCH INSERT OK]\\n" + JSON.stringify(inserted, null, 2));
     }
 
     // ============================
-    // UI APPLY
+    // Tabs
     // ============================
-    function applyMatchTypeUI(){
-      const isSingles = draftMatch.match_type === "singles";
-      colA2.classList.toggle("hidden", isSingles);
-      colB2.classList.toggle("hidden", isSingles);
-      if(isSingles){
-        valA2.textContent = "(n/a)";
-        valB2.textContent = "(n/a)";
-      }
+    function switchTab(tabId){
+      tabPlayers.classList.toggle("hidden", tabId !== "tabPlayers");
+      tabMatches.classList.toggle("hidden", tabId !== "tabMatches");
+      tabDebug.classList.toggle("hidden", tabId !== "tabDebug");
+      tabs.forEach(b => b.classList.toggle("active", b.dataset.tab === tabId));
+    }
+    tabs.forEach(b => b.addEventListener("click", () => switchTab(b.dataset.tab)));
+
+    // ============================
+    // Refresh all
+    // ============================
+    async function refreshAll(){
+      await loadPlayers();
+      await loadMatches();
     }
 
     // ============================
-    // CONFIG MODAL (⚙︎)
+    // Events
     // ============================
-    function openConfigModal(){
-      const backdrop = document.createElement("div");
-      backdrop.className = "modalBackdrop";
-
-      const modal = document.createElement("div");
-      modal.className = "modal";
-
-      const header = document.createElement("div");
-      header.className = "modalHeader";
-      header.innerHTML = `<div class="title">Configuration</div>`;
-
-      const body = document.createElement("div");
-      body.className = "modalBody";
-
-      const name = document.createElement("input");
-      name.placeholder = "Nom complet (Prénom Nom)";
-      name.value = profile?.full_name || "";
-
-      const email = document.createElement("input");
-      email.placeholder = "Courriel (auth)";
-      email.value = me?.email || "";
-      email.disabled = true;
-
-      const info = document.createElement("div");
-      info.className = "help";
-      info.innerHTML = `Le courriel est celui de l’auth. Pour le changer, tu dois te reconnecter avec un autre email.`;
-
-      body.appendChild(document.createElement("div")).innerHTML = `<label>Nom complet</label>`;
-      body.appendChild(name);
-      body.appendChild(document.createElement("div")).innerHTML = `<label>Courriel</label>`;
-      body.appendChild(email);
-      body.appendChild(info);
-
-      const footer = document.createElement("div");
-      footer.className = "modalFooter";
-
-      const cancel = document.createElement("button");
-      cancel.className = "btnGhost";
-      cancel.textContent = "Fermer";
-
-      const save = document.createElement("button");
-      save.className = "btnPrimary";
-      save.textContent = "Enregistrer";
-
-      footer.appendChild(cancel);
-      footer.appendChild(save);
-
-      modal.appendChild(header);
-      modal.appendChild(body);
-      modal.appendChild(footer);
-
-      backdrop.appendChild(modal);
-      document.body.appendChild(backdrop);
-
-      function close(){ document.body.removeChild(backdrop); }
-      cancel.onclick = close;
-      backdrop.addEventListener("click", (e) => { if(e.target === backdrop) close(); });
-
-      save.onclick = async () => {
-        const fn = (name.value || "").trim();
-        if(!fn) return alert("Nom complet requis.");
-        try{
-          profile = await upsertProfile(fn);
-          close();
-        }catch(e){
-          alert("Erreur sauvegarde profil.\n" + e.message);
-        }
-      };
-    }
-
-    // ============================
-    // REPORT PREVIEW / SEND
-    // ============================
-    function buildReportText(){
-      if(!currentSession) return "Sélectionne une session.";
-      const done = matches.filter(m => m.status === "done" && m.score_a !== null && m.score_b !== null);
-      let s = `Session: ${currentSession.name}\n`;
-      s += `Saison terminée: ${currentSession.season_ended ? "Oui" : "Non"}\n`;
-      s += `Matchs terminés: ${done.length}\n\n`;
-      for(const m of done.slice().reverse()){ // oldest->newest
-        const a = m.match_type === "singles"
-          ? `${playerName(m.a1)}`
-          : `${playerName(m.a1)} + ${playerName(m.a2)}`;
-        const b = m.match_type === "singles"
-          ? `${playerName(m.b1)}`
-          : `${playerName(m.b1)} + ${playerName(m.b2)}`;
-        s += `Terrain ${m.court} | ${m.match_type} | ${a} vs ${b} | ${m.score_a}-${m.score_b}\n`;
-      }
-      return s || "(vide)";
-    }
-
-    async function sendReportViaEdgeFunction(){
-      // Placeholder: you must implement an Edge Function that:
-      // - reads session_id
-      // - computes report
-      // - sends to players with wants_email=true and a non-null email
-      // Example endpoint (you create): /functions/v1/send_session_report
-      if(!currentSession) throw new Error("Sélectionne une session.");
-      const token = getAccess();
-      if(!token) throw new Error("Non connecté.");
-
-      const resp = await fetch(`${SUPABASE_URL}/functions/v1/send_session_report`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-          "apikey": SUPABASE_ANON_KEY
-        },
-        body: JSON.stringify({ session_id: currentSession.id })
-      });
-      const text = await resp.text();
-      if(!resp.ok) throw new Error(`Edge Function error: ${resp.status}\n${text}`);
-      return text;
-    }
-
-    // ============================
-    // PICKERS (all choices = wheel)
-    // ============================
-    function wirePickers(){
-      // Yes/No pickers
-      sessionEndedPick.onclick = () => {
-        openWheelPicker({
-          title: "Saison terminée",
-          items: [
-            {value:"no", label:"Non"},
-            {value:"yes", label:"Oui"},
-          ],
-          initialValue: uiFlags.sessionEnded ? "yes" : "no",
-          onDone: (v) => {
-            uiFlags.sessionEnded = (v === "yes");
-            sessionEndedVal.textContent = uiFlags.sessionEnded ? "Oui" : "Non";
-          }
-        });
-      };
-
-      wantsEmailPick.onclick = () => {
-        openWheelPicker({
-          title: "Recevoir les résultats par email",
-          items: [
-            {value:"no", label:"Non"},
-            {value:"yes", label:"Oui"},
-          ],
-          initialValue: uiFlags.wantsEmail ? "yes" : "no",
-          onDone: (v) => {
-            uiFlags.wantsEmail = (v === "yes");
-            wantsEmailVal.textContent = uiFlags.wantsEmail ? "Oui" : "Non";
-          }
-        });
-      };
-
-      // Session picker
-      sessionPick.onclick = () => {
-        const items = sessions.map(s => ({
-          value: s.name,
-          label: s.name + (s.completed_at ? " (complétée)" : "") + (s.season_ended ? " [saison terminée]" : "")
-        }));
-        if(!items.length) items.push({value:"", label:"(aucune session)" , dim:true});
-        openWheelPicker({
-          title: "Choisir une session",
-          items,
-          initialValue: currentSession?.name || getDefaultSessionName() || (items[0]?.value || ""),
-          onDone: async (v) => {
-            if(!v) return;
-            setCurrentSessionByName(v);
-            await loadSessionPlayers();
-            await loadMatches();
-          }
-        });
-      };
-
-      // Generator pickers
-      gameTypePick.onclick = () => {
-        openWheelPicker({
-          title: "Mode de jeu",
-          items: [
-            {value:"doubles", label:"Double"},
-            {value:"singles", label:"Simple"},
-          ],
-          initialValue: uiFlags.genGameType,
-          onDone: (v, label) => {
-            uiFlags.genGameType = v;
-            gameTypeVal.textContent = label;
-          }
-        });
-      };
-
-      courtsPick.onclick = () => {
-        const items = Array.from({length: 16}, (_,i)=>({value:String(i+1), label:String(i+1)}));
-        openWheelPicker({
-          title: "Nombre de terrains",
-          items,
-          initialValue: String(uiFlags.genCourts),
-          onDone: (v) => {
-            uiFlags.genCourts = Number(v);
-            courtsVal.textContent = String(uiFlags.genCourts);
-          }
-        });
-      };
-
-      assignModePick.onclick = () => {
-        openWheelPicker({
-          title: "Répartition",
-          items: [
-            {value:"random", label:"Au hasard"},
-            {value:"by_court", label:"Par terrain"},
-          ],
-          initialValue: uiFlags.assignMode,
-          onDone: (v, label) => {
-            uiFlags.assignMode = v;
-            assignModeVal.textContent = label;
-          }
-        });
-      };
-
-      algoPick.onclick = () => {
-        openWheelPicker({
-          title: "Algorithme",
-          items: [
-            {value:"random", label:"Aléatoire"},
-            {value:"performance", label:"Performance (formule X)"},
-          ],
-          initialValue: uiFlags.algo,
-          onDone: (v, label) => {
-            uiFlags.algo = v;
-            algoVal.textContent = label;
-          }
-        });
-      };
-
-      // Match pickers
-      matchCourtPick.onclick = () => {
-        const items = Array.from({length: 32}, (_,i)=>({value:String(i+1), label:String(i+1)}));
-        openWheelPicker({
-          title: "Terrain",
-          items,
-          initialValue: String(draftMatch.court),
-          onDone: (v) => {
-            draftMatch.court = Number(v);
-            matchCourtVal.textContent = String(draftMatch.court);
-          }
-        });
-      };
-
-      matchTypePick.onclick = () => {
-        openWheelPicker({
-          title: "Mode",
-          items: [
-            {value:"doubles", label:"Double"},
-            {value:"singles", label:"Simple"},
-          ],
-          initialValue: draftMatch.match_type,
-          onDone: (v, label) => {
-            draftMatch.match_type = v;
-            matchTypeVal.textContent = label;
-            applyMatchTypeUI();
-            currentMatchTeamNames();
-          }
-        });
-      };
-
-      matchStatusPick.onclick = () => {
-        openWheelPicker({
-          title: "Statut",
-          items: [
-            {value:"open", label:"open"},
-            {value:"locked", label:"locked"},
-            {value:"done", label:"done"},
-          ],
-          initialValue: draftMatch.status,
-          onDone: (v, label) => {
-            draftMatch.status = v;
-            matchStatusVal.textContent = label;
-          }
-        });
-      };
-
-      function openPlayerPicker(title, currentId, onPick){
-        if(!currentSession || !sessionPlayers.length){
-          alert("Aucun joueur. Ajoute des joueurs à la session.");
-          return;
-        }
-        const items = sessionPlayers.map(sp => {
-          const p = playersById.get(sp.player_id);
-          return { value: sp.player_id, label: p ? p.full_name : "(?)" };
-        });
-        openWheelPicker({
-          title,
-          items,
-          initialValue: currentId || items[0]?.value,
-          onDone: (v, label) => onPick(v, label)
-        });
-      }
-
-      pickA1.onclick = () => openPlayerPicker("Choisir A1", draftMatch.a1, (v,label)=>{
-        draftMatch.a1 = v; valA1.textContent = label; currentMatchTeamNames();
-      });
-      pickA2.onclick = () => openPlayerPicker("Choisir A2", draftMatch.a2, (v,label)=>{
-        draftMatch.a2 = v; valA2.textContent = label; currentMatchTeamNames();
-      });
-      pickB1.onclick = () => openPlayerPicker("Choisir B1", draftMatch.b1, (v,label)=>{
-        draftMatch.b1 = v; valB1.textContent = label; currentMatchTeamNames();
-      });
-      pickB2.onclick = () => openPlayerPicker("Choisir B2", draftMatch.b2, (v,label)=>{
-        draftMatch.b2 = v; valB2.textContent = label; currentMatchTeamNames();
-      });
-
-      // Matches filter
-      matchFilterPick.onclick = () => {
-        openWheelPicker({
-          title: "Filtrer les matchs",
-          items: [
-            {value:"all", label:"Tous"},
-            {value:"mine", label:"Mes parties"},
-            {value:"player", label:"Un joueur"},
-          ],
-          initialValue: uiFlags.matchFilter,
-          onDone: (v, label) => {
-            uiFlags.matchFilter = v;
-            matchFilterVal.textContent = label;
-            filterPlayerCol.classList.toggle("hidden", v !== "player");
-            renderMatches();
-          }
-        });
-      };
-
-      filterPlayerPick.onclick = () => {
-        if(!currentSession || !sessionPlayers.length){
-          alert("Aucun joueur.");
-          return;
-        }
-        const items = sessionPlayers.map(sp => {
-          const p = playersById.get(sp.player_id);
-          return { value: sp.player_id, label: p ? p.full_name : "(?)" };
-        });
-        openWheelPicker({
-          title: "Choisir un joueur",
-          items,
-          initialValue: uiFlags.filterPlayerId || items[0]?.value,
-          onDone: (v, label) => {
-            uiFlags.filterPlayerId = v;
-            filterPlayerVal.textContent = label;
-            renderMatches();
-          }
-        });
-      };
-    }
-
-    // ============================
-    // EVENTS
-    // ============================
-    sendLinkBtn.addEventListener("click", async () => {
-      const email = (authEmailEl.value || "").trim();
-      const fn = (fullNameFirstEl.value || "").trim();
-      if(!email) return alert("Courriel requis.");
-      // Keep name draft locally (first login will persist after token)
-      if(fn) localStorage.setItem(LS_PROFILE_FULLNAME, fn);
+    loginBtn.addEventListener("click", async () => {
+      const email = (emailEl.value || "").trim();
+      if(!email) return alert("Courriel requis");
       await sendMagicLink(email);
     });
 
     logoutBtn.addEventListener("click", () => {
-      clearAccess(); clearRefresh();
+      clearTokens();
       location.href = window.location.origin + window.location.pathname;
     });
 
-    gearBtn.addEventListener("click", () => {
-      if(!me) return alert("Connecte-toi d'abord.");
-      openConfigModal();
+    refreshBtn.addEventListener("click", async () => {
+      try{
+        await refreshAll();
+        alert("OK");
+      }catch(e){
+        log("[REFRESH ERROR]\\n" + e.message);
+        alert("Erreur refresh (voir debug).");
+      }
     });
 
-    newSessionBtn.addEventListener("click", async () => {
-      const name = (sessionNameEl.value || "").trim();
-      if(!name) return alert("Nom de session requis.");
-      newSessionBtn.disabled = true;
+    addPlayerBtn.addEventListener("click", async () => {
+      const name = (playerNameEl.value || "").trim();
+      if(!name) return alert("Nom requis");
+      addPlayerBtn.disabled = true;
       try{
-        const s = await createSession(name, uiFlags.sessionEnded);
-        await loadSessions();
-        setCurrentSessionByName(s.name);
-        await loadSessionPlayers();
-        await loadMatches();
-        sessionsStatus.textContent = `Créée: ${s.name}`;
+        await addPlayer(name);
+        playerNameEl.value = "";
+        await refreshAll();
       }catch(e){
-        // Unique violation is the expected "cannot create twice"
-        alert("Création refusée.\nProbable: session existe déjà (nom unique).\n\n" + e.message);
+        log("[ADD PLAYER ERROR]\\n" + e.message);
+        alert("Erreur ajout joueur (voir debug).");
       }finally{
-        newSessionBtn.disabled = false;
-      }
-    });
-
-    setDefaultSessionBtn.addEventListener("click", () => {
-      if(!currentSession) return alert("Sélectionne une session.");
-      setDefaultSessionName(currentSession.name);
-      sessionsStatus.textContent = `Session par défaut: ${currentSession.name}`;
-    });
-
-    markSessionCompleteBtn.addEventListener("click", async () => {
-      if(!currentSession) return alert("Sélectionne une session.");
-      if(!confirm("Marquer la session comme complétée ?")) return;
-      try{
-        const u = await updateSession(currentSession.id, { completed_at: isoNow() });
-        await loadSessions();
-        setCurrentSessionByName(u.name);
-        sessionsStatus.textContent = "Session complétée.";
-      }catch(e){
-        alert("Erreur.\n" + e.message);
-      }
-    });
-
-    addPlayerToSessionBtn.addEventListener("click", async () => {
-      if(!currentSession) return alert("Sélectionne une session.");
-      const fn = (playerFullNameEl.value || "").trim();
-      const email = (playerEmailEl.value || "").trim();
-      if(!fn) return alert("Nom complet requis.");
-      addPlayerToSessionBtn.disabled = true;
-      try{
-        const p = await ensurePlayer(fn, email || null);
-        await addPlayerToSession(p.id, uiFlags.wantsEmail);
-        playerFullNameEl.value = "";
-        playerEmailEl.value = "";
-        uiFlags.wantsEmail = false;
-        wantsEmailVal.textContent = "Non";
-        await loadSessionPlayers();
-      }catch(e){
-        alert("Erreur ajout joueur.\n" + e.message);
-      }finally{
-        addPlayerToSessionBtn.disabled = false;
-      }
-    });
-
-    genBtn.addEventListener("click", async () => {
-      try{
-        await loadMatches(); // to have latest perf
-        const sets = genTeams();
-        renderGen(sets);
-      }catch(e){
-        alert(e.message);
+        addPlayerBtn.disabled = false;
       }
     });
 
     createMatchBtn.addEventListener("click", async () => {
       createMatchBtn.disabled = true;
       try{
-        const m = await createMatch();
-        currentMatchTeamNames();
-        scoreAEl.value = 0; scoreBEl.value = 0;
+        await createMatch();
         await loadMatches();
         alert("Match créé.");
       }catch(e){
-        alert(e.message);
+        log("[MATCH INSERT ERROR]\\n" + e.message);
+        alert("Erreur création match (voir debug).");
       }finally{
         createMatchBtn.disabled = false;
       }
     });
 
-    submitScoreBtn.addEventListener("click", async () => {
-      submitScoreBtn.disabled = true;
+    gearBtn.addEventListener("click", async () => {
+      // Pre-fill modal
+      cfgEmail.value = me?.email || "";
+      cfgFullName.value = myProfile?.full_name || "";
+      cfgWantsEmail.value = String(!!myProfile?.wants_email);
+      openSettings();
+    });
+
+    settingsCloseBtn.addEventListener("click", closeSettings);
+    settingsOverlay.addEventListener("click", (e) => {
+      if(e.target === settingsOverlay) closeSettings();
+    });
+
+    saveProfileBtn.addEventListener("click", async () => {
+      const fullName = (cfgFullName.value || "").trim();
+      if(!fullName){
+        settingsStatus.textContent = "Nom complet requis.";
+        return;
+      }
+      const wantsEmail = (cfgWantsEmail.value === "true");
+      saveProfileBtn.disabled = true;
+      settingsStatus.textContent = "Enregistrement…";
       try{
-        await submitScore();
-        await loadMatches();
-        alert("Score soumis. Match terminé.");
+        const p = await upsertProfile({ full_name: fullName, wants_email: wantsEmail });
+        settingsStatus.textContent = "OK.";
+        // show name somewhere later; for now auth badge stays email
+        myProfile = p;
+        closeSettings();
       }catch(e){
-        alert(e.message);
+        settingsStatus.textContent = "Erreur sauvegarde profil.\\n" + e.message;
+        alert("Erreur sauvegarde profil (voir le message).\\n\\nSi ça dit 404 profiles: tu n'as pas exécuté le SQL.");
       }finally{
-        submitScoreBtn.disabled = false;
-      }
-    });
-
-    refreshMatchesBtn.addEventListener("click", async () => {
-      try{
-        await loadMatches();
-      }catch(e){
-        alert("Erreur refresh.\n" + e.message);
-      }
-    });
-
-    previewReportBtn.addEventListener("click", () => {
-      reportBox.textContent = buildReportText();
-    });
-
-    sendReportBtn.addEventListener("click", async () => {
-      try{
-        const txt = await sendReportViaEdgeFunction();
-        reportBox.textContent = "OK:\n" + txt;
-      }catch(e){
-        reportBox.textContent = "Erreur:\n" + e.message;
-        alert("Envoi impossible tant que l’Edge Function n’existe pas.");
+        saveProfileBtn.disabled = false;
       }
     });
 
     // ============================
-    // INIT
+    // Init
     // ============================
     (async function init(){
-      // parse magic link return
+      debugEl.textContent = "";
+      initCourtSelect(12);
+
+      // handle magic link return
       const hp = parseHash();
       if(hp?.error){
-        showLogin(`Erreur auth: ${hp.error}\n${hp.error_description || ""}`);
+        showLogin(`Erreur auth: ${hp.error}\\n${hp.error_description || ""}`);
         history.replaceState(null, "", window.location.pathname + window.location.search);
         return;
       }
       if(hp?.access_token){
-        saveAccess(hp.access_token);
-        if(hp.refresh_token) saveRefresh(hp.refresh_token);
+        saveTokens({
+          access_token: hp.access_token,
+          refresh_token: hp.refresh_token,
+          expires_in: hp.expires_in ?? 3600
+        });
         history.replaceState(null, "", window.location.pathname + window.location.search);
       }
 
-      const token = getAccess();
+      // refresh if needed before loading user
+      const ok = await refreshSessionIfNeeded();
+      const token = getAccessToken();
       if(!token){
         showLogin();
-        wirePickers();
         return;
       }
 
-      // try load user; if fails, attempt refresh
-      try{
-        me = await loadUser();
-      }catch{
-        const ok = await refreshTokenIfPossible();
-        if(!ok){
-          clearAccess(); clearRefresh();
-          showLogin("Session invalide. Reconnecte-toi.");
-          wirePickers();
-          return;
-        }
-        me = await loadUser();
-      }
-
-      // upsert profile if missing OR first-login draft name exists
-      profile = await loadProfile();
-      const draftName = (localStorage.getItem(LS_PROFILE_FULLNAME) || "").trim();
-      if(!profile || !profile.full_name){
-        const fn = draftName || (fullNameFirstEl.value||"").trim();
-        if(fn){
-          profile = await upsertProfile(fn);
-          localStorage.removeItem(LS_PROFILE_FULLNAME);
-        }
-      }
-
-      // Enforce: no "email as player name"
-      // -> profile.full_name is your real display name; players are separate entities.
-
-      topEmail.textContent = me.email || "(email inconnu)";
-      setConn(true);
       showApp();
-      startRefreshLoop();
+      try{
+        await loadUser();
+        setAuthUI(true, me.email);
+        log("[AUTH OK] " + me.email);
 
-      wirePickers();
+        // load profile; if missing => force settings open
+        try{
+          await loadMyProfile();
+        }catch(e){
+          // If profiles table missing you'll see it here too
+          log("[PROFILE LOAD ERROR]\\n" + e.message);
+        }
 
-      // Load sessions
-      await loadSessions();
+        if(!myProfile || !myProfile.full_name){
+          // force user to set it
+          cfgEmail.value = me.email;
+          cfgFullName.value = "";
+          cfgWantsEmail.value = "false";
+          openSettings();
+          settingsStatus.textContent = "Au premier login, tu dois définir ton nom complet.";
+        }
 
-      // Select default session if exists
-      const def = getDefaultSessionName();
-      if(def && sessions.some(s=>s.name===def)){
-        setCurrentSessionByName(def);
-      }else if(sessions[0]){
-        setCurrentSessionByName(sessions[0].name);
+        await refreshAll();
+
+        // Keep session alive: refresh every 10 minutes
+        setInterval(async () => {
+          await refreshSessionIfNeeded();
+        }, 10 * 60 * 1000);
+
+      }catch(e){
+        log("[INIT ERROR]\\n" + e.message);
+        clearTokens();
+        showLogin("Session invalide. Reconnecte-toi.");
       }
-
-      // Load players/matches for current
-      await loadSessionPlayers();
-      await loadMatches();
-
-      // Init pick values
-      sessionEndedVal.textContent = uiFlags.sessionEnded ? "Oui" : "Non";
-      wantsEmailVal.textContent = "Non";
-
-      gameTypeVal.textContent = "Double";
-      courtsVal.textContent = "1";
-      assignModeVal.textContent = "Au hasard";
-      algoVal.textContent = "Aléatoire";
-
-      matchCourtVal.textContent = "1";
-      matchTypeVal.textContent = "Double";
-      matchStatusVal.textContent = "open";
-      matchFilterVal.textContent = "Tous";
-      filterPlayerCol.classList.add("hidden");
-
-      applyMatchTypeUI();
-      currentMatchTeamNames();
-
-      sessionsStatus.textContent = `Sessions: ${sessions.length}`;
-      reportBox.textContent = "Prévisualise d’abord.";
     })();
   </script>
 </body>
