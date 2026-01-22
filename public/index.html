@@ -34,7 +34,7 @@
       backdrop-filter: blur(8px);
     }
     .brand{ display:flex; flex-direction:column; gap:2px; }
-    .brand small{ color:var(--muted); font-size:12px; }
+    .brand small{ color:var(--muted); font-size:12px; white-space:normal; overflow:visible; }
     .rightTop{ display:flex; align-items:center; gap:10px; }
 
     .authMini{
@@ -148,7 +148,26 @@
       body{ max-width: 860px; margin: 0 auto; }
       .tabs{ grid-template-columns: repeat(3, 1fr); }
     }
-  </style>
+  
+/* Modal (score) */
+.overlay{
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.55);
+  display:flex; align-items:flex-end; justify-content:center;
+  padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+  z-index: 1000;
+}
+.modal{
+  width: min(900px, 100%);
+  border:1px solid var(--line);
+  background: rgba(18,27,47,.98);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  padding: 14px;
+}
+.modalHead{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.modalHead strong{ font-size: 16px; }
+</style>
 </head>
 
 <body>
@@ -221,7 +240,7 @@
           <input id="playerName" type="text" placeholder="Ex: Titi Pellerin" />
         </div>
         <div class="col" style="flex:0 0 240px;">
-          <button id="addPlayerBtn" class="btnPrimary" type="button">Ajouter au lieu</button>
+          <button id="addPlayerBtn" class="btnPrimary" type="button">Ajouter joueur</button>
         </div>
       </div>
       <div class="help">
@@ -250,7 +269,35 @@
             <option value="done">done</option>
           </select>
         </div>
-      </div>
+      
+<div class="row">
+  <div class="col">
+    <label for="matchMode">Type de partie</label>
+    <select id="matchMode">
+      <option value="4" selected>4 joueurs (double)</option>
+      <option value="2">2 joueurs (simple)</option>
+    </select>
+  </div>
+  <div class="col">
+    <label for="matchFilter">Affichage</label>
+    <select id="matchFilter">
+      <option value="today_all" selected>Session du jour – tous</option>
+      <option value="today_inprogress">Session du jour – en cours</option>
+      <option value="today_mine">Session du jour – mes matchs</option>
+    </select>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col" style="flex:0 0 240px;">
+    <button id="suggestTeamsBtn" type="button">Proposer équipes (aléatoire)</button>
+  </div>
+  <div class="col" style="flex:0 0 260px;">
+    <button id="finishAllTodayBtn" class="btnDanger" type="button">Terminer tous les matchs du jour</button>
+  </div>
+</div>
+
+</div>
 
       <div class="row">
         <div class="col">
@@ -297,6 +344,25 @@
     </div>
   </div>
 
-  <script type="module" src="js/main.js"></script>
-</body>
-</html>
+  
+<!-- SCORE MODAL -->
+<div id="scoreOverlay" class="overlay hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modalHead">
+      <strong>Terminer le match</strong>
+      <button id="scoreCloseBtn" class="iconBtn" type="button" title="Fermer">✕</button>
+    </div>
+    <div class="hr"></div>
+
+   
+<div class="row" style="margin-top:10px;">
+  <div class="col">
+    <label for="finishStatus">Statut</label>
+    <select id="finishStatus">
+      <option value="done" selected>terminée</option>
+      <option value="abandoned">abandonnée</option>
+    </select>
+  </div>
+</div>
+
+ 
