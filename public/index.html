@@ -4,18 +4,164 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Pickleball</title>
-  <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
 
+  <style>
+    :root{
+      --bg:#0b1220; --card:#121b2f; --muted:#9fb0d0; --text:#e8efff;
+      --line:rgba(255,255,255,.12);
+      --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --accent:#60a5fa;
+      --radius:16px; --pad:16px; --tap:58px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; font-family:var(--sans);
+      background:linear-gradient(180deg,#070b14, var(--bg));
+      color:var(--text);
+      padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+    }
+    h1{ margin: 6px 0 2px; font-size: 22px; letter-spacing:.2px; }
+    h2{ margin: 0 0 10px; font-size: 18px; }
+    h3{ margin: 16px 0 10px; font-size: 16px; color: #d7e3ff; }
+
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; padding: 10px 12px; border:1px solid var(--line);
+      border-radius: 18px; background: rgba(255,255,255,.04); box-shadow: var(--shadow);
+      position: sticky; top: 10px; z-index: 10;
+      backdrop-filter: blur(8px);
+    }
+    .brand{ display:flex; flex-direction:column; gap:2px; }
+    .brand small{ color:var(--muted); font-size:12px; }
+    .rightTop{ display:flex; align-items:center; gap:10px; }
+
+    .authMini{
+      display:flex; align-items:center; gap:10px;
+      padding: 8px 10px; border:1px solid var(--line); border-radius: 999px;
+      background: rgba(255,255,255,.03);
+      max-width: 62vw;
+      cursor: pointer;
+      user-select:none;
+      touch-action: manipulation;
+    }
+    .dot{ width:10px; height:10px; border-radius:999px; background: var(--warn); flex:0 0 auto; }
+    .dot.ok{ background: var(--ok); }
+    .dot.bad{ background: var(--bad); }
+    .authEmail{
+      font-size: 12px; color:var(--muted);
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+
+    .card{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      border-radius: var(--radius);
+      padding: var(--pad);
+      box-shadow: var(--shadow);
+      margin-top: 14px;
+    }
+    .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:end; }
+    .col{ display:flex; flex-direction:column; gap:8px; flex:1 1 220px; }
+    label{ font-weight:800; font-size: 13px; color:#d7e3ff; }
+    input, select{
+      width:100%;
+      height: var(--tap);
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.2);
+      color: var(--text);
+      outline: none;
+      font-size: 16px;
+    }
+    input::placeholder{ color: rgba(232,239,255,.45); }
+    button{
+      height: var(--tap);
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      color: var(--text);
+      font-weight: 900;
+      font-size: 16px;
+      padding: 0 14px;
+      cursor:pointer;
+      user-select:none;
+      touch-action: manipulation;
+    }
+    button:disabled{ opacity:.55; cursor:not-allowed; }
+    .btnPrimary{
+      background: linear-gradient(180deg, rgba(96,165,250,.35), rgba(96,165,250,.14));
+      border-color: rgba(96,165,250,.45);
+    }
+    .btnDanger{
+      background: linear-gradient(180deg, rgba(239,68,68,.28), rgba(239,68,68,.10));
+      border-color: rgba(239,68,68,.40);
+    }
+    .btnGhost{ background: rgba(255,255,255,.03); }
+    .help{ color: var(--muted); font-size: 13px; margin-top: 6px; line-height:1.35; }
+    .status{
+      font-family: var(--mono);
+      font-size: 12px;
+      white-space: pre-wrap;
+      color: #d7e3ff;
+      border:1px dashed rgba(255,255,255,.18);
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: rgba(0,0,0,.18);
+    }
+    .hidden{ display:none !important; }
+    .muted{ color: var(--muted); }
+
+    .tabs{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .tab{
+      height: 52px;
+      border-radius: 16px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      font-weight: 900;
+      font-size: 14px;
+    }
+    .tab.active{
+      background: linear-gradient(180deg, rgba(96,165,250,.35), rgba(96,165,250,.14));
+      border-color: rgba(96,165,250,.55);
+    }
+
+    .listItem{
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      padding: 10px 12px; border:1px solid var(--line); border-radius: 14px;
+      background: rgba(0,0,0,.12);
+      margin-top: 10px;
+    }
+    .name{ font-weight: 950; }
+    .miniBtn{ height: 44px; min-width: 44px; border-radius: 14px; font-size: 14px; padding: 0 12px; }
+
+    .hr{ height:1px; background: var(--line); margin: 12px 0; }
+
+    @media (min-width: 840px){
+      body{ max-width: 860px; margin: 0 auto; }
+      .tabs{ grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Topbar -->
   <div class="topbar">
     <div class="brand">
       <div style="font-weight:950">Pickleball</div>
-      <small id="versionText"></small>
+      <small id="versionText">Version: 2026-01-22</small>
     </div>
 
     <div class="rightTop">
-      <div id="authMini" class="authMini" title="Compte">
+      <!-- Email badge: clique = page compte -->
+      <div id="authBadge" class="authMini" title="Compte (clique pour configurer)">
         <span id="authDot" class="dot"></span>
         <span id="authEmail" class="authEmail">(non connecté)</span>
       </div>
@@ -25,6 +171,7 @@
   <!-- LOGIN -->
   <div id="loginCard" class="card">
     <h2>Connexion</h2>
+
     <div class="row">
       <div class="col">
         <label for="email">Courriel</label>
@@ -34,76 +181,61 @@
         <button id="loginBtn" class="btnPrimary" type="button">Recevoir un lien</button>
       </div>
     </div>
+
     <div class="help">
-      Tu reçois un lien par courriel. Clique-le pour te connecter.
+      Tu reçois un lien par courriel. Clique-le pour ouvrir l’app (session conservée).
     </div>
+
     <div class="hr"></div>
     <div id="loginStatus" class="status">Prêt.</div>
   </div>
 
   <!-- APP -->
-  <div class="row" style="margin-top:12px;">
-  <div class="col">
-    <label for="venueSelect">Lieu</label>
-    <select id="venueSelect"></select>
-  </div>
-  <div class="col" style="flex:0 0 240px;">
-    <label>&nbsp;</label>
-    <button id="addVenueBtn" class="btnPrimary" type="button">+ Ajouter un lieu</button>
-  </div>
-</div>
-
-<div class="help" id="venueHint">
-  Choisis un lieu. Les joueurs et matchs affichés sont ceux de ce lieu uniquement.
-</div>
   <div id="appCard" class="card hidden">
-    <h2>Session</h2>
-
-    <!-- Lieu -->
-    <div class="row">
-      <div class="col">
-        <label for="venueSelect">Lieu (obligatoire)</label>
-        <select id="venueSelect"></select>
-        <div class="help">Seuls les joueurs du lieu sélectionné sont visibles. Ton compte reste le même partout.</div>
-      </div>
-      <div class="col" style="flex:0 0 240px;">
-        <button id="reloadBtn" type="button">Rafraîchir</button>
-      </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="tabPlayers" type="button">Joueurs</button>
+      <button class="tab" data-tab="tabMatches" type="button">Matchs</button>
+      <button class="tab" data-tab="tabDebug" type="button">Debug</button>
     </div>
 
-    <!-- Menu affichage -->
-    <div class="menuGrid">
-      <button class="menuBtn active" data-view="addPlayer">Ajout de joueur</button>
-      <button class="menuBtn" data-view="listPlayers">Liste de joueurs</button>
-      <button class="menuBtn" data-view="allMatches">Tous les matchs</button>
-      <button class="menuBtn" data-view="myMatches">Mes matchs</button>
-    </div>
+    <!-- Joueurs -->
+    <div id="tabPlayers" style="margin-top:12px;">
+      <h3>Lieu / Session</h3>
+      <div class="row">
+        <div class="col">
+          <label for="venueSelect">Lieu</label>
+          <select id="venueSelect"></select>
+        </div>
+        <div class="col" style="flex:0 0 240px;">
+          <button id="addVenueBtn" class="btnPrimary" type="button">+ Ajouter un lieu</button>
+        </div>
+      </div>
+      <div class="help">
+        Le lieu filtre l’affichage. Les joueurs et matchs visibles appartiennent à ce lieu.
+      </div>
 
-    <!-- View: add player -->
-    <div id="view_addPlayer" style="margin-top:12px;">
-      <h3>Ajouter un joueur (dans ce lieu)</h3>
+      <h3>Ajouter un joueur</h3>
       <div class="row">
         <div class="col">
           <label for="playerName">Nom complet</label>
-          <input id="playerName" type="text" placeholder="Ex: Yans Côté" />
+          <input id="playerName" type="text" placeholder="Ex: Titi Pellerin" />
         </div>
         <div class="col" style="flex:0 0 240px;">
-          <button id="addPlayerBtn" class="btnPrimary" type="button">Ajouter</button>
+          <button id="addPlayerBtn" class="btnPrimary" type="button">Ajouter au lieu</button>
         </div>
       </div>
-      <div class="help">Le joueur est lié au lieu sélectionné.</div>
-    </div>
+      <div class="help">
+        La corbeille retire le joueur de ce lieu (le joueur global reste disponible pour d’autres lieux).
+      </div>
 
-    <!-- View: list players -->
-    <div id="view_listPlayers" class="hidden" style="margin-top:12px;">
-      <h3>Liste des joueurs (ce lieu)</h3>
+      <h3>Liste des joueurs</h3>
       <div id="playersEmpty" class="muted">Chargement…</div>
       <div id="playersWrap"></div>
     </div>
 
-    <!-- View: matches -->
-    <div id="view_matches" class="hidden" style="margin-top:12px;">
-      <h3>Matchs (session du jour)</h3>
+    <!-- Matchs -->
+    <div id="tabMatches" class="hidden" style="margin-top:12px;">
+      <h3>Créer un match</h3>
 
       <div class="row">
         <div class="col">
@@ -111,45 +243,71 @@
           <select id="court"></select>
         </div>
         <div class="col">
-          <label for="a1">A1</label>
-          <select id="a1"></select>
-        </div>
-        <div class="col">
-          <label for="b1">B1</label>
-          <select id="b1"></select>
+          <label for="statusMatch">Statut</label>
+          <select id="statusMatch">
+            <option value="open">open</option>
+            <option value="locked">locked</option>
+            <option value="done">done</option>
+          </select>
         </div>
       </div>
 
       <div class="row">
         <div class="col">
-          <label for="a2">A2 (optionnel)</label>
-          <select id="a2"></select>
+          <label for="a1">A1</label>
+          <select id="a1"></select>
         </div>
         <div class="col">
-          <label for="b2">B2 (optionnel)</label>
+          <label for="a2">A2</label>
+          <select id="a2"></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label for="b1">B1</label>
+          <select id="b1"></select>
+        </div>
+        <div class="col">
+          <label for="b2">B2</label>
           <select id="b2"></select>
         </div>
+      </div>
+
+      <div class="row">
         <div class="col" style="flex:0 0 240px;">
           <button id="createMatchBtn" class="btnPrimary" type="button">Créer match</button>
         </div>
       </div>
 
-      <div class="row">
-        <div class="col" style="flex:0 0 320px;">
-          <button id="finishAllBtn" class="btnDanger" type="button">Terminer tous les matchs en cours</button>
-        </div>
-      </div>
-
       <div class="hr"></div>
-
+      <h3>Matchs du lieu</h3>
       <div id="matchesEmpty" class="muted">Chargement…</div>
       <div id="matchesWrap"></div>
+    </div>
 
+    <!-- Debug -->
+    <div id="tabDebug" class="hidden" style="margin-top:12px;">
+      <h3>Debug</h3>
+      <div class="help">
+        (Tech) Ce panneau sert au diagnostic.
+      </div>
       <div class="hr"></div>
       <div id="debug" class="status">…</div>
     </div>
   </div>
 
   <script type="module" src="js/main.js"></script>
+  <script>
+    // Clique sur le badge email = page compte (si tu l’as)
+    (function(){
+      const badge = document.getElementById("authBadge");
+      if(!badge) return;
+      badge.addEventListener("click", () => {
+        // Si tu n’as pas encore account.html, commente cette ligne
+        window.location.href = "account.html";
+      });
+    })();
+  </script>
 </body>
 </html>
