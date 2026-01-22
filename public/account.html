@@ -1,1 +1,76 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Compte - Pickleball</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
 
+  <div class="topbar">
+    <div class="brand">
+      <div style="font-weight:950">Compte</div>
+      <small>Configuration du compte</small>
+    </div>
+
+    <div class="rightTop">
+      <button id="backBtn" class="miniBtn btnGhost" type="button">Retour</button>
+    </div>
+  </div>
+
+  <div id="card" class="card">
+    <h2>Profil</h2>
+
+    <div class="row">
+      <div class="col">
+        <label for="cfgEmail">Courriel (auth)</label>
+        <input id="cfgEmail" type="email" disabled />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label for="cfgFullName">Nom complet</label>
+        <input id="cfgFullName" type="text" placeholder="Prénom Nom" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label for="cfgLevel">Niveau</label>
+        <select id="cfgLevel">
+          <option value="">(choisir)</option>
+          <option value="Débutant">Débutant</option>
+          <option value="Intermédiaire">Intermédiaire</option>
+          <option value="Avancé">Avancé</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label for="cfgWantsEmail">Rapport par email en fin de match/session</label>
+        <select id="cfgWantsEmail">
+          <option value="true">Oui</option>
+          <option value="false">Non</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col" style="flex:0 0 240px;">
+        <button id="saveBtn" class="btnPrimary" type="button">Enregistrer</button>
+      </div>
+      <div class="col" style="flex:0 0 240px;">
+        <button id="logoutBtn" class="btnDanger" type="button">Déconnexion</button>
+      </div>
+    </div>
+
+    <div class="hr"></div>
+    <div id="status" class="status">…</div>
+  </div>
+
+  <script type="module" src="js/ui-account.js"></script>
+</body>
+</html>
