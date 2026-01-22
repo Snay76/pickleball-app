@@ -1,32 +1,47 @@
 import { apiFetch } from "./api.js";
-import { LS_VENUE_ID } from "./config.js";
 
-/**
- * Approche: venues dans la DB.
- * - listVenues: charge tout
- * - ensureVenueByName: crée si absent
- * - selected venue stocké en localStorage
- */
+const LS_VENUE_PREFIX = "pb_selected_venue_"; // + userId
 
-export function getSelectedVenueId(){
-  return localStorage.getItem(LS_VENUE_ID) || "";
-}
-export function setSelectedVenueId(id){
-  localStorage.setItem(LS_VENUE_ID, id);
+export function getSelectedVenueId(userId) {
+  if (!userId) return localStorage.getItem("pb_selected_venue") || "";
+  return localStorage.getItem(LS_VENUE_PREFIX + userId) || "";
 }
 
-export async function listVenues(){
-  return await apiFetch("/rest/v1/venues?select=id,name,created_at&order=name.asc") || [];
+export function setSelectedVenueId(userId, venueId) {
+  if (!userId) localStorage.setItem("pb_selected_venue", venueId || "");
+  else localStorage.setItem(LS_VENUE_PREFIX + userId, venueId || "");
 }
 
-export async function ensureVenueByName(name){
-  const found = await apiFetch(`/rest/v1/venues?select=id,name&name=eq.${encodeURIComponent(name)}`) || [];
-  if(found[0]) return found[0];
+export async function listVenues() {
+  return (await apiFetch("/rest/v1/locations?select=id,name,created_at&order=name.asc")) || [];
+}
 
-  const inserted = await apiFetch("/rest/v1/venues?select=id,name", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json", "Prefer":"return=representation" },
-    body: JSON.stringify({ name })
+export async function createVenue({ name, created_by }) {
+  const payload = { name, created_by };
+  const inserted = await apiFetch("/rest/v1/locations?select=id,name,created_at", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Prefer": "return=representation"
+    },
+    body: JSON.stringify(payload),
   });
   return inserted?.[0] || null;
+}
+
+export function fillVenueSelect(selectEl, venues, selectedId) {
+  selectEl.innerHTML = "";
+
+  const opt0 = document.createElement("option");
+  opt0.value = "";
+  opt0.textContent = "(choisir un lieu)";
+  selectEl.appendChild(opt0);
+
+  for (const v of venues) {
+    const o = document.createElement("option");
+    o.value = v.id;
+    o.textContent = v.name;
+    if (v.id === selectedId) o.selected = true;
+    selectEl.appendChild(o);
+  }
 }
