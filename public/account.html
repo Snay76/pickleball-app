@@ -114,36 +114,27 @@
       </div>
     </div>
 
-    <!-- Code de partage du lieu sélectionné -->
-   <div class="row">
-  <div class="col">
-    <div id="shareBox" class="card" style="padding:12px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-        <div>
-          <div style="font-weight:800;">Partage du lieu</div>
-          <div class="help">Choisis un lieu, le code s’affiche automatiquement. Copier copie le code.</div>
+    <!-- Partage (menu séparé + code) -->
+    <div class="row">
+      <div class="col">
+        <div id="shareBox" class="card" style="padding:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <div>
+              <div style="font-weight:800;">Partage du lieu</div>
+              <div class="help">Choisis un lieu, le code s’affiche automatiquement. Copier copie le code.</div>
+            </div>
+            <button id="copyShareCodeBtn" class="miniBtn btnGhost" type="button">Copier</button>
+          </div>
+
+          <div style="margin-top:10px;">
+            <label for="shareVenueSelect">Lieu à partager</label>
+            <select id="shareVenueSelect"></select>
+          </div>
+
+          <div style="margin-top:10px;font-family:var(--mono);" id="shareCodeValue">—</div>
         </div>
-        <button id="copyShareCodeBtn" class="miniBtn btnGhost" type="button">Copier</button>
       </div>
-
-      <!-- NOUVEAU: menu de sélection du lieu à partager -->
-      <div style="margin-top:10px;">
-        <label for="shareVenueSelect">Lieu à partager</label>
-        <select id="shareVenueSelect"></select>
-      </div>
-
-      <div style="margin-top:10px;font-family:var(--mono);" id="shareCodeValue">—</div>
     </div>
-  </div>
-</div>
-
-    <!-- SUPPRIMÉ: Membres/Joueurs du lieu => à déplacer dans stats.html -->
-    <!--
-    <h2 style="margin-top:16px;">Membres / Joueurs du lieu</h2>
-    <div class="help">Liste des joueurs inscrits au lieu, leur rôle et le nombre de matchs joués (à vie).</div>
-    <div id="membersWrap"></div>
-    <div id="membersEmpty" class="empty">Aucun membre.</div>
-    -->
 
     <div class="hr"></div>
 
