@@ -170,7 +170,7 @@ export function bindMainUI(ctx) {
     }
     return opp;
   }
-  }
+
 
   function isoStartOfDayLocal(d = new Date()) {
     const x = new Date(d);
