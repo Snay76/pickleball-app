@@ -1,4 +1,7 @@
 import { APP_VERSION } from "./config.js";
+
+const vEl = document.getElementById("appVersion");
+if (vEl) vEl.textContent = `v${APP_VERSION}`;
 import { parseHash, saveTokens, refreshSessionIfNeeded, loadUser, sendMagicLink, hasSession, clearTokens } from "./auth.js";
 import { bindMainUI } from "./ui-main.js";
 import { apiFetch } from "./api.js";
