@@ -26,11 +26,9 @@ const shareBox = document.getElementById("shareBox");
 const shareCodeValue = document.getElementById("shareCodeValue");
 const copyShareCodeBtn = document.getElementById("copyShareCodeBtn");
 
-// NOUVEAU: créer un lieu
+// NOUVEAU: créer un lieu (doit exister dans account.html)
 const newVenueName = document.getElementById("newVenueName");
 const createVenueBtn = document.getElementById("createVenueBtn");
-
-// NOTE: section membres retirée du HTML -> on ne l’utilise plus ici
 
 backBtn?.addEventListener("click", () => (window.location.href = "index.html"));
 
@@ -40,7 +38,7 @@ logoutBtn?.addEventListener("click", () => {
 });
 
 function setStatus(msg) {
-  if (statusEl) statusEl.textContent = msg;
+  if (statusEl) statusEl.textContent = msg || "";
 }
 
 function esc(s) {
@@ -52,18 +50,17 @@ function esc(s) {
     .replaceAll("'", "&#039;");
 }
 
+// ---------- Profile ----------
 async function loadMyProfile() {
-  // Nouveau schema (skill_level + level=global_role) OU ancien schema (level=skill)
   const rows = await apiFetch(
-    `/rest/v1/profiles?select=user_id,email,full_name,wants_email,level,skill_level&user_id=eq.${me.id}`
+    `/rest/v1/profiles?select=user_id,email,full_name,wants_email,level,skill_level&user_id=eq.${me.id}&limit=1`
   );
   myProfile = rows?.[0] || null;
   return myProfile;
 }
 
 async function upsertProfile({ full_name, wants_email, skill_level }) {
-  // IMPORTANT: on ne met JAMAIS à jour level (global_role) depuis le client.
-  // Sinon un utilisateur s’auto-promote admin_full.
+  // IMPORTANT: on ne met JAMAIS à jour level/global_role depuis le client.
   const payload = {
     user_id: me.id,
     email: me.email,
@@ -71,7 +68,7 @@ async function upsertProfile({ full_name, wants_email, skill_level }) {
     wants_email,
   };
 
-  // On tente le nouveau schema: skill_level existe.
+  // Nouveau schema
   try {
     payload.skill_level = skill_level;
 
@@ -89,8 +86,8 @@ async function upsertProfile({ full_name, wants_email, skill_level }) {
 
     myProfile = inserted?.[0] || myProfile;
     return;
-  } catch (e) {
-    // Fallback schema legacy: level = skill (et pas de skill_level)
+  } catch (_) {
+    // Legacy fallback: level = skill
     const legacy = {
       user_id: me.id,
       email: me.email,
@@ -115,6 +112,7 @@ async function upsertProfile({ full_name, wants_email, skill_level }) {
   }
 }
 
+// ---------- Venues ----------
 async function listMyVenues() {
   // Nouveau schema: location_members -> locations
   try {
@@ -133,10 +131,12 @@ async function listMyVenues() {
       .filter((v) => v.id);
 
     return { venues, mode: "members" };
-  } catch (e) {
+  } catch (_) {
     // Legacy fallback: tout le monde voit tous les lieux
     const venues =
-      (await apiFetch(`/rest/v1/locations?select=id,name,share_code,created_by&order=created_at.desc`)) || [];
+      (await apiFetch(
+        `/rest/v1/locations?select=id,name,share_code,created_by&order=created_at.desc`
+      )) || [];
     return { venues, mode: "legacy" };
   }
 }
@@ -152,15 +152,70 @@ function fillVenueSelect(sel, venues) {
   }
 }
 
+function pickVenueId(venues) {
+  const current = acctVenueSelect?.value;
+  if (current && venues.some((v) => v.id === current)) return current;
+  return venues?.[0]?.id || "";
+}
+
 async function getVenueByShareCode(code) {
   const c = (code || "").trim();
   if (!c) return null;
+
+  // NOTE: share_code est généralement alphanum, pas besoin d'encodeURIComponent ici,
+  // mais ça ne nuit pas si ton code n'a pas de caractères spéciaux.
   const rows = await apiFetch(
     `/rest/v1/locations?select=id,name,share_code,created_by&share_code=eq.${encodeURIComponent(c)}&limit=1`
   );
   return rows?.[0] || null;
 }
 
+async function loadVenueRoleForMe(venueId) {
+  try {
+    const rows = await apiFetch(
+      `/rest/v1/location_members?select=role&location_id=eq.${venueId}&user_id=eq.${me.id}&limit=1`
+    );
+    return rows?.[0]?.role || "player";
+  } catch (_) {
+    return "player";
+  }
+}
+
+function canSeeShareCode(myRole) {
+  if (myProfile?.level === "admin_full") return true;
+  return myRole === "admin";
+}
+
+async function renderShareCode(selectedVenue, myRole) {
+  if (!shareBox || !shareCodeValue) return;
+
+  const visible = canSeeShareCode(myRole);
+  shareBox.style.display = visible ? "block" : "none";
+
+  if (!visible) {
+    shareCodeValue.textContent = "—";
+    return;
+  }
+
+  // 1) utiliser le share_code déjà présent (join list)
+  const already = (selectedVenue?.share_code || "").trim();
+  if (already) {
+    shareCodeValue.textContent = already;
+    return;
+  }
+
+  // 2) fallback DB
+  try {
+    const rows = await apiFetch(
+      `/rest/v1/locations?select=share_code&id=eq.${selectedVenue.id}&limit=1`
+    );
+    shareCodeValue.textContent = rows?.[0]?.share_code || "—";
+  } catch (_) {
+    shareCodeValue.textContent = "—";
+  }
+}
+
+// ---------- Player identity (for location_players) ----------
 async function ensurePlayerForMe() {
   const fullName = (cfgFullName?.value || me.email || "").trim();
   const email = me.email;
@@ -182,19 +237,21 @@ async function ensurePlayerForMe() {
         created_by_user_id: me.id,
       }),
     });
+
     return inserted?.[0] || null;
-  } catch (e) {
+  } catch (_) {
     // Legacy: match par nom
     const existing = await apiFetch(
       `/rest/v1/players?select=id,name&name=eq.${encodeURIComponent(fullName)}&limit=1`
     );
     if (existing?.[0]) return existing[0];
 
-    const inserted = await apiFetch("/rest/v1/players?select=id,name", {
+    const inserted = await apiFetch(`/rest/v1/players?select=id,name`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Prefer: "return=representation" },
       body: JSON.stringify({ name: fullName }),
     });
+
     return inserted?.[0] || null;
   }
 }
@@ -207,6 +264,7 @@ async function addPlayerToVenue(playerId, venueId) {
   });
 }
 
+// ---------- Join / Leave ----------
 async function joinVenueByCode() {
   const code = joinCode?.value || "";
   const v = await getVenueByShareCode(code);
@@ -223,7 +281,7 @@ async function joinVenueByCode() {
     // legacy: ignore
   }
 
-  // Ensure player identity and attach to venue
+  // Attach player to venue
   const p = await ensurePlayerForMe();
   if (p?.id) {
     try {
@@ -243,7 +301,7 @@ async function leaveSelectedVenue() {
     });
   } catch (_) {}
 
-  // Also remove from location_players if possible
+  // remove from location_players
   try {
     const p = await ensurePlayerForMe();
     if (p?.id) {
@@ -254,95 +312,12 @@ async function leaveSelectedVenue() {
   } catch (_) {}
 }
 
-function canSeeShareCode(myRole) {
-  if (myProfile?.level === "admin_full") return true;
-  return myRole === "admin";
-}
-
-async function loadVenueRoleForMe(venueId) {
-  try {
-    const rows = await apiFetch(
-      `/rest/v1/location_members?select=role&location_id=eq.${venueId}&user_id=eq.${me.id}&limit=1`
-    );
-    return rows?.[0]?.role || "player";
-  } catch (_) {
-    return "player";
-  }
-}
-
-async function renderShareCode(selectedVenue, myRole) {
-  if (!shareBox || !shareCodeValue) return;
-
-  const visible = canSeeShareCode(myRole);
-  shareBox.style.display = visible ? "block" : "none";
-  if (!visible) {
-    shareCodeValue.textContent = "—";
-    return;
-  }
-
-  // 1) utiliser ce qu’on a déjà en mémoire
-  const already = (selectedVenue?.share_code || "").trim();
-  if (already) {
-    shareCodeValue.textContent = already;
-    return;
-  }
-
-  // 2) fallback DB (URL corrigée, sans espace)
-  try {
-    const rows = await apiFetch(
-      `/rest/v1/locations?select=share_code&id=eq.${selectedVenue.id}&limit=1`
-    );
-    shareCodeValue.textContent = rows?.[0]?.share_code || "—";
-  } catch (e) {
-    shareCodeValue.textContent = "—";
-  }
-}
-
-  // fetch share_code du lieu sélectionné
-  try {
-    const rows = await apiFetch(
-      `/rest/v1/locations?select=share_code&id=eq.${selectedVenue.id}&limit=1`
-    );
-    shareCodeValue.textContent = rows?.[0]?.share_code || selectedVenue.share_code || "—";
-  } catch (_) {
-    shareCodeValue.textContent = selectedVenue.share_code || "—";
-  }
-}
-
-function pickVenueId(venues) {
-  const current = acctVenueSelect?.value;
-  if (current && venues.some((v) => v.id === current)) return current;
-  return venues?.[0]?.id || "";
-}
-
-let venuesState = { venues: [], mode: "members" };
-
-async function refreshVenuesUI() {
-  venuesState = await listMyVenues();
-  fillVenueSelect(acctVenueSelect, venuesState.venues);
-
-  const venueId = pickVenueId(venuesState.venues);
-  if (acctVenueSelect && venueId) acctVenueSelect.value = venueId;
-
-  if (!venueId) {
-    if (shareBox) shareBox.style.display = "none";
-    if (shareCodeValue) shareCodeValue.textContent = "—";
-    return;
-  }
-
-  const selVenue = venuesState.venues.find((v) => v.id === venueId) || { id: venueId };
-  const myRole =
-    myProfile?.level === "admin_full" ? "admin" : await loadVenueRoleForMe(venueId);
-
-  await renderShareCode(selVenue, myRole);
-}
-
+// ---------- Create venue ----------
 async function createVenueFlow() {
   const name = (newVenueName?.value || "").trim();
   if (!name) throw new Error("Nom du lieu requis.");
 
-  // NOTE: tu dois avoir une policy RLS qui permet INSERT locations
-  // pour un utilisateur connecté (ou via RPC). Sinon ça va échouer.
+  // NOTE: tu dois avoir une policy RLS qui permet INSERT sur locations (ou RPC).
   const inserted = await apiFetch(`/rest/v1/locations?select=id,name,share_code,created_by`, {
     method: "POST",
     headers: {
@@ -355,7 +330,7 @@ async function createVenueFlow() {
   const v = inserted?.[0];
   if (!v?.id) throw new Error("Création échouée (pas de retour).");
 
-  // Se donner admin du lieu dans location_members (si table/policy ok)
+  // Se donner admin du lieu (si table/policy ok)
   try {
     await apiFetch(`/rest/v1/location_members`, {
       method: "POST",
@@ -377,11 +352,34 @@ async function createVenueFlow() {
   if (newVenueName) newVenueName.value = "";
   await refreshVenuesUI();
 
-  // Sélectionner le nouveau lieu
+  // sélectionner le nouveau lieu
   if (acctVenueSelect) acctVenueSelect.value = v.id;
   await refreshVenuesUI();
 }
 
+// ---------- UI refresh ----------
+let venuesState = { venues: [], mode: "members" };
+
+async function refreshVenuesUI() {
+  venuesState = await listMyVenues();
+  fillVenueSelect(acctVenueSelect, venuesState.venues);
+
+  const venueId = pickVenueId(venuesState.venues);
+  if (acctVenueSelect && venueId) acctVenueSelect.value = venueId;
+
+  if (!venueId) {
+    if (shareBox) shareBox.style.display = "none";
+    if (shareCodeValue) shareCodeValue.textContent = "—";
+    return;
+  }
+
+  const selVenue = venuesState.venues.find((v) => v.id === venueId) || { id: venueId };
+  const myRole = myProfile?.level === "admin_full" ? "admin" : await loadVenueRoleForMe(venueId);
+
+  await renderShareCode(selVenue, myRole);
+}
+
+// ---------- Events ----------
 acctVenueSelect?.addEventListener("change", async () => {
   await refreshVenuesUI();
 });
@@ -410,7 +408,7 @@ leaveVenueBtn?.addEventListener("click", async () => {
 });
 
 copyShareCodeBtn?.addEventListener("click", async () => {
-  const txt = shareCodeValue?.textContent || "";
+  const txt = (shareCodeValue?.textContent || "").trim();
   if (!txt || txt === "—") return;
   try {
     await navigator.clipboard.writeText(txt);
@@ -446,7 +444,7 @@ saveBtn?.addEventListener("click", async () => {
       skill_level: cfgSkill?.value || "",
     });
 
-    // Affichage seulement (non modifiable)
+    // affichage seulement (non modifiable)
     if (cfgAccess) cfgAccess.value = myProfile?.level === "admin_full" ? "admin_full" : "user";
 
     await refreshVenuesUI();
@@ -456,6 +454,7 @@ saveBtn?.addEventListener("click", async () => {
   }
 });
 
+// ---------- Init ----------
 async function init() {
   setStatus("Chargement…");
   await refreshSessionIfNeeded();
@@ -481,7 +480,7 @@ async function init() {
 
   if (cfgSkill) cfgSkill.value = myProfile?.skill_level || legacySkill || "";
 
-  // Affichage seulement
+  // affichage seulement
   if (cfgAccess) cfgAccess.value = myProfile?.level === "admin_full" ? "admin_full" : "user";
 
   await refreshVenuesUI();
