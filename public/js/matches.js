@@ -4,7 +4,7 @@ import { apiFetch } from "./api.js";
 export async function listMatchesForVenueToday(venueId, fromIso, toIso) {
   if (!venueId) return [];
   // created_at filter
-  const q = `/rest/v1/matches?select=id,location_id,court,status,a1,a2,b1,b2,created_at,score_a,score_b`
+  const q = `/rest/v1/matches?select=id,location_id,court,status,a1,a2,b1,b2,created_at,ended_at,ended_by_user_id,ended_at,ended_by_user_id,score_a,score_b`
           + `&location_id=eq.${venueId}`
           + `&created_at=gte.${encodeURIComponent(fromIso)}`
           + `&created_at=lt.${encodeURIComponent(toIso)}`
@@ -14,7 +14,7 @@ export async function listMatchesForVenueToday(venueId, fromIso, toIso) {
   } catch (e) {
     // Si la table n'a pas encore score_a/score_b, Supabase renverra 400.
     // On retente sans ces colonnes.
-    const q2 = `/rest/v1/matches?select=id,location_id,court,status,a1,a2,b1,b2,created_at`
+    const q2 = `/rest/v1/matches?select=id,location_id,court,status,a1,a2,b1,b2,created_at,ended_at,ended_by_user_id`
             + `&location_id=eq.${venueId}`
             + `&created_at=gte.${encodeURIComponent(fromIso)}`
             + `&created_at=lt.${encodeURIComponent(toIso)}`
@@ -27,7 +27,18 @@ export async function createMatchForVenue(venueId, payload) {
   if (!venueId) throw new Error("venueId requis");
   const toInsert = { ...payload, location_id: venueId };
 
-  const inserted = await apiFetch("/rest/v1/matches?select=id,location_id,court,status,a1,a2,b1,b2,created_at", {
+  // Preferred: atomic RPC (match + match_players + billing)
+  try{
+    const r = await apiFetch("/rest/v1/rpc/create_match_with_billing", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(toInsert)
+    });
+    // RPC can return inserted match (object)
+    if(r?.id) return r;
+  }catch(e){ /* fallback */ }
+
+  const inserted = await apiFetch("/rest/v1/matches?select=id,location_id,court,status,a1,a2,b1,b2,created_at,ended_at,score_a,score_b", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Prefer": "return=representation" },
     body: JSON.stringify(toInsert)
@@ -37,11 +48,12 @@ export async function createMatchForVenue(venueId, payload) {
 }
 
 // Terminer un match (PATCH). Tolère l'absence de colonnes score_a/score_b.
-export async function finishMatchById(matchId, { status = "done", score_a = null, score_b = null } = {}) {
+export async function finishMatchById(matchId, { status = "done", score_a = null, score_b = null, ended_by_user_id = null } = {}) {
   if (!matchId) throw new Error("matchId requis");
 
   // 1) tentative avec score
-  const payload1 = { status, score_a, score_b };
+  const ended_at = new Date().toISOString();
+  const payload1 = { status, score_a, score_b, ended_at, ended_by_user_id };
   try {
     await apiFetch(`/rest/v1/matches?id=eq.${matchId}`, {
       method: "PATCH",
@@ -51,7 +63,7 @@ export async function finishMatchById(matchId, { status = "done", score_a = null
     return true;
   } catch (e) {
     // 2) fallback sans score
-    const payload2 = { status };
+    const payload2 = { status, ended_at, ended_by_user_id };
     await apiFetch(`/rest/v1/matches?id=eq.${matchId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },

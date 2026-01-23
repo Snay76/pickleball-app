@@ -38,13 +38,24 @@
 
     <div class="row">
       <div class="col">
-        <label for="cfgLevel">Niveau</label>
-        <select id="cfgLevel">
+        <label for="cfgSkill">Niveau (jeu)</label>
+        <select id="cfgSkill">
           <option value="">(choisir)</option>
           <option value="Débutant">Débutant</option>
           <option value="Intermédiaire">Intermédiaire</option>
           <option value="Avancé">Avancé</option>
         </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label for="cfgAccess">Niveau d’accès</label>
+        <select id="cfgAccess">
+          <option value="user">Joueur</option>
+          <option value="admin_full">Admin full</option>
+        </select>
+        <div class="help">Admin full : accès à tous les lieux + debug. Les rôles par lieu se gèrent plus bas.</div>
       </div>
     </div>
 
@@ -68,26 +79,52 @@
     </div>
 
     
+
 <h2 style="margin-top:16px;">Lieux</h2>
-<div class="help">Pour t’ajouter au lieu (comme joueur), sélectionne un lieu puis clique “M’inscrire”.</div>
+<div class="help">Inscription par code partagé. Tu peux aussi te retirer d’un lieu.</div>
 
 <div class="row">
   <div class="col">
-    <label for="acctVenueSelect">Lieu</label>
-    <select id="acctVenueSelect"></select>
+    <label for="joinCode">Code du lieu</label>
+    <input id="joinCode" type="text" placeholder="ex: AB12CD" />
+  </div>
+  <div class="col">
+    <button id="joinByCodeBtn" class="btnPrimary btnBlock" type="button">M’inscrire avec ce code</button>
   </div>
 </div>
 
 <div class="row">
-  <div class="col" style="flex:0 0 240px;">
-    <button id="joinVenueBtn" class="btnPrimary" type="button">M’inscrire au lieu</button>
+  <div class="col">
+    <label for="acctVenueSelect">Mes lieux</label>
+    <select id="acctVenueSelect"></select>
   </div>
-  <div class="col" style="flex:0 0 240px;">
-    <button id="leaveVenueBtn" class="btnDanger" type="button">Me retirer du lieu</button>
+  <div class="col">
+    <button id="leaveVenueBtn" class="btnDanger btnBlock" type="button">Me retirer du lieu</button>
   </div>
 </div>
 
+<div class="row">
+  <div class="col">
+    <div id="shareBox" class="card" style="padding:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <div>
+          <div style="font-weight:800;">Partage du lieu</div>
+          <div class="help">Visible si tu es admin du lieu (ou admin full).</div>
+        </div>
+        <button id="copyShareCodeBtn" class="miniBtn btnGhost" type="button">Copier</button>
+      </div>
+      <div style="margin-top:8px;font-family:var(--mono);" id="shareCodeValue">—</div>
+    </div>
+  </div>
+</div>
+
+<h2 style="margin-top:16px;">Membres / Joueurs du lieu</h2>
+<div class="help">Liste des joueurs inscrits au lieu, leur rôle et le nombre de matchs joués (à vie).</div>
+<div id="membersWrap"></div>
+<div id="membersEmpty" class="empty">Aucun membre.</div>
+
 <div class="hr"></div>
+
     <div id="status" class="status">…</div>
   </div>
 

@@ -21,7 +21,8 @@
 
 *{ box-sizing:border-box; }
 
-html, body{ height:100%; }
+html, html,body{height:100%;background:var(--bg);margin:0;}
+body{min-height:100vh;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);}
 
 body{
   margin:0;
@@ -350,3 +351,13 @@ button:disabled{ opacity:.55; cursor:not-allowed; }
 a[href*="display.html"]{
   display: none !important;
 }
+
+
+/* Full-width centered buttons */
+.btnBlock{width:100%;display:block;min-height:var(--tap);}
+.centerRow{display:flex;justify-content:center;}
+
+/* Venue context bar */
+.venueBar{position:sticky;top:0;z-index:20;background:rgba(11,18,32,.96);backdrop-filter: blur(8px);padding:10px 16px;border-bottom:1px solid var(--line);}
+.venueBar .label{color:var(--muted);font-size:12px;}
+.venueBar .value{font-weight:800;}

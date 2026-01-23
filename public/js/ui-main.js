@@ -27,12 +27,15 @@ import {
  * ctx attendu: { me, log }
  */
 export function bindMainUI(ctx) {
-  const { me, log } = ctx;
+  const { me, profile, log } = ctx;
 
   // =========================
   // DOM - Lieux
   // =========================
   const venueSelect = document.getElementById("venueSelect");
+  const venueBar = document.getElementById("venueBar");
+  const venueBarValue = document.getElementById("venueBarValue");
+
 
   // IMPORTANT: tu veux que "Ajouter un lieu" soit au même endroit que l’ajout de joueur.
   // Donc le bouton dans la section "Lieux" peut ne plus exister: on le lit ici mais on le gère en bas via addVenueBtn2.
@@ -57,7 +60,8 @@ export function bindMainUI(ctx) {
   // DOM - Matchs
   // =========================
   const courtEl = document.getElementById("court");
-  const statusMatchEl = document.getElementById("statusMatch");
+  // status est forcé (in_progress/done)
+  const statusMatchEl = null;
   const matchModeEl = document.getElementById("matchMode"); // 2 ou 4
   const matchFilterEl = document.getElementById("matchFilter"); // today_all | today_inprogress | today_mine
   const suggestTeamsBtn = document.getElementById("suggestTeamsBtn");
@@ -90,6 +94,9 @@ export function bindMainUI(ctx) {
   // =========================
   let venues = [];
   let currentVenueId = "";
+  let currentVenueRole = "player"; // player | organiser | admin
+  const isAdminFull = (profile?.level === "admin_full");
+
 
   let cachedPlayers = []; // joueurs du lieu
   let cachedMatches = []; // matchs du jour (lieu)
@@ -108,6 +115,61 @@ export function bindMainUI(ctx) {
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+
+  async function getMyVenueRole(venueId){
+    if(isAdminFull) return "admin";
+    try{
+      const rows = await apiFetch(`/rest/v1/location_members?select=role&location_id=eq.${venueId}&user_id=eq.${me.id}&limit=1`);
+      return rows?.[0]?.role || "player";
+    }catch(e){
+      return "player";
+    }
+  }
+
+  function setDebugVisibility(){
+    const debugTabBtn = document.querySelector('.tab[data-tab="tabDebug"]');
+    const debugTab = document.getElementById("tabDebug");
+    const canDebug = isAdminFull || currentVenueRole === "admin";
+    if(debugTabBtn) debugTabBtn.style.display = canDebug ? "" : "none";
+    if(debugTab) debugTab.style.display = canDebug ? "" : "none";
+  }
+
+  function updateVenueBar(){
+    if(!venueBar || !venueBarValue) return;
+    const v = venues.find(x => x.id === currentVenueId);
+    if(!v){ venueBar.classList.add("hidden"); venueBarValue.textContent = "—"; return; }
+    venueBar.classList.remove("hidden");
+    venueBarValue.textContent = v.name || "—";
+  }
+
+  function activePlayerSet(){
+    const s = new Set();
+    for(const m of (cachedMatches||[])){
+      if(m.status && m.status !== "done"){
+        [m.a1,m.a2,m.b1,m.b2].filter(Boolean).forEach(id => s.add(id));
+      }
+    }
+    return s;
+  }
+
+  function isCourtBusy(court){
+    return (cachedMatches||[]).some(m => (m.status && m.status !== "done") && String(m.court) === String(court));
+  }
+
+  function buildOpponentSetFromMatches(matches){
+    const opp = new Set();
+    for(const m of (matches||[])){
+      const A = [m.a1,m.a2].filter(Boolean);
+      const B = [m.b1,m.b2].filter(Boolean);
+      for(const a of A){
+        for(const b of B){
+          const k = [a,b].sort().join("|");
+          opp.add(k);
+        }
+      }
+    }
+    return opp;
+  }
   }
 
   function isoStartOfDayLocal(d = new Date()) {
@@ -122,6 +184,20 @@ export function bindMainUI(ctx) {
     return x.toISOString();
   }
 
+
+  function formatDuration(startIso, endIso){
+    if(!startIso || !endIso) return "";
+    const a = new Date(startIso).getTime();
+    const b = new Date(endIso).getTime();
+    if(!Number.isFinite(a) || !Number.isFinite(b) || b<=a) return "";
+    const sec = Math.round((b-a)/1000);
+    const m = Math.floor(sec/60);
+    const s = sec%60;
+    const h = Math.floor(m/60);
+    const mm = m%60;
+    if(h>0) return `${h}h ${String(mm).padStart(2,"0")}m`;
+    return `${mm}m ${String(s).padStart(2,"0")}s`;
+  }
   function initCourtSelect(max = 12) {
     if (!courtEl) return;
     courtEl.innerHTML = "";
@@ -143,7 +219,10 @@ export function bindMainUI(ctx) {
   sel.appendChild(o0);
 
   // 👉 ICI: seulement les joueurs présents
-  const pool = cachedPlayers.filter(p => p.present);
+  const busy = activePlayerSet();
+
+  // Présents + pas en match en cours
+  const pool = cachedPlayers.filter(p => p.present && !busy.has(p.id));
 
   for (const p of pool) {
     const o = document.createElement("option");
@@ -389,50 +468,72 @@ export function bindMainUI(ctx) {
     return a;
   }
 
-  function suggestTeams(mode) {
+  
+function suggestTeams(mode) {
     if (!cachedPlayers.length) return null;
 
-    const usedPairs = buildPairSetFromMatches(cachedMatches);
+    const busy = activePlayerSet();
 
+    // Pool: présents + pas dans un match en cours
+    const poolPlayers = cachedPlayers.filter(p => p.present && !busy.has(p.id));
     if (mode === 2) {
-      const pool = shuffle(cachedPlayers);
+      const pool = shuffle(poolPlayers.map(p => p.id));
       if (pool.length < 2) return null;
-      return { a1: pool[0].id, a2: null, b1: pool[1].id, b2: null };
+      return { a1: pool[0], a2: null, b1: pool[1], b2: null };
     }
 
-    if (cachedPlayers.length < 4) return null;
-    const ids = cachedPlayers.map((p) => p.id);
+    if (poolPlayers.length < 4) return null;
 
-    for (let attempt = 0; attempt < 200; attempt++) {
-      const pool = shuffle(ids).slice(0, 4);
-      const [p1, p2, p3, p4] = pool;
+    const ids = poolPlayers.map(p => p.id);
+    const usedPairs = buildPairSetFromMatches(cachedMatches);
+    const usedOpp  = buildOpponentSetFromMatches(cachedMatches);
 
-      const pairA = [p1, p2].sort().join("|");
-      const pairB = [p3, p4].sort().join("|");
+    // minimiser répétitions: équipes (pairs) + adversaires
+    let best = null;
+    let bestCost = Infinity;
 
-      if (!usedPairs.has(pairA) && !usedPairs.has(pairB)) {
-        return { a1: p1, a2: p2, b1: p3, b2: p4 };
-      }
+    for (let attempt = 0; attempt < 400; attempt++) {
+      const pick = shuffle(ids).slice(0, 4);
+      const [p1,p2,p3,p4] = pick;
 
-      const combos = [
-        [[p1, p3], [p2, p4]],
-        [[p1, p4], [p2, p3]],
+      const candidates = [
+        { a:[p1,p2], b:[p3,p4] },
+        { a:[p1,p3], b:[p2,p4] },
+        { a:[p1,p4], b:[p2,p3] },
       ];
-      for (const [A, B] of combos) {
-        const kA = A.slice().sort().join("|");
-        const kB = B.slice().sort().join("|");
-        if (!usedPairs.has(kA) && !usedPairs.has(kB)) {
-          return { a1: A[0], a2: A[1], b1: B[0], b2: B[1] };
+
+      for(const c of candidates){
+        const a = c.a, b = c.b;
+        const pairA = a.slice().sort().join("|");
+        const pairB = b.slice().sort().join("|");
+
+        let cost = 0;
+        if(usedPairs.has(pairA)) cost += 10;
+        if(usedPairs.has(pairB)) cost += 10;
+
+        for(const x of a){
+          for(const y of b){
+            const k = [x,y].sort().join("|");
+            if(usedOpp.has(k)) cost += 3;
+          }
+        }
+
+        // léger bonus si aucune répétition
+        if(cost === 0) return { a1:a[0], a2:a[1], b1:b[0], b2:b[1] };
+
+        if(cost < bestCost){
+          bestCost = cost;
+          best = { a1:a[0], a2:a[1], b1:b[0], b2:b[1] };
         }
       }
     }
 
-    const pool = shuffle(ids).slice(0, 4);
-    return { a1: pool[0], a2: pool[1], b1: pool[2], b2: pool[3] };
+    return best;
   }
 
   // =========================
   // Score modal
+
   // =========================
   function openScoreModal(match) {
     activeMatch = match;
@@ -498,7 +599,8 @@ export function bindMainUI(ctx) {
 
     try {
       await finishMatchById(activeMatch.id, {
-        status: finishStatusEl?.value || "done",
+        status: "done",
+        ended_by_user_id: me.id,
         score_a: withScore ? sA : null,
         score_b: withScore ? sB : null,
       });
@@ -545,6 +647,9 @@ export function bindMainUI(ctx) {
       const bTeam = [byIdName(m.b1), byIdName(m.b2)].filter(Boolean).join(" + ");
 
       const canFinish = (m.status || "") !== "done";
+      const venueName = venues.find(v=>v.id===currentVenueId)?.name || "";
+      const dur = (m.status==="done" && m.ended_at) ? formatDuration(m.created_at, m.ended_at) : "";
+      const score = (m.score_a !== undefined && m.score_a !== null && m.score_b !== undefined && m.score_b !== null) ? `${m.score_a}-${m.score_b}` : "";
 
       const box = document.createElement("div");
       box.className = "listItem matchCard";
@@ -552,8 +657,8 @@ export function bindMainUI(ctx) {
       box.innerHTML = `
         <div class="matchTop">
           <div>
-            <div class="name">Terrain ${esc(m.court)} — ${esc(m.status || "")}</div>
-            <div class="muted" style="font-size:12px;margin-top:2px">A: ${esc(aTeam)} • B: ${esc(bTeam)}</div>
+            <div class="name">Lieu ${esc(venueName)} • Terrain ${esc(m.court)} — ${esc(m.status || "")}</div>
+            <div class="muted" style="font-size:12px;margin-top:2px">A: ${esc(aTeam)} • B: ${esc(bTeam)}${score ? ` • Score: ${esc(score)}` : ``}${dur ? ` • Durée: ${esc(dur)}` : ``}</div>
           </div>
           <div class="inline" style="justify-content:flex-end;">
             <div class="muted" style="font-size:12px">${esc(new Date(m.created_at).toLocaleString())}</div>
@@ -586,6 +691,9 @@ export function bindMainUI(ctx) {
   venueSelect?.addEventListener("change", async () => {
     currentVenueId = venueSelect.value || "";
     setSelectedVenueId(me?.id, currentVenueId);
+    currentVenueRole = await getMyVenueRole(currentVenueId);
+    updateVenueBar();
+    setDebugVisibility();
     await refreshPlayers();
     await refreshMatches();
   });
@@ -653,7 +761,6 @@ export function bindMainUI(ctx) {
 
     try {
       const court = Number(courtEl?.value);
-      const status = statusMatchEl?.value || "open";
 
       const a1 = a1El?.value || null;
       const a2 = a2El?.value || null;
@@ -662,18 +769,54 @@ export function bindMainUI(ctx) {
 
       if (!Number.isFinite(court) || court <= 0) return alert("Terrain invalide");
 
+      // Court busy?
+      if (isCourtBusy(court)) return alert("Ce terrain a déjà un match en cours.");
+
+      const busy = activePlayerSet();
+      const present = new Set(cachedPlayers.filter(p => p.present).map(p => p.id));
+
+      function assertPlayerOk(pid){
+        if(!pid) return true;
+        if(!present.has(pid)) throw new Error("Un joueur absent ne peut pas être sélectionné.");
+        if(busy.has(pid)) throw new Error("Un joueur est déjà dans un match en cours.");
+        return true;
+      }
+
       if (mode === 2) {
-        // 2 joueurs seulement: A1 + B1; pas A2/B2
         if (!a1 || !b1) return alert("A1 et B1 requis (simple).");
         if (a2 || b2) return alert("Simple: pas de A2/B2.");
+        if (a1 === b1) return alert("Un joueur ne peut pas jouer contre lui-même.");
+
+        assertPlayerOk(a1); assertPlayerOk(b1);
+
         await createMatchForVenue(currentVenueId, {
           court,
-          status,
+          status: "in_progress",
           a1,
           a2: null,
           b1,
           b2: null,
         });
+      } else {
+        if (!a1 || !a2 || !b1 || !b2) return alert("A1, A2, B1, B2 requis (double).");
+
+        const ids = [a1,a2,b1,b2];
+        const uniq = new Set(ids);
+        if(uniq.size !== ids.length) return alert("Un joueur ne peut pas être ajouté deux fois.");
+
+        ids.forEach(assertPlayerOk);
+
+        await createMatchForVenue(currentVenueId, { court, status: "in_progress", a1, a2, b1, b2 });
+      }
+
+      await refreshMatches();
+      alert("Match créé.");
+    } catch (e) {
+      alert(e?.message || "Erreur création match.");
+    } finally {
+      createMatchBtn.disabled = false;
+    }
+  });
       } else {
         // 4 joueurs: jamais 3
         if (!a1 || !a2 || !b1 || !b2) return alert("A1, A2, B1, B2 requis (double).");
@@ -736,6 +879,9 @@ export function bindMainUI(ctx) {
     applyModeUI();
 
     await refreshVenues();
+    currentVenueRole = await getMyVenueRole(currentVenueId);
+    updateVenueBar();
+    setDebugVisibility();
     await ensureMyPlayerId();
     await refreshPlayers();
     await refreshMatches();

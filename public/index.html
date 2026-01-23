@@ -16,12 +16,13 @@
       --sans: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
     *{ box-sizing:border-box; }
+    html{background:var(--bg);}
+
     body{
       margin:0; font-family:var(--sans);
       background:linear-gradient(180deg,#070b14, var(--bg));
       color:var(--text);
-      padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
-    }
+      padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); min-height:100vh;}
     h2{ margin: 0 0 10px; font-size: 18px; }
     h3{ margin: 16px 0 10px; font-size: 16px; color: #d7e3ff; }
 
@@ -192,7 +193,7 @@
         <label for="email">Courriel</label>
         <input id="email" type="email" placeholder="nom@exemple.com" autocomplete="email" inputmode="email" />
       </div>
-      <div class="col" style="flex:0 0 240px;">
+      <div class="col" >
         <button id="loginBtn" class="btnPrimary" type="button">Recevoir un lien</button>
       </div>
     </div>
@@ -205,6 +206,7 @@
 
   <!-- APP -->
   <div id="appCard" class="card hidden">
+    <div id="venueBar" class="venueBar hidden"><div class="label">Lieu sélectionné</div><div class="value" id="venueBarValue">—</div></div>
     <div class="tabs">
       <button class="tab active" data-tab="tabPlayers" type="button">Joueurs</button>
       <button class="tab" data-tab="tabMatches" type="button">Matchs</button>
@@ -219,8 +221,8 @@
           <label for="venueSelect">Lieu</label>
           <select id="venueSelect"></select>
         </div>
-        <div class="col" style="flex:0 0 240px;">
-          <button id="addVenueBtn" class="btnPrimary" type="button">+ Ajouter un lieu</button>
+        <div class="col" >
+          <button id="addVenueBtn" class="btnBlock btnPrimary" type="button">+ Ajouter un lieu</button>
         </div>
       </div>
 
@@ -230,8 +232,8 @@
           <label for="playerName">Nom complet</label>
           <input id="playerName" type="text" placeholder="Ex: Titi Pellerin" />
         </div>
-        <div class="col" style="flex:0 0 240px;">
-          <button id="addPlayerBtn" class="btnPrimary" type="button">Ajouter joueur</button>
+        <div class="col" >
+          <button id="addPlayerBtn" class="btnBlock btnPrimary" type="button">Ajouter joueur</button>
         </div>
       </div>
 
@@ -267,7 +269,7 @@
           <button id="suggestTeamsBtn" type="button">Proposer équipes (aléatoire)</button>
         </div>
         <div class="col" style="flex:0 0 320px;">
-          <button id="finishAllTodayBtn" class="btnDanger" type="button">Terminer tous les matchs du jour</button>
+          <button id="finishAllTodayBtn" class="btnBlock btnDanger" type="button">Terminer tous les matchs du jour</button>
         </div>
       </div>
 
@@ -312,8 +314,8 @@
       </div>
 
       <div class="row">
-        <div class="col" style="flex:0 0 240px;">
-          <button id="createMatchBtn" class="btnPrimary" type="button">Créer match</button>
+        <div class="col" >
+          <button id="createMatchBtn" class="btnBlock btnPrimary" type="button">Créer match</button>
         </div>
       </div>
 

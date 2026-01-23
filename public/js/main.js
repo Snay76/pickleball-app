@@ -1,6 +1,7 @@
 import { APP_VERSION } from "./config.js";
 import { parseHash, saveTokens, refreshSessionIfNeeded, loadUser, sendMagicLink, hasSession, clearTokens } from "./auth.js";
 import { bindMainUI } from "./ui-main.js";
+import { apiFetch } from "./api.js";
 
 // Logger simple (debug panneau + console)
 function log(msg){
@@ -129,12 +130,20 @@ function wireLogin(){
 
   // 4) load user + start UI
   try{
+    
     const me = await loadUser();
     showApp();
     setAuthUI(true, me.email);
     log("[AUTH OK] " + me.email);
 
-    const ui = bindMainUI({ me, log });
+    // Load profile (global_role via profiles.level when migrated)
+    let profile = null;
+    try{
+      const rows = await apiFetch(`/rest/v1/profiles?select=user_id,level,full_name,skill_level&user_id=eq.${me.id}&limit=1`);
+      profile = rows?.[0] || null;
+    }catch(e){}
+
+    const ui = bindMainUI({ me, profile, log });
     await ui.initVenuesFlow();
 
   }catch(e){
