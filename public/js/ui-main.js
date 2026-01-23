@@ -134,23 +134,25 @@ export function bindMainUI(ctx) {
   }
 
   function fillPlayerSelect(sel) {
-    if (!sel) return;
-    sel.innerHTML = "";
+  if (!sel) return;
+  sel.innerHTML = "";
 
-    const o0 = document.createElement("option");
-    o0.value = "";
-    o0.textContent = "(choisir)";
-    sel.appendChild(o0);
+  const o0 = document.createElement("option");
+  o0.value = "";
+  o0.textContent = "(choisir)";
+  sel.appendChild(o0);
 
-    for (const p of cachedPlayers) {
-      const o = document.createElement("option");
-      o.value = p.id;
-      // tu voulais voir l’ID (pour suppression/diagnostic)
-      o.textContent = `${p.name} (${String(p.id).slice(0, 8)})`;
-      sel.appendChild(o);
-    }
+  // 👉 ICI: seulement les joueurs présents
+  const pool = cachedPlayers.filter(p => p.present);
+
+  for (const p of pool) {
+    const o = document.createElement("option");
+    o.value = p.id;
+    o.textContent = `${p.name} (${String(p.id).slice(0,8)})`;
+    sel.appendChild(o);
   }
-
+}
+  
   function applyModeUI() {
     const mode = Number(matchModeEl?.value || 4);
     const isSingles = mode === 2;
