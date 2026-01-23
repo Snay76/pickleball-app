@@ -8,7 +8,8 @@ export async function apiFetch(path, { method="GET", headers={}, body=null } = {
 
   const finalHeaders = {
     apikey: SUPABASE_ANON_KEY,
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    // IMPORTANT: toujours un Authorization, sinon /auth/v1/user peut répondre 401
+    Authorization: token ? `Bearer ${token}` : `Bearer ${SUPABASE_ANON_KEY}`,
     ...headers
   };
 
@@ -22,11 +23,20 @@ export async function apiFetch(path, { method="GET", headers={}, body=null } = {
   }catch(e){
     throw new Error(`FETCH FAILED: ${e?.message || e}`);
   }
+
   if(!r.ok){
     throw new Error(`${method} ${path} -> ${r.status}\n${text}`);
   }
+
   const trimmed = (text || "").trim();
-  return trimmed ? JSON.parse(trimmed) : null;
+  if(!trimmed) return null;
+
+  // Certaines réponses peuvent être non-JSON (rare mais possible)
+  try{
+    return JSON.parse(trimmed);
+  }catch{
+    return trimmed;
+  }
 }
 
 export function escapeHtml(s){
