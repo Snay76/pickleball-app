@@ -51,11 +51,11 @@
     <div class="row">
       <div class="col">
         <label for="cfgAccess">Niveau d’accès</label>
-        <select id="cfgAccess">
+        <select id="cfgAccess" disabled>
           <option value="user">Joueur</option>
           <option value="admin_full">Admin full</option>
         </select>
-        <div class="help">Admin full : accès à tous les lieux + debug. Les rôles par lieu se gèrent plus bas.</div>
+        <div class="help">Le niveau d’accès ne doit pas être modifiable depuis l’app. (Sinon n’importe qui se donne admin.)</div>
       </div>
     </div>
 
@@ -78,52 +78,67 @@
       </div>
     </div>
 
-    
+    <h2 style="margin-top:16px;">Lieux</h2>
+    <div class="help">Créer un lieu, puis choisis-le pour afficher/partager son code. Tu peux aussi t’inscrire par code.</div>
 
-<h2 style="margin-top:16px;">Lieux</h2>
-<div class="help">Inscription par code partagé. Tu peux aussi te retirer d’un lieu.</div>
-
-<div class="row">
-  <div class="col">
-    <label for="joinCode">Code du lieu</label>
-    <input id="joinCode" type="text" placeholder="ex: AB12CD" />
-  </div>
-  <div class="col">
-    <button id="joinByCodeBtn" class="btnPrimary btnBlock" type="button">M’inscrire avec ce code</button>
-  </div>
-</div>
-
-<div class="row">
-  <div class="col">
-    <label for="acctVenueSelect">Mes lieux</label>
-    <select id="acctVenueSelect"></select>
-  </div>
-  <div class="col">
-    <button id="leaveVenueBtn" class="btnDanger btnBlock" type="button">Me retirer du lieu</button>
-  </div>
-</div>
-
-<div class="row">
-  <div class="col">
-    <div id="shareBox" class="card" style="padding:12px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-        <div>
-          <div style="font-weight:800;">Partage du lieu</div>
-          <div class="help">Visible si tu es admin du lieu (ou admin full).</div>
-        </div>
-        <button id="copyShareCodeBtn" class="miniBtn btnGhost" type="button">Copier</button>
+    <!-- Créer un lieu -->
+    <div class="row">
+      <div class="col">
+        <label for="newVenueName">Ajouter un lieu</label>
+        <input id="newVenueName" type="text" placeholder="ex: Ste-Élie Débutant-2026" />
       </div>
-      <div style="margin-top:8px;font-family:var(--mono);" id="shareCodeValue">—</div>
+      <div class="col">
+        <button id="createVenueBtn" class="btnPrimary btnBlock" type="button">Créer le lieu</button>
+      </div>
     </div>
-  </div>
-</div>
 
-<h2 style="margin-top:16px;">Membres / Joueurs du lieu</h2>
-<div class="help">Liste des joueurs inscrits au lieu, leur rôle et le nombre de matchs joués (à vie).</div>
-<div id="membersWrap"></div>
-<div id="membersEmpty" class="empty">Aucun membre.</div>
+    <!-- Joindre par code -->
+    <div class="row" style="margin-top:10px;">
+      <div class="col">
+        <label for="joinCode">Code du lieu</label>
+        <input id="joinCode" type="text" placeholder="ex: AB12CD" />
+      </div>
+      <div class="col">
+        <button id="joinByCodeBtn" class="btnPrimary btnBlock" type="button">M’inscrire avec ce code</button>
+      </div>
+    </div>
 
-<div class="hr"></div>
+    <!-- Choisir un lieu + quitter -->
+    <div class="row">
+      <div class="col">
+        <label for="acctVenueSelect">Mes lieux</label>
+        <select id="acctVenueSelect"></select>
+      </div>
+      <div class="col">
+        <button id="leaveVenueBtn" class="btnDanger btnBlock" type="button">Me retirer du lieu</button>
+      </div>
+    </div>
+
+    <!-- Code de partage du lieu sélectionné -->
+    <div class="row">
+      <div class="col">
+        <div id="shareBox" class="card" style="padding:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <div>
+              <div style="font-weight:800;">Partage du lieu</div>
+              <div class="help">Affiche le code du lieu sélectionné si tu es admin du lieu (ou admin full).</div>
+            </div>
+            <button id="copyShareCodeBtn" class="miniBtn btnGhost" type="button">Copier</button>
+          </div>
+          <div style="margin-top:8px;font-family:var(--mono);" id="shareCodeValue">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUPPRIMÉ: Membres/Joueurs du lieu => à déplacer dans stats.html -->
+    <!--
+    <h2 style="margin-top:16px;">Membres / Joueurs du lieu</h2>
+    <div class="help">Liste des joueurs inscrits au lieu, leur rôle et le nombre de matchs joués (à vie).</div>
+    <div id="membersWrap"></div>
+    <div id="membersEmpty" class="empty">Aucun membre.</div>
+    -->
+
+    <div class="hr"></div>
 
     <div id="status" class="status">…</div>
   </div>
