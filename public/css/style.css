@@ -344,3 +344,9 @@ button:disabled{ opacity:.55; cursor:not-allowed; }
   body{ max-width: 860px; margin: 0 auto; }
   .menuGrid{ grid-template-columns: repeat(3, 1fr); }
 }
+/* ========= TEMPORAIRE : masquer Affichage ========= */
+#menuDisplayBtn,
+#openDisplayBtn,
+a[href*="display.html"]{
+  display: none !important;
+}
