@@ -12,8 +12,7 @@ import {
   createPlayerGlobal,
   addPlayerToVenue,
   removePlayerFromVenue,
-  // NEW (optionnel si tu l’ajoutes) :
-  // setPlayerPresentInVenue,
+  // setPlayerPresentInVenue, // optionnel si tu l’ajoutes dans players.js
 } from "./players.js";
 import {
   listMatchesForVenueToday,
@@ -24,7 +23,7 @@ import {
 
 /**
  * bindMainUI(ctx)
- * ctx attendu: { me, log }
+ * ctx attendu: { me, profile, log }
  */
 export function bindMainUI(ctx) {
   const { me, profile, log } = ctx;
@@ -35,11 +34,7 @@ export function bindMainUI(ctx) {
   const venueSelect = document.getElementById("venueSelect");
   const venueBar = document.getElementById("venueBar");
   const venueBarValue = document.getElementById("venueBarValue");
-
-
-  // IMPORTANT: tu veux que "Ajouter un lieu" soit au même endroit que l’ajout de joueur.
-  // Donc le bouton dans la section "Lieux" peut ne plus exister: on le lit ici mais on le gère en bas via addVenueBtn2.
-  const addVenueBtn = document.getElementById("addVenueBtn"); // optionnel (si tu le gardes, on le re-wire propre)
+  const addVenueBtn = document.getElementById("addVenueBtn"); // optionnel
 
   // =========================
   // DOM - Joueurs
@@ -48,20 +43,14 @@ export function bindMainUI(ctx) {
   const addPlayerBtn = document.getElementById("addPlayerBtn");
   const playersWrap = document.getElementById("playersWrap");
   const playersEmpty = document.getElementById("playersEmpty");
+  const addVenueBtn2 = document.getElementById("addVenueBtn2"); // bouton "Ajouter lieu" dans section joueurs
 
-  // Bouton Ajouter Lieu (nouvel emplacement – dans la section joueurs)
-  const addVenueBtn2 = document.getElementById("addVenueBtn2"); // <-- ajoute cet id dans index.html
-
-  // Toggle présence par joueur (si tu l’ajoutes)
-  // NOTE: pour que ça marche il faut une colonne dans location_players (ex: present boolean)
-  const HAS_PRESENCE_TOGGLE = true;
+  const HAS_PRESENCE_TOGGLE = true; // nécessite colonne location_players.present
 
   // =========================
   // DOM - Matchs
   // =========================
   const courtEl = document.getElementById("court");
-  // status est forcé (in_progress/done)
-  const statusMatchEl = null;
   const matchModeEl = document.getElementById("matchMode"); // 2 ou 4
   const matchFilterEl = document.getElementById("matchFilter"); // today_all | today_inprogress | today_mine
   const suggestTeamsBtn = document.getElementById("suggestTeamsBtn");
@@ -95,8 +84,8 @@ export function bindMainUI(ctx) {
   let venues = [];
   let currentVenueId = "";
   let currentVenueRole = "player"; // player | organiser | admin
-  const isAdminFull = (profile?.level === "admin_full");
 
+  const isAdminFull = profile?.level === "admin_full";
 
   let cachedPlayers = []; // joueurs du lieu
   let cachedMatches = []; // matchs du jour (lieu)
@@ -115,68 +104,79 @@ export function bindMainUI(ctx) {
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+  }
 
-  async function getMyVenueRole(venueId){
-    if(isAdminFull) return "admin";
-    try{
-      const rows = await apiFetch(`/rest/v1/location_members?select=role&location_id=eq.${venueId}&user_id=eq.${me.id}&limit=1`);
+  async function getMyVenueRole(venueId) {
+    if (!venueId) return "player";
+    if (isAdminFull) return "admin";
+    try {
+      const rows = await apiFetch(
+        `/rest/v1/location_members?select=role&location_id=eq.${venueId}&user_id=eq.${me.id}&limit=1`
+      );
       return rows?.[0]?.role || "player";
-    }catch(e){
+    } catch {
       return "player";
     }
   }
 
-  function setDebugVisibility(){
+  function setDebugVisibility() {
     const debugTabBtn = document.querySelector('.tab[data-tab="tabDebug"]');
     const debugTab = document.getElementById("tabDebug");
     const canDebug = isAdminFull || currentVenueRole === "admin";
-    if(debugTabBtn) debugTabBtn.style.display = canDebug ? "" : "none";
-    if(debugTab) debugTab.style.display = canDebug ? "" : "none";
+    if (debugTabBtn) debugTabBtn.style.display = canDebug ? "" : "none";
+    if (debugTab) debugTab.style.display = canDebug ? "" : "none";
   }
 
-  function updateVenueBar(){
-    if(!venueBar || !venueBarValue) return;
-    const v = venues.find(x => x.id === currentVenueId);
-    if(!v){ venueBar.classList.add("hidden"); venueBarValue.textContent = "—"; return; }
+  function updateVenueBar() {
+    if (!venueBar || !venueBarValue) return;
+    const v = venues.find((x) => x.id === currentVenueId);
+    if (!v) {
+      venueBar.classList.add("hidden");
+      venueBarValue.textContent = "—";
+      return;
+    }
     venueBar.classList.remove("hidden");
     venueBarValue.textContent = v.name || "—";
   }
 
-  function activePlayerSet(){
+  function activePlayerSet() {
     const s = new Set();
-    for(const m of (cachedMatches||[])){
-      if(m.status && m.status !== "done"){
-        [m.a1,m.a2,m.b1,m.b2].filter(Boolean).forEach(id => s.add(id));
+    for (const m of cachedMatches || []) {
+      if (m.status && m.status !== "done") {
+        [m.a1, m.a2, m.b1, m.b2].filter(Boolean).forEach((id) => s.add(id));
       }
     }
     return s;
   }
 
-  function isCourtBusy(court){
-    return (cachedMatches||[]).some(m => (m.status && m.status !== "done") && String(m.court) === String(court));
+  function isCourtBusy(court) {
+    return (cachedMatches || []).some(
+      (m) =>
+        (m.status && m.status !== "done") &&
+        String(m.court) === String(court)
+    );
   }
 
-  function buildOpponentSetFromMatches(matches){
+  function buildOpponentSetFromMatches(matches) {
     const opp = new Set();
-    for(const m of (matches||[])){
-      const A = [m.a1,m.a2].filter(Boolean);
-      const B = [m.b1,m.b2].filter(Boolean);
-      for(const a of A){
-        for(const b of B){
-          const k = [a,b].sort().join("|");
-          opp.add(k);
+    for (const m of matches || []) {
+      const A = [m.a1, m.a2].filter(Boolean);
+      const B = [m.b1, m.b2].filter(Boolean);
+      for (const a of A) {
+        for (const b of B) {
+          opp.add([a, b].sort().join("|"));
         }
       }
     }
     return opp;
   }
 
-
   function isoStartOfDayLocal(d = new Date()) {
     const x = new Date(d);
     x.setHours(0, 0, 0, 0);
     return x.toISOString();
   }
+
   function isoStartOfTomorrowLocal(d = new Date()) {
     const x = new Date(d);
     x.setHours(0, 0, 0, 0);
@@ -184,20 +184,20 @@ export function bindMainUI(ctx) {
     return x.toISOString();
   }
 
-
-  function formatDuration(startIso, endIso){
-    if(!startIso || !endIso) return "";
+  function formatDuration(startIso, endIso) {
+    if (!startIso || !endIso) return "";
     const a = new Date(startIso).getTime();
     const b = new Date(endIso).getTime();
-    if(!Number.isFinite(a) || !Number.isFinite(b) || b<=a) return "";
-    const sec = Math.round((b-a)/1000);
-    const m = Math.floor(sec/60);
-    const s = sec%60;
-    const h = Math.floor(m/60);
-    const mm = m%60;
-    if(h>0) return `${h}h ${String(mm).padStart(2,"0")}m`;
-    return `${mm}m ${String(s).padStart(2,"0")}s`;
+    if (!Number.isFinite(a) || !Number.isFinite(b) || b <= a) return "";
+    const sec = Math.round((b - a) / 1000);
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    const h = Math.floor(m / 60);
+    const mm = m % 60;
+    if (h > 0) return `${h}h ${String(mm).padStart(2, "0")}m`;
+    return `${mm}m ${String(s).padStart(2, "0")}s`;
   }
+
   function initCourtSelect(max = 12) {
     if (!courtEl) return;
     courtEl.innerHTML = "";
@@ -210,39 +210,34 @@ export function bindMainUI(ctx) {
   }
 
   function fillPlayerSelect(sel) {
-  if (!sel) return;
-  sel.innerHTML = "";
+    if (!sel) return;
+    sel.innerHTML = "";
 
-  const o0 = document.createElement("option");
-  o0.value = "";
-  o0.textContent = "(choisir)";
-  sel.appendChild(o0);
+    const o0 = document.createElement("option");
+    o0.value = "";
+    o0.textContent = "(choisir)";
+    sel.appendChild(o0);
 
-  // 👉 ICI: seulement les joueurs présents
-  const busy = activePlayerSet();
+    const busy = activePlayerSet();
+    const pool = cachedPlayers.filter((p) => p.present && !busy.has(p.id));
 
-  // Présents + pas en match en cours
-  const pool = cachedPlayers.filter(p => p.present && !busy.has(p.id));
-
-  for (const p of pool) {
-    const o = document.createElement("option");
-    o.value = p.id;
-    o.textContent = `${p.name} (${String(p.id).slice(0,8)})`;
-    sel.appendChild(o);
+    for (const p of pool) {
+      const o = document.createElement("option");
+      o.value = p.id;
+      o.textContent = `${p.name} (${String(p.id).slice(0, 8)})`;
+      sel.appendChild(o);
+    }
   }
-}
-  
+
   function applyModeUI() {
     const mode = Number(matchModeEl?.value || 4);
     const isSingles = mode === 2;
 
-    // show/hide A2 & B2 columns
     const a2Col = document.querySelector('label[for="a2"]')?.closest(".col");
     const b2Col = document.querySelector('label[for="b2"]')?.closest(".col");
     if (a2Col) a2Col.classList.toggle("hidden", isSingles);
     if (b2Col) b2Col.classList.toggle("hidden", isSingles);
 
-    // enforce: jamais 3 joueurs
     if (isSingles) {
       if (a2El) a2El.value = "";
       if (b2El) b2El.value = "";
@@ -261,9 +256,7 @@ export function bindMainUI(ctx) {
     const saved = getSelectedVenueId(me?.id);
 
     currentVenueId =
-      saved && venues.some((v) => v.id === saved)
-        ? saved
-        : venues[0]?.id || "";
+      saved && venues.some((v) => v.id === saved) ? saved : venues[0]?.id || "";
 
     setSelectedVenueId(me?.id, currentVenueId);
     fillVenueSelect(venueSelect, venues, currentVenueId);
@@ -303,7 +296,7 @@ export function bindMainUI(ctx) {
       const fullName = rows?.[0]?.full_name ? String(rows[0].full_name).trim() : "";
       if (!fullName) return;
       ensureMyPlayerId.fullName = fullName;
-    } catch (_) {
+    } catch {
       // ignore
     }
   }
@@ -326,7 +319,6 @@ export function bindMainUI(ctx) {
 
     cachedPlayers = await listPlayersForVenue(currentVenueId);
 
-    // match myPlayerId by profile full_name
     const fn = ensureMyPlayerId.fullName;
     if (fn) {
       const meP = cachedPlayers.find((p) => String(p.name).trim() === fn);
@@ -351,8 +343,6 @@ export function bindMainUI(ctx) {
         const actions = document.createElement("div");
         actions.className = "inline";
 
-        // Présence toggle (vert/rouge)
-        // ATTENTION: nécessite que listPlayersForVenue retourne p.present (boolean) via location_players.present
         if (HAS_PRESENCE_TOGGLE) {
           const wrap = document.createElement("label");
           wrap.className = "switch";
@@ -360,13 +350,10 @@ export function bindMainUI(ctx) {
 
           const input = document.createElement("input");
           input.type = "checkbox";
-          input.checked = !!p.present; // si pas présent dans DB => false
+          input.checked = !!p.present;
+
           input.addEventListener("change", async () => {
-            // si tu n’as pas encore la colonne/politiques, commente ce bloc
             try {
-              // À implémenter côté players.js (patch sur location_players)
-              // await setPlayerPresentInVenue(currentVenueId, p.id, input.checked);
-              // Si tu n’as pas la fonction, on fait direct ici:
               await apiFetch(
                 `/rest/v1/location_players?location_id=eq.${currentVenueId}&player_id=eq.${p.id}`,
                 {
@@ -393,7 +380,6 @@ export function bindMainUI(ctx) {
           actions.appendChild(wrap);
         }
 
-        // Retirer du lieu (pas delete global)
         const del = document.createElement("button");
         del.className = "miniBtn btnDanger iconOnly";
         del.innerHTML = "🗑️";
@@ -402,7 +388,6 @@ export function bindMainUI(ctx) {
           if (!confirm(`Retirer "${p.name}" de ce lieu ?`)) return;
           try {
             await removePlayerFromVenue(currentVenueId, p.id);
-            log?.(`[VENUE PLAYER REMOVE OK] ${p.name}`);
             await refreshPlayers();
             await refreshMatches();
           } catch (e) {
@@ -434,7 +419,6 @@ export function bindMainUI(ctx) {
 
   function applyMatchFilter() {
     const f = matchFilterEl?.value || "today_all";
-
     if (f === "today_inprogress") {
       visibleMatches = cachedMatches.filter((m) => (m.status || "") !== "done");
     } else if (f === "today_mine") {
@@ -452,7 +436,6 @@ export function bindMainUI(ctx) {
     for (const m of matches) {
       const a = [m.a1, m.a2].filter(Boolean);
       const b = [m.b1, m.b2].filter(Boolean);
-
       if (a.length === 2) set.add(a.slice().sort().join("|"));
       if (b.length === 2) set.add(b.slice().sort().join("|"));
     }
@@ -468,62 +451,59 @@ export function bindMainUI(ctx) {
     return a;
   }
 
-  
-function suggestTeams(mode) {
+  function suggestTeams(mode) {
     if (!cachedPlayers.length) return null;
 
     const busy = activePlayerSet();
+    const poolPlayers = cachedPlayers.filter((p) => p.present && !busy.has(p.id));
 
-    // Pool: présents + pas dans un match en cours
-    const poolPlayers = cachedPlayers.filter(p => p.present && !busy.has(p.id));
     if (mode === 2) {
-      const pool = shuffle(poolPlayers.map(p => p.id));
+      const pool = shuffle(poolPlayers.map((p) => p.id));
       if (pool.length < 2) return null;
       return { a1: pool[0], a2: null, b1: pool[1], b2: null };
     }
 
     if (poolPlayers.length < 4) return null;
 
-    const ids = poolPlayers.map(p => p.id);
+    const ids = poolPlayers.map((p) => p.id);
     const usedPairs = buildPairSetFromMatches(cachedMatches);
-    const usedOpp  = buildOpponentSetFromMatches(cachedMatches);
+    const usedOpp = buildOpponentSetFromMatches(cachedMatches);
 
-    // minimiser répétitions: équipes (pairs) + adversaires
     let best = null;
     let bestCost = Infinity;
 
     for (let attempt = 0; attempt < 400; attempt++) {
       const pick = shuffle(ids).slice(0, 4);
-      const [p1,p2,p3,p4] = pick;
+      const [p1, p2, p3, p4] = pick;
 
       const candidates = [
-        { a:[p1,p2], b:[p3,p4] },
-        { a:[p1,p3], b:[p2,p4] },
-        { a:[p1,p4], b:[p2,p3] },
+        { a: [p1, p2], b: [p3, p4] },
+        { a: [p1, p3], b: [p2, p4] },
+        { a: [p1, p4], b: [p2, p3] },
       ];
 
-      for(const c of candidates){
-        const a = c.a, b = c.b;
+      for (const c of candidates) {
+        const a = c.a;
+        const b = c.b;
         const pairA = a.slice().sort().join("|");
         const pairB = b.slice().sort().join("|");
 
         let cost = 0;
-        if(usedPairs.has(pairA)) cost += 10;
-        if(usedPairs.has(pairB)) cost += 10;
+        if (usedPairs.has(pairA)) cost += 10;
+        if (usedPairs.has(pairB)) cost += 10;
 
-        for(const x of a){
-          for(const y of b){
-            const k = [x,y].sort().join("|");
-            if(usedOpp.has(k)) cost += 3;
+        for (const x of a) {
+          for (const y of b) {
+            const k = [x, y].sort().join("|");
+            if (usedOpp.has(k)) cost += 3;
           }
         }
 
-        // léger bonus si aucune répétition
-        if(cost === 0) return { a1:a[0], a2:a[1], b1:b[0], b2:b[1] };
+        if (cost === 0) return { a1: a[0], a2: a[1], b1: b[0], b2: b[1] };
 
-        if(cost < bestCost){
+        if (cost < bestCost) {
           bestCost = cost;
-          best = { a1:a[0], a2:a[1], b1:b[0], b2:b[1] };
+          best = { a1: a[0], a2: a[1], b1: b[0], b2: b[1] };
         }
       }
     }
@@ -533,7 +513,6 @@ function suggestTeams(mode) {
 
   // =========================
   // Score modal
-
   // =========================
   function openScoreModal(match) {
     activeMatch = match;
@@ -577,7 +556,6 @@ function suggestTeams(mode) {
     const aRaw = String(scoreAEl?.value ?? "").trim();
     const bRaw = String(scoreBEl?.value ?? "").trim();
 
-    // Enter: si vide => confirmer sans score (ton requirement)
     if (withScore) {
       const aFilled = aRaw !== "";
       const bFilled = bRaw !== "";
@@ -585,16 +563,14 @@ function suggestTeams(mode) {
         if (scoreStatus) scoreStatus.textContent = "Entre les 2 scores ou laisse vide pour 'sans score'.";
         return;
       }
-      if (!aFilled && !bFilled) {
-        return confirmFinish(false);
-      }
+      if (!aFilled && !bFilled) return confirmFinish(false);
     }
 
     const sA = parseScoreValue(aRaw);
     const sB = parseScoreValue(bRaw);
 
-    scoreConfirmBtn && (scoreConfirmBtn.disabled = true);
-    scoreNoScoreBtn && (scoreNoScoreBtn.disabled = true);
+    if (scoreConfirmBtn) scoreConfirmBtn.disabled = true;
+    if (scoreNoScoreBtn) scoreNoScoreBtn.disabled = true;
     if (scoreStatus) scoreStatus.textContent = "Enregistrement…";
 
     try {
@@ -611,8 +587,8 @@ function suggestTeams(mode) {
       if (scoreStatus) scoreStatus.textContent = "Erreur:\n" + e.message;
       log?.("[FINISH MATCH ERROR]\n" + e.message);
     } finally {
-      scoreConfirmBtn && (scoreConfirmBtn.disabled = false);
-      scoreNoScoreBtn && (scoreNoScoreBtn.disabled = false);
+      if (scoreConfirmBtn) scoreConfirmBtn.disabled = false;
+      if (scoreNoScoreBtn) scoreNoScoreBtn.disabled = false;
     }
   }
 
@@ -647,9 +623,11 @@ function suggestTeams(mode) {
       const bTeam = [byIdName(m.b1), byIdName(m.b2)].filter(Boolean).join(" + ");
 
       const canFinish = (m.status || "") !== "done";
-      const venueName = venues.find(v=>v.id===currentVenueId)?.name || "";
-      const dur = (m.status==="done" && m.ended_at) ? formatDuration(m.created_at, m.ended_at) : "";
-      const score = (m.score_a !== undefined && m.score_a !== null && m.score_b !== undefined && m.score_b !== null) ? `${m.score_a}-${m.score_b}` : "";
+      const venueName = venues.find((v) => v.id === currentVenueId)?.name || "";
+      const dur = (m.status === "done" && m.ended_at) ? formatDuration(m.created_at, m.ended_at) : "";
+      const score = (m.score_a !== null && m.score_a !== undefined && m.score_b !== null && m.score_b !== undefined)
+        ? `${m.score_a}-${m.score_b}`
+        : "";
 
       const box = document.createElement("div");
       box.className = "listItem matchCard";
@@ -658,15 +636,15 @@ function suggestTeams(mode) {
         <div class="matchTop">
           <div>
             <div class="name">Lieu ${esc(venueName)} • Terrain ${esc(m.court)} — ${esc(m.status || "")}</div>
-            <div class="muted" style="font-size:12px;margin-top:2px">A: ${esc(aTeam)} • B: ${esc(bTeam)}${score ? ` • Score: ${esc(score)}` : ``}${dur ? ` • Durée: ${esc(dur)}` : ``}</div>
+            <div class="muted" style="font-size:12px;margin-top:2px">
+              A: ${esc(aTeam)} • B: ${esc(bTeam)}
+              ${score ? ` • Score: ${esc(score)}` : ``}
+              ${dur ? ` • Durée: ${esc(dur)}` : ``}
+            </div>
           </div>
           <div class="inline" style="justify-content:flex-end;">
             <div class="muted" style="font-size:12px">${esc(new Date(m.created_at).toLocaleString())}</div>
-            ${
-              canFinish
-                ? `<button class="miniBtn btnPrimary" data-finish="${esc(m.id)}" type="button">Terminer</button>`
-                : ``
-            }
+            ${canFinish ? `<button class="miniBtn btnPrimary" data-finish="${esc(m.id)}" type="button">Terminer</button>` : ``}
           </div>
         </div>
       `;
@@ -674,7 +652,6 @@ function suggestTeams(mode) {
       matchesWrap?.appendChild(box);
     }
 
-    // Wire finish buttons
     matchesWrap?.querySelectorAll("button[data-finish]")?.forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.getAttribute("data-finish");
@@ -698,10 +675,7 @@ function suggestTeams(mode) {
     await refreshMatches();
   });
 
-  // Si tu gardes l’ancien bouton "Ajouter lieu" (ailleurs), il marche encore:
   addVenueBtn?.addEventListener("click", createVenueFlow);
-
-  // Nouveau bouton "Ajouter lieu" (dans la section joueurs)
   addVenueBtn2?.addEventListener("click", createVenueFlow);
 
   addPlayerBtn?.addEventListener("click", async () => {
@@ -727,9 +701,7 @@ function suggestTeams(mode) {
     }
   });
 
-  matchModeEl?.addEventListener("change", () => {
-    applyModeUI();
-  });
+  matchModeEl?.addEventListener("change", applyModeUI);
 
   matchFilterEl?.addEventListener("change", async () => {
     applyMatchFilter();
@@ -753,7 +725,7 @@ function suggestTeams(mode) {
     }
   });
 
-   createMatchBtn?.addEventListener("click", async () => {
+  createMatchBtn?.addEventListener("click", async () => {
     if (!currentVenueId) return alert("Choisis un lieu d’abord.");
 
     const mode = Number(matchModeEl?.value || 4);
@@ -768,17 +740,15 @@ function suggestTeams(mode) {
       const b2 = b2El?.value || null;
 
       if (!Number.isFinite(court) || court <= 0) return alert("Terrain invalide");
-
-      // Court busy?
       if (isCourtBusy(court)) return alert("Ce terrain a déjà un match en cours.");
 
       const busy = activePlayerSet();
-      const present = new Set(cachedPlayers.filter(p => p.present).map(p => p.id));
+      const present = new Set(cachedPlayers.filter((p) => p.present).map((p) => p.id));
 
-      function assertPlayerOk(pid){
-        if(!pid) return true;
-        if(!present.has(pid)) throw new Error("Un joueur absent ne peut pas être sélectionné.");
-        if(busy.has(pid)) throw new Error("Un joueur est déjà dans un match en cours.");
+      function assertPlayerOk(pid) {
+        if (!pid) return true;
+        if (!present.has(pid)) throw new Error("Un joueur absent ne peut pas être sélectionné.");
+        if (busy.has(pid)) throw new Error("Un joueur est déjà dans un match en cours.");
         return true;
       }
 
@@ -787,7 +757,8 @@ function suggestTeams(mode) {
         if (a2 || b2) return alert("Simple: pas de A2/B2.");
         if (a1 === b1) return alert("Un joueur ne peut pas jouer contre lui-même.");
 
-        assertPlayerOk(a1); assertPlayerOk(b1);
+        assertPlayerOk(a1);
+        assertPlayerOk(b1);
 
         await createMatchForVenue(currentVenueId, {
           court,
@@ -800,13 +771,20 @@ function suggestTeams(mode) {
       } else {
         if (!a1 || !a2 || !b1 || !b2) return alert("A1, A2, B1, B2 requis (double).");
 
-        const ids = [a1,a2,b1,b2];
+        const ids = [a1, a2, b1, b2];
         const uniq = new Set(ids);
-        if(uniq.size !== ids.length) return alert("Un joueur ne peut pas être ajouté deux fois.");
+        if (uniq.size !== ids.length) return alert("Un joueur ne peut pas être ajouté deux fois.");
 
         ids.forEach(assertPlayerOk);
 
-        await createMatchForVenue(currentVenueId, { court, status: "in_progress", a1, a2, b1, b2 });
+        await createMatchForVenue(currentVenueId, {
+          court,
+          status: "in_progress",
+          a1,
+          a2,
+          b1,
+          b2,
+        });
       }
 
       await refreshMatches();
@@ -816,7 +794,7 @@ function suggestTeams(mode) {
     } finally {
       createMatchBtn.disabled = false;
     }
-  });    
+  });
 
   finishAllTodayBtn?.addEventListener("click", async () => {
     if (!currentVenueId) return alert("Choisis un lieu d’abord.");
@@ -842,11 +820,9 @@ function suggestTeams(mode) {
   scoreOverlay?.addEventListener("click", (e) => {
     if (e.target === scoreOverlay) closeScoreModal();
   });
-
   scoreConfirmBtn?.addEventListener("click", () => confirmFinish(true));
   scoreNoScoreBtn?.addEventListener("click", () => confirmFinish(false));
 
-  // Enter: confirmer. Si vide => sans score.
   [scoreAEl, scoreBEl].forEach((inp) => {
     inp?.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
