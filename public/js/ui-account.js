@@ -5,6 +5,7 @@ import { refreshSessionIfNeeded, hasSession, loadUser, clearTokens } from "./aut
 let me = null;
 let myProfile = null;
 
+// ---------- DOM ----------
 const backBtn = document.getElementById("backBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const saveBtn = document.getElementById("saveBtn");
@@ -16,7 +17,7 @@ const cfgWantsEmail = document.getElementById("cfgWantsEmail");
 const cfgSkill = document.getElementById("cfgSkill");
 const cfgAccess = document.getElementById("cfgAccess");
 
-// Lieux (join/leave/select)
+// Lieux
 const joinCode = document.getElementById("joinCode");
 const joinByCodeBtn = document.getElementById("joinByCodeBtn");
 const acctVenueSelect = document.getElementById("acctVenueSelect");
@@ -24,24 +25,45 @@ const leaveVenueBtn = document.getElementById("leaveVenueBtn");
 
 // Partage
 const shareBox = document.getElementById("shareBox");
-const shareVenueSelect = document.getElementById("shareVenueSelect"); // <-- NEW
+const shareVenueSelect = document.getElementById("shareVenueSelect"); // doit exister dans account.html
 const shareCodeValue = document.getElementById("shareCodeValue");
 const copyShareCodeBtn = document.getElementById("copyShareCodeBtn");
 
-// Créer un lieu (doit exister dans account.html)
-const newVenueName = document.getElementById("newVenueName");
-const createVenueBtn = document.getElementById("createVenueBtn");
+// Créer un lieu
+const newVenueName = document.getElementById("newVenueName"); // doit exister dans account.html
+const createVenueBtn = document.getElementById("createVenueBtn"); // doit exister dans account.html
 
+// ---------- State ----------
+let venuesState = { venues: [], mode: "members" };
+
+// ---------- Helpers ----------
+function setStatus(msg) {
+  if (statusEl) statusEl.textContent = msg || "";
+}
+
+function fillSelect(sel, venues) {
+  if (!sel) return;
+  sel.innerHTML = "";
+  for (const v of venues) {
+    const o = document.createElement("option");
+    o.value = v.id;
+    o.textContent = v.name || "(?)";
+    sel.appendChild(o);
+  }
+}
+
+function pickId(prev, venues) {
+  if (prev && venues.some((v) => v.id === prev)) return prev;
+  return venues?.[0]?.id || "";
+}
+
+// ---------- Nav / auth buttons ----------
 backBtn?.addEventListener("click", () => (window.location.href = "index.html"));
 
 logoutBtn?.addEventListener("click", () => {
   clearTokens();
   window.location.href = "index.html";
 });
-
-function setStatus(msg) {
-  if (statusEl) statusEl.textContent = msg || "";
-}
 
 // ---------- Profile ----------
 async function loadMyProfile() {
@@ -61,7 +83,7 @@ async function upsertProfile({ full_name, wants_email, skill_level }) {
     wants_email,
   };
 
-  // Nouveau schema
+  // Nouveau schema (skill_level)
   try {
     payload.skill_level = skill_level;
 
@@ -80,7 +102,7 @@ async function upsertProfile({ full_name, wants_email, skill_level }) {
     myProfile = inserted?.[0] || myProfile;
     return;
   } catch (_) {
-    // Legacy fallback: level = skill
+    // Legacy: level = skill
     const legacy = {
       user_id: me.id,
       email: me.email,
@@ -130,36 +152,8 @@ async function listMyVenues() {
       (await apiFetch(
         `/rest/v1/locations?select=id,name,share_code,created_by&order=created_at.desc`
       )) || [];
-    // my_role absent en legacy
-    return { venues: venues.map(v => ({...v, my_role:"player"})), mode: "legacy" };
+    return { venues: venues.map((v) => ({ ...v, my_role: "player" })), mode: "legacy" };
   }
-}
-
-function fillVenueSelect(sel, venues) {
-  if (!sel) return;
-  sel.innerHTML = "";
-  for (const v of venues) {
-    const o = document.createElement("option");
-    o.value = v.id;
-    o.textContent = v.name;
-    sel.appendChild(o);
-  }
-}
-
-function pickValidVenueId(sel, venues) {
-  const current = sel?.value;
-  if (current && venues.some((v) => v.id === current)) return current;
-  return venues?.[0]?.id || "";
-}
-
-async function getVenueByShareCode(code) {
-  const c = (code || "").trim();
-  if (!c) return null;
-
-  const rows = await apiFetch(
-    `/rest/v1/locations?select=id,name,share_code,created_by&share_code=eq.${encodeURIComponent(c)}&limit=1`
-  );
-  return rows?.[0] || null;
 }
 
 async function loadVenueRoleForMe(venueId) {
@@ -178,8 +172,17 @@ function canSeeShareCode(myRole) {
   return myRole === "admin";
 }
 
-async function renderShareCode(selectedVenue, myRole) {
+async function renderShareFromVenueId(venueId) {
   if (!shareBox || !shareCodeValue) return;
+
+  if (!venueId) {
+    shareBox.style.display = "none";
+    shareCodeValue.textContent = "—";
+    return;
+  }
+
+  const selVenue = venuesState.venues.find((v) => v.id === venueId) || { id: venueId };
+  const myRole = myProfile?.level === "admin_full" ? "admin" : await loadVenueRoleForMe(venueId);
 
   const visible = canSeeShareCode(myRole);
   shareBox.style.display = visible ? "block" : "none";
@@ -189,25 +192,8 @@ async function renderShareCode(selectedVenue, myRole) {
     return;
   }
 
-  async function updateShareCodeFromShareSelect() {
-  const venueId = (shareVenueSelect?.value || "").trim();
-
-  if (!venueId) {
-    if (shareBox) shareBox.style.display = "none";
-    if (shareCodeValue) shareCodeValue.textContent = "—";
-    return;
-  }
-
-  const selVenue = venuesState.venues.find(v => v.id === venueId) || { id: venueId };
-
-  const myRole =
-    myProfile?.level === "admin_full" ? "admin" : await loadVenueRoleForMe(venueId);
-
-  await renderShareCode(selVenue, myRole);
-}
-  
-  // 1) déjà dispo via join
-  const already = (selectedVenue?.share_code || "").trim();
+  // 1) si déjà présent dans la liste
+  const already = String(selVenue.share_code || "").trim();
   if (already) {
     shareCodeValue.textContent = already;
     return;
@@ -215,13 +201,42 @@ async function renderShareCode(selectedVenue, myRole) {
 
   // 2) fallback DB
   try {
-    const rows = await apiFetch(
-      `/rest/v1/locations?select=share_code&id=eq.${selectedVenue.id}&limit=1`
-    );
+    const rows = await apiFetch(`/rest/v1/locations?select=share_code&id=eq.${venueId}&limit=1`);
     shareCodeValue.textContent = rows?.[0]?.share_code || "—";
   } catch (_) {
     shareCodeValue.textContent = "—";
   }
+}
+
+// IMPORTANT: cette fonction ne doit PAS “revenir à Canada” quand tu changes de lieu
+async function refreshVenuesUI({ keepSelection = true } = {}) {
+  venuesState = await listMyVenues();
+
+  const prevAcct = keepSelection ? String(acctVenueSelect?.value || "") : "";
+  const prevShare = keepSelection ? String(shareVenueSelect?.value || "") : "";
+
+  fillSelect(acctVenueSelect, venuesState.venues);
+  fillSelect(shareVenueSelect, venuesState.venues);
+
+  const acctId = pickId(prevAcct, venuesState.venues);
+  const shareId = pickId(prevShare, venuesState.venues);
+
+  if (acctVenueSelect) acctVenueSelect.value = acctId;
+  if (shareVenueSelect) shareVenueSelect.value = shareId;
+
+  await renderShareFromVenueId(shareId);
+}
+
+async function getVenueByShareCode(code) {
+  const c = (code || "").trim();
+  if (!c) return null;
+
+  const rows = await apiFetch(
+    `/rest/v1/locations?select=id,name,share_code,created_by&share_code=eq.${encodeURIComponent(
+      c
+    )}&limit=1`
+  );
+  return rows?.[0] || null;
 }
 
 // ---------- Player identity (for location_players) ----------
@@ -229,6 +244,7 @@ async function ensurePlayerForMe() {
   const fullName = (cfgFullName?.value || me.email || "").trim();
   const email = me.email;
 
+  // Nouveau schema
   try {
     const found = await apiFetch(
       `/rest/v1/players?select=id,name,user_id,email&user_id=eq.${me.id}&limit=1`
@@ -248,6 +264,7 @@ async function ensurePlayerForMe() {
 
     return inserted?.[0] || null;
   } catch (_) {
+    // Legacy: match par nom
     const existing = await apiFetch(
       `/rest/v1/players?select=id,name&name=eq.${encodeURIComponent(fullName)}&limit=1`
     );
@@ -277,6 +294,7 @@ async function joinVenueByCode() {
   const v = await getVenueByShareCode(code);
   if (!v) throw new Error("Code invalide (lieu introuvable).");
 
+  // membership
   try {
     await apiFetch(`/rest/v1/location_members`, {
       method: "POST",
@@ -285,6 +303,7 @@ async function joinVenueByCode() {
     });
   } catch (_) {}
 
+  // location_players
   const p = await ensurePlayerForMe();
   if (p?.id) {
     try {
@@ -350,62 +369,21 @@ async function createVenueFlow() {
   } catch (_) {}
 
   if (newVenueName) newVenueName.value = "";
-  await refreshVenuesUI();
 
-  // sélectionner dans "Mes lieux" ET "Partage"
+  // reload sans conserver les anciennes sélections, puis forcer sur le nouveau
+  await refreshVenuesUI({ keepSelection: false });
   if (acctVenueSelect) acctVenueSelect.value = v.id;
   if (shareVenueSelect) shareVenueSelect.value = v.id;
-  await refreshVenuesUI();
+  await renderShareFromVenueId(v.id);
 }
 
-// ---------- UI refresh ----------
-let venuesState = { venues: [], mode: "members" };
-
-async function refreshVenuesUI({ keepSelection = true } = {}) {
-  venuesState = await listMyVenues();
-
-  // Sauvegarde des choix AVANT de refill
-  const prevAcct = keepSelection ? (acctVenueSelect?.value || "") : "";
-  const prevShare = keepSelection ? (shareVenueSelect?.value || "") : "";
-
-  // Refill
-  fillVenueSelect(acctVenueSelect, venuesState.venues);
-  fillVenueSelect(shareVenueSelect, venuesState.venues);
-
-  // Restore si possible
-  const acctId =
-    (prevAcct && venuesState.venues.some(v => v.id === prevAcct)) ? prevAcct :
-    (venuesState.venues[0]?.id || "");
-
-  const shareId =
-    (prevShare && venuesState.venues.some(v => v.id === prevShare)) ? prevShare :
-    (venuesState.venues[0]?.id || "");
-
-  if (acctVenueSelect) acctVenueSelect.value = acctId;
-  if (shareVenueSelect) shareVenueSelect.value = shareId;
-
-  // Afficher code selon le menu Partage
-  await updateShareCodeFromShareSelect();
-}
-
-  const selVenue = venuesState.venues.find((v) => v.id === venueId) || { id: venueId };
-
-  // rôle pour VISIBILITÉ (admin_full => ok)
-  const myRole =
-    myProfile?.level === "admin_full" ? "admin" : await loadVenueRoleForMe(venueId);
-
-  await renderShareCode(selVenue, myRole);
-}
-
-// ---------- Events ----------
+// ---------- Events (IMPORTANT: pas de refreshVenuesUI() sur change, sinon ça reset ton choix) ----------
 acctVenueSelect?.addEventListener("change", async () => {
-  // Ne change pas le partage automatiquement (tu veux deux menus séparés).
-  await refreshVenuesUI();
+  // ne rien faire: ce menu sert juste au "Me retirer du lieu"
 });
 
 shareVenueSelect?.addEventListener("change", async () => {
-  // Met à jour immédiatement le code affiché
-  await refreshVenuesUI();
+  await renderShareFromVenueId(String(shareVenueSelect?.value || ""));
 });
 
 joinByCodeBtn?.addEventListener("click", async () => {
@@ -413,7 +391,7 @@ joinByCodeBtn?.addEventListener("click", async () => {
     setStatus("Inscription…");
     await joinVenueByCode();
     if (joinCode) joinCode.value = "";
-    await refreshVenuesUI();
+    await refreshVenuesUI({ keepSelection: true });
     setStatus("Inscrit au lieu.");
   } catch (e) {
     setStatus(e?.message || "Erreur inscription.");
@@ -424,7 +402,7 @@ leaveVenueBtn?.addEventListener("click", async () => {
   try {
     setStatus("Retrait…");
     await leaveSelectedVenue();
-    await refreshVenuesUI();
+    await refreshVenuesUI({ keepSelection: false });
     setStatus("Retiré du lieu.");
   } catch (_) {
     setStatus("Erreur retrait.");
@@ -432,7 +410,7 @@ leaveVenueBtn?.addEventListener("click", async () => {
 });
 
 copyShareCodeBtn?.addEventListener("click", async () => {
-  const txt = (shareCodeValue?.textContent || "").trim();
+  const txt = String(shareCodeValue?.textContent || "").trim();
   if (!txt || txt === "—") return;
   try {
     await navigator.clipboard.writeText(txt);
@@ -471,7 +449,7 @@ saveBtn?.addEventListener("click", async () => {
     // affichage seulement
     if (cfgAccess) cfgAccess.value = myProfile?.level === "admin_full" ? "admin_full" : "user";
 
-    await refreshVenuesUI();
+    await refreshVenuesUI({ keepSelection: true });
     setStatus("OK.");
   } catch (_) {
     setStatus("Erreur enregistrement.");
@@ -506,7 +484,7 @@ async function init() {
   // affichage seulement
   if (cfgAccess) cfgAccess.value = myProfile?.level === "admin_full" ? "admin_full" : "user";
 
-  await refreshVenuesUI();
+  await refreshVenuesUI({ keepSelection: false });
   setStatus("Prêt.");
 }
 
