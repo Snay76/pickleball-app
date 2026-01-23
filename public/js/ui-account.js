@@ -189,6 +189,23 @@ async function renderShareCode(selectedVenue, myRole) {
     return;
   }
 
+  async function updateShareCodeFromShareSelect() {
+  const venueId = (shareVenueSelect?.value || "").trim();
+
+  if (!venueId) {
+    if (shareBox) shareBox.style.display = "none";
+    if (shareCodeValue) shareCodeValue.textContent = "—";
+    return;
+  }
+
+  const selVenue = venuesState.venues.find(v => v.id === venueId) || { id: venueId };
+
+  const myRole =
+    myProfile?.level === "admin_full" ? "admin" : await loadVenueRoleForMe(venueId);
+
+  await renderShareCode(selVenue, myRole);
+}
+  
   // 1) déjà dispo via join
   const already = (selectedVenue?.share_code || "").trim();
   if (already) {
@@ -344,26 +361,32 @@ async function createVenueFlow() {
 // ---------- UI refresh ----------
 let venuesState = { venues: [], mode: "members" };
 
-async function refreshVenuesUI() {
+async function refreshVenuesUI({ keepSelection = true } = {}) {
   venuesState = await listMyVenues();
 
-  // 1) Mes lieux
+  // Sauvegarde des choix AVANT de refill
+  const prevAcct = keepSelection ? (acctVenueSelect?.value || "") : "";
+  const prevShare = keepSelection ? (shareVenueSelect?.value || "") : "";
+
+  // Refill
   fillVenueSelect(acctVenueSelect, venuesState.venues);
-  const venueIdForAccount = pickValidVenueId(acctVenueSelect, venuesState.venues);
-  if (acctVenueSelect && venueIdForAccount) acctVenueSelect.value = venueIdForAccount;
-
-  // 2) Partage du lieu (menu dédié)
   fillVenueSelect(shareVenueSelect, venuesState.venues);
-  const venueIdForShare = pickValidVenueId(shareVenueSelect, venuesState.venues);
-  if (shareVenueSelect && venueIdForShare) shareVenueSelect.value = venueIdForShare;
 
-  // 3) Afficher code selon le menu de partage
-  const venueId = venueIdForShare;
-  if (!venueId) {
-    if (shareBox) shareBox.style.display = "none";
-    if (shareCodeValue) shareCodeValue.textContent = "—";
-    return;
-  }
+  // Restore si possible
+  const acctId =
+    (prevAcct && venuesState.venues.some(v => v.id === prevAcct)) ? prevAcct :
+    (venuesState.venues[0]?.id || "");
+
+  const shareId =
+    (prevShare && venuesState.venues.some(v => v.id === prevShare)) ? prevShare :
+    (venuesState.venues[0]?.id || "");
+
+  if (acctVenueSelect) acctVenueSelect.value = acctId;
+  if (shareVenueSelect) shareVenueSelect.value = shareId;
+
+  // Afficher code selon le menu Partage
+  await updateShareCodeFromShareSelect();
+}
 
   const selVenue = venuesState.venues.find((v) => v.id === venueId) || { id: venueId };
 
