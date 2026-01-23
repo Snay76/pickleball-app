@@ -192,10 +192,19 @@ function wireLogin() {
 
     const ui = bindMainUI({ me, profile, log });
     await ui.initVenuesFlow();
-  } catch (e) {
-    clearTokens?.();
-    showLogin();
-    setAuthUI(false, "");
-    log("[INIT ERROR]\n" + (e?.message || e));
+  }catch(e){
+    const msg = e?.message || String(e);
+
+    // On clear uniquement si vraiment non autorisé
+    if (msg.includes("-> 401")) {
+      clearTokens?.();
+      showLogin();
+      setAuthUI(false, "");
+    } else {
+      // sinon on garde la session et on affiche l'app
+      showApp();
+    }
+
+    log("[INIT ERROR]\n" + msg);
   }
 })();
