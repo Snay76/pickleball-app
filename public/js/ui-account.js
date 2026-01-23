@@ -4,6 +4,7 @@ import { refreshSessionIfNeeded, hasSession, loadUser, clearTokens } from "./aut
 
 let me = null;
 let myProfile = null;
+let venuesState = { venues: [], mode: "members" };
 
 // ---------- DOM ----------
 const backBtn = document.getElementById("backBtn");
@@ -17,7 +18,7 @@ const cfgWantsEmail = document.getElementById("cfgWantsEmail");
 const cfgSkill = document.getElementById("cfgSkill");
 const cfgAccess = document.getElementById("cfgAccess");
 
-// Lieux
+// Lieux (join/leave/select)
 const joinCode = document.getElementById("joinCode");
 const joinByCodeBtn = document.getElementById("joinByCodeBtn");
 const acctVenueSelect = document.getElementById("acctVenueSelect");
@@ -25,45 +26,44 @@ const leaveVenueBtn = document.getElementById("leaveVenueBtn");
 
 // Partage
 const shareBox = document.getElementById("shareBox");
-const shareVenueSelect = document.getElementById("shareVenueSelect"); // doit exister dans account.html
+const shareVenueSelect = document.getElementById("shareVenueSelect");
 const shareCodeValue = document.getElementById("shareCodeValue");
 const copyShareCodeBtn = document.getElementById("copyShareCodeBtn");
 
 // Créer un lieu
-const newVenueName = document.getElementById("newVenueName"); // doit exister dans account.html
-const createVenueBtn = document.getElementById("createVenueBtn"); // doit exister dans account.html
+const newVenueName = document.getElementById("newVenueName");
+const createVenueBtn = document.getElementById("createVenueBtn");
 
-// ---------- State ----------
-let venuesState = { venues: [], mode: "members" };
-
-// ---------- Helpers ----------
+// ---------- Utils ----------
 function setStatus(msg) {
   if (statusEl) statusEl.textContent = msg || "";
 }
 
 function fillSelect(sel, venues) {
   if (!sel) return;
+  const current = sel.value || "";
   sel.innerHTML = "";
+
   for (const v of venues) {
-    const o = document.createElement("option");
-    o.value = v.id;
-    o.textContent = v.name || "(?)";
-    sel.appendChild(o);
+    const opt = document.createElement("option");
+    opt.value = v.id;
+    opt.textContent = v.name || "(?)";
+    sel.appendChild(opt);
+  }
+
+  // Tente de restaurer le choix précédent si encore valide
+  if (current && venues.some(v => v.id === current)) {
+    sel.value = current;
   }
 }
 
-function pickId(prev, venues) {
-  if (prev && venues.some((v) => v.id === prev)) return prev;
-  return venues?.[0]?.id || "";
+function firstVenueId() {
+  return venuesState.venues?.[0]?.id || "";
 }
 
-// ---------- Nav / auth buttons ----------
-backBtn?.addEventListener("click", () => (window.location.href = "index.html"));
-
-logoutBtn?.addEventListener("click", () => {
-  clearTokens();
-  window.location.href = "index.html";
-});
+function getVenueById(id) {
+  return venuesState.venues.find(v => v.id === id) || null;
+}
 
 // ---------- Profile ----------
 async function loadMyProfile() {
@@ -75,18 +75,17 @@ async function loadMyProfile() {
 }
 
 async function upsertProfile({ full_name, wants_email, skill_level }) {
-  // IMPORTANT: on ne met JAMAIS à jour level/global_role depuis le client.
+  // IMPORTANT: ne jamais écrire "level" depuis le client.
   const payload = {
     user_id: me.id,
     email: me.email,
     full_name,
     wants_email,
+    skill_level,
   };
 
-  // Nouveau schema (skill_level)
+  // Nouveau schema
   try {
-    payload.skill_level = skill_level;
-
     const inserted = await apiFetch(
       `/rest/v1/profiles?select=user_id,email,full_name,wants_email,level,skill_level`,
       {
@@ -98,11 +97,10 @@ async function upsertProfile({ full_name, wants_email, skill_level }) {
         body: JSON.stringify(payload),
       }
     );
-
     myProfile = inserted?.[0] || myProfile;
     return;
   } catch (_) {
-    // Legacy: level = skill
+    // Legacy schema: level = skill
     const legacy = {
       user_id: me.id,
       email: me.email,
@@ -122,12 +120,11 @@ async function upsertProfile({ full_name, wants_email, skill_level }) {
         body: JSON.stringify(legacy),
       }
     );
-
     myProfile = inserted?.[0] || myProfile;
   }
 }
 
-// ---------- Venues ----------
+// ---------- Venues list ----------
 async function listMyVenues() {
   // Nouveau schema: location_members -> locations
   try {
@@ -139,8 +136,8 @@ async function listMyVenues() {
       .map((r) => ({
         id: r.locations?.id || r.location_id,
         name: r.locations?.name || "(?)",
-        share_code: r.locations?.share_code || null,
-        created_by: r.locations?.created_by || null,
+        share_code: r.locations?.share_code ?? null,
+        created_by: r.locations?.created_by ?? null,
         my_role: r.role || "player",
       }))
       .filter((v) => v.id);
@@ -149,13 +146,21 @@ async function listMyVenues() {
   } catch (_) {
     // Legacy fallback
     const venues =
-      (await apiFetch(
-        `/rest/v1/locations?select=id,name,share_code,created_by&order=created_at.desc`
-      )) || [];
-    return { venues: venues.map((v) => ({ ...v, my_role: "player" })), mode: "legacy" };
+      (await apiFetch(`/rest/v1/locations?select=id,name,share_code,created_by&order=created_at.desc`)) || [];
+    return {
+      venues: venues.map(v => ({
+        id: v.id,
+        name: v.name,
+        share_code: v.share_code ?? null,
+        created_by: v.created_by ?? null,
+        my_role: "player",
+      })),
+      mode: "legacy",
+    };
   }
 }
 
+// ---------- Roles / Share visibility ----------
 async function loadVenueRoleForMe(venueId) {
   try {
     const rows = await apiFetch(
@@ -172,79 +177,66 @@ function canSeeShareCode(myRole) {
   return myRole === "admin";
 }
 
-async function renderShareFromVenueId(venueId) {
-  if (!shareBox || !shareCodeValue) return;
+async function fetchShareCodeFromDB(venueId) {
+  const rows = await apiFetch(
+    `/rest/v1/locations?select=share_code&id=eq.${venueId}&limit=1`
+  );
+  return rows?.[0]?.share_code ?? null;
+}
 
+async function updateShareUI() {
+  if (!shareBox || !shareVenueSelect || !shareCodeValue) return;
+
+  const venueId = shareVenueSelect.value || "";
   if (!venueId) {
     shareBox.style.display = "none";
     shareCodeValue.textContent = "—";
+    if (copyShareCodeBtn) copyShareCodeBtn.disabled = true;
     return;
   }
 
-  const selVenue = venuesState.venues.find((v) => v.id === venueId) || { id: venueId };
-  const myRole = myProfile?.level === "admin_full" ? "admin" : await loadVenueRoleForMe(venueId);
-
+  const myRole = (myProfile?.level === "admin_full") ? "admin" : await loadVenueRoleForMe(venueId);
   const visible = canSeeShareCode(myRole);
-  shareBox.style.display = visible ? "block" : "none";
 
+  shareBox.style.display = visible ? "block" : "none";
   if (!visible) {
     shareCodeValue.textContent = "—";
+    if (copyShareCodeBtn) copyShareCodeBtn.disabled = true;
     return;
   }
 
-  // 1) si déjà présent dans la liste
-  const already = String(selVenue.share_code || "").trim();
-  if (already) {
-    shareCodeValue.textContent = already;
-    return;
-  }
+  // 1) tente cache venuesState
+  let code = getVenueById(venueId)?.share_code ?? null;
 
   // 2) fallback DB
-  try {
-    const rows = await apiFetch(`/rest/v1/locations?select=share_code&id=eq.${venueId}&limit=1`);
-    shareCodeValue.textContent = rows?.[0]?.share_code || "—";
-  } catch (_) {
-    shareCodeValue.textContent = "—";
+  if (!code) {
+    try {
+      code = await fetchShareCodeFromDB(venueId);
+    } catch (_) {
+      code = null;
+    }
   }
+
+  shareCodeValue.textContent = code ? String(code) : "—";
+  if (copyShareCodeBtn) copyShareCodeBtn.disabled = !code;
 }
 
-// IMPORTANT: cette fonction ne doit PAS “revenir à Canada” quand tu changes de lieu
-async function refreshVenuesUI({ keepSelection = true } = {}) {
-  venuesState = await listMyVenues();
-
-  const prevAcct = keepSelection ? String(acctVenueSelect?.value || "") : "";
-  const prevShare = keepSelection ? String(shareVenueSelect?.value || "") : "";
-
-  fillSelect(acctVenueSelect, venuesState.venues);
-  fillSelect(shareVenueSelect, venuesState.venues);
-
-  const acctId = pickId(prevAcct, venuesState.venues);
-  const shareId = pickId(prevShare, venuesState.venues);
-
-  if (acctVenueSelect) acctVenueSelect.value = acctId;
-  if (shareVenueSelect) shareVenueSelect.value = shareId;
-
-  await renderShareFromVenueId(shareId);
-}
-
+// ---------- Player identity / join / leave ----------
 async function getVenueByShareCode(code) {
   const c = (code || "").trim();
   if (!c) return null;
 
   const rows = await apiFetch(
-    `/rest/v1/locations?select=id,name,share_code,created_by&share_code=eq.${encodeURIComponent(
-      c
-    )}&limit=1`
+    `/rest/v1/locations?select=id,name,share_code,created_by&share_code=eq.${encodeURIComponent(c)}&limit=1`
   );
   return rows?.[0] || null;
 }
 
-// ---------- Player identity (for location_players) ----------
 async function ensurePlayerForMe() {
   const fullName = (cfgFullName?.value || me.email || "").trim();
   const email = me.email;
 
-  // Nouveau schema
+  // Nouveau schema (players.user_id/email)
   try {
     const found = await apiFetch(
       `/rest/v1/players?select=id,name,user_id,email&user_id=eq.${me.id}&limit=1`
@@ -254,14 +246,8 @@ async function ensurePlayerForMe() {
     const inserted = await apiFetch(`/rest/v1/players?select=id,name,user_id,email`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Prefer: "return=representation" },
-      body: JSON.stringify({
-        name: fullName,
-        user_id: me.id,
-        email,
-        created_by_user_id: me.id,
-      }),
+      body: JSON.stringify({ name: fullName, user_id: me.id, email, created_by_user_id: me.id }),
     });
-
     return inserted?.[0] || null;
   } catch (_) {
     // Legacy: match par nom
@@ -275,7 +261,6 @@ async function ensurePlayerForMe() {
       headers: { "Content-Type": "application/json", Prefer: "return=representation" },
       body: JSON.stringify({ name: fullName }),
     });
-
     return inserted?.[0] || null;
   }
 }
@@ -288,7 +273,6 @@ async function addPlayerToVenue(playerId, venueId) {
   });
 }
 
-// ---------- Join / Leave ----------
 async function joinVenueByCode() {
   const code = joinCode?.value || "";
   const v = await getVenueByShareCode(code);
@@ -303,12 +287,10 @@ async function joinVenueByCode() {
     });
   } catch (_) {}
 
-  // location_players
+  // player attach
   const p = await ensurePlayerForMe();
   if (p?.id) {
-    try {
-      await addPlayerToVenue(p.id, v.id);
-    } catch (_) {}
+    try { await addPlayerToVenue(p.id, v.id); } catch (_) {}
   }
 }
 
@@ -339,10 +321,7 @@ async function createVenueFlow() {
 
   const inserted = await apiFetch(`/rest/v1/locations?select=id,name,share_code,created_by`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Prefer: "return=representation",
-    },
+    headers: { "Content-Type": "application/json", Prefer: "return=representation" },
     body: JSON.stringify({ name, created_by: me.id }),
   });
 
@@ -362,28 +341,51 @@ async function createVenueFlow() {
   try {
     const p = await ensurePlayerForMe();
     if (p?.id) {
-      try {
-        await addPlayerToVenue(p.id, v.id);
-      } catch (_) {}
+      try { await addPlayerToVenue(p.id, v.id); } catch (_) {}
     }
   } catch (_) {}
 
   if (newVenueName) newVenueName.value = "";
 
-  // reload sans conserver les anciennes sélections, puis forcer sur le nouveau
-  await refreshVenuesUI({ keepSelection: false });
+  await refreshVenuesUI();
+
+  // sélectionne le nouveau lieu dans les 2 menus
   if (acctVenueSelect) acctVenueSelect.value = v.id;
   if (shareVenueSelect) shareVenueSelect.value = v.id;
-  await renderShareFromVenueId(v.id);
+
+  await updateShareUI();
 }
 
-// ---------- Events (IMPORTANT: pas de refreshVenuesUI() sur change, sinon ça reset ton choix) ----------
+// ---------- UI refresh (NE PAS l'appeler sur chaque change) ----------
+async function refreshVenuesUI() {
+  venuesState = await listMyVenues();
+
+  // Remplir les deux selects sans casser la sélection courante
+  fillSelect(acctVenueSelect, venuesState.venues);
+  fillSelect(shareVenueSelect, venuesState.venues);
+
+  // Si vide, force un default
+  if (acctVenueSelect && !acctVenueSelect.value) acctVenueSelect.value = firstVenueId();
+  if (shareVenueSelect && !shareVenueSelect.value) shareVenueSelect.value = firstVenueId();
+
+  await updateShareUI();
+}
+
+// ---------- Events ----------
+backBtn?.addEventListener("click", () => (window.location.href = "index.html"));
+
+logoutBtn?.addEventListener("click", () => {
+  clearTokens();
+  window.location.href = "index.html";
+});
+
 acctVenueSelect?.addEventListener("change", async () => {
-  // ne rien faire: ce menu sert juste au "Me retirer du lieu"
+  // IMPORTANT: ne pas refresh ici, sinon tu écrases la sélection de l’autre menu.
+  // Ici, tu n’as rien à faire (sauf si tu veux afficher autre chose).
 });
 
 shareVenueSelect?.addEventListener("change", async () => {
-  await renderShareFromVenueId(String(shareVenueSelect?.value || ""));
+  await updateShareUI();
 });
 
 joinByCodeBtn?.addEventListener("click", async () => {
@@ -391,7 +393,7 @@ joinByCodeBtn?.addEventListener("click", async () => {
     setStatus("Inscription…");
     await joinVenueByCode();
     if (joinCode) joinCode.value = "";
-    await refreshVenuesUI({ keepSelection: true });
+    await refreshVenuesUI();
     setStatus("Inscrit au lieu.");
   } catch (e) {
     setStatus(e?.message || "Erreur inscription.");
@@ -402,7 +404,7 @@ leaveVenueBtn?.addEventListener("click", async () => {
   try {
     setStatus("Retrait…");
     await leaveSelectedVenue();
-    await refreshVenuesUI({ keepSelection: false });
+    await refreshVenuesUI();
     setStatus("Retiré du lieu.");
   } catch (_) {
     setStatus("Erreur retrait.");
@@ -410,7 +412,7 @@ leaveVenueBtn?.addEventListener("click", async () => {
 });
 
 copyShareCodeBtn?.addEventListener("click", async () => {
-  const txt = String(shareCodeValue?.textContent || "").trim();
+  const txt = (shareCodeValue?.textContent || "").trim();
   if (!txt || txt === "—") return;
   try {
     await navigator.clipboard.writeText(txt);
@@ -449,7 +451,6 @@ saveBtn?.addEventListener("click", async () => {
     // affichage seulement
     if (cfgAccess) cfgAccess.value = myProfile?.level === "admin_full" ? "admin_full" : "user";
 
-    await refreshVenuesUI({ keepSelection: true });
     setStatus("OK.");
   } catch (_) {
     setStatus("Erreur enregistrement.");
@@ -484,7 +485,7 @@ async function init() {
   // affichage seulement
   if (cfgAccess) cfgAccess.value = myProfile?.level === "admin_full" ? "admin_full" : "user";
 
-  await refreshVenuesUI({ keepSelection: false });
+  await refreshVenuesUI();
   setStatus("Prêt.");
 }
 
