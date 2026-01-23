@@ -115,20 +115,27 @@
     </div>
 
     <!-- Code de partage du lieu sélectionné -->
-    <div class="row">
-      <div class="col">
-        <div id="shareBox" class="card" style="padding:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-            <div>
-              <div style="font-weight:800;">Partage du lieu</div>
-              <div class="help">Affiche le code du lieu sélectionné si tu es admin du lieu (ou admin full).</div>
-            </div>
-            <button id="copyShareCodeBtn" class="miniBtn btnGhost" type="button">Copier</button>
-          </div>
-          <div style="margin-top:8px;font-family:var(--mono);" id="shareCodeValue">—</div>
+   <div class="row">
+  <div class="col">
+    <div id="shareBox" class="card" style="padding:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <div>
+          <div style="font-weight:800;">Partage du lieu</div>
+          <div class="help">Choisis un lieu, le code s’affiche automatiquement. Copier copie le code.</div>
         </div>
+        <button id="copyShareCodeBtn" class="miniBtn btnGhost" type="button">Copier</button>
       </div>
+
+      <!-- NOUVEAU: menu de sélection du lieu à partager -->
+      <div style="margin-top:10px;">
+        <label for="shareVenueSelect">Lieu à partager</label>
+        <select id="shareVenueSelect"></select>
+      </div>
+
+      <div style="margin-top:10px;font-family:var(--mono);" id="shareCodeValue">—</div>
     </div>
+  </div>
+</div>
 
     <!-- SUPPRIMÉ: Membres/Joueurs du lieu => à déplacer dans stats.html -->
     <!--
