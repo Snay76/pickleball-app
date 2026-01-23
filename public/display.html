@@ -2,32 +2,78 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Pickleball — Affichage</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="./css/style.css" />
 </head>
+
 <body>
+  <!-- TOPBAR -->
   <div class="topbar">
     <div class="brand">
-      <div style="font-weight:950">Affichage</div>
-      <small id="displayVenue">Lieu: …</small>
+      <div style="font-weight:950">Pickleball — Affichage</div>
+      <small id="versionText">Version: …</small>
     </div>
 
-    <div class="row" style="gap:10px;align-items:center;">
-      <select id="displayFilter" style="height:46px;border-radius:14px;">
-        <option value="today_all">Aujourd’hui – tous</option>
-        <option value="today_inprogress">Aujourd’hui – en cours</option>
-        <option value="today_mine">Aujourd’hui – mes matchs</option>
-      </select>
-      <button id="backBtn" type="button" style="height:46px;">Retour</button>
+    <div class="rightTop">
+      <!-- badge email (cliquable) -->
+      <a class="authMini" id="authBadge" href="./index.html" title="Retour à l’app (connexion / admin)">
+        <span id="authDot" class="dot"></span>
+        <span id="authEmail" class="authEmail">(non connecté)</span>
+      </a>
     </div>
   </div>
 
+  <!-- CONTROLS -->
   <div class="card">
-    <div id="displayStatus" class="muted">Chargement…</div>
-    <div id="displayWrap"></div>
+    <h2>Affichage des matchs</h2>
+
+    <div class="row">
+      <div class="col">
+        <label for="venueSelect">Lieu</label>
+        <select id="venueSelect">
+          <option value="">(Lieu…)</option>
+        </select>
+        <div class="help">Les matchs affichés sont filtrés par le lieu sélectionné.</div>
+      </div>
+
+      <div class="col">
+        <label for="matchFilter">Filtre</label>
+        <select id="matchFilter">
+          <option value="today_all">Tous (aujourd’hui)</option>
+          <option value="today_inprogress">En cours (aujourd’hui)</option>
+          <option value="today_mine">Mes matchs (aujourd’hui)</option>
+        </select>
+        <div class="help">“Mes matchs” dépend de ton profil (nom) + joueur inscrit au lieu.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col" style="flex:0 0 240px;">
+        <button id="refreshDisplayBtn" type="button">Rafraîchir</button>
+      </div>
+    </div>
+
+    <div class="hr"></div>
+
+    <!-- Status clair (pour diagnostiquer) -->
+    <div id="displayStatus" class="status">Chargement…</div>
   </div>
 
-  <script type="module" src="js/ui-display.js"></script>
+  <!-- MATCHES -->
+  <div class="card">
+    <h3>Matchs</h3>
+    <div id="matchesEmpty" class="muted">Chargement…</div>
+    <div id="matchesWrap"></div>
+  </div>
+
+  <!-- Debug (optionnel) -->
+  <div class="card">
+    <h3>Debug</h3>
+    <div id="debug" class="status">…</div>
+  </div>
+
+  <!-- IMPORTANT: chemins relatifs -->
+  <script type="module" src="./js/display.js"></script>
 </body>
 </html>
