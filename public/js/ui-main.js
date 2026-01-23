@@ -753,7 +753,7 @@ function suggestTeams(mode) {
     }
   });
 
-  createMatchBtn?.addEventListener("click", async () => {
+   createMatchBtn?.addEventListener("click", async () => {
     if (!currentVenueId) return alert("Choisis un lieu d’abord.");
 
     const mode = Number(matchModeEl?.value || 4);
@@ -816,8 +816,7 @@ function suggestTeams(mode) {
     } finally {
       createMatchBtn.disabled = false;
     }
-  });
-    
+  });    
 
   finishAllTodayBtn?.addEventListener("click", async () => {
     if (!currentVenueId) return alert("Choisis un lieu d’abord.");
