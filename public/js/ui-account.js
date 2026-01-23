@@ -280,6 +280,24 @@ async function renderShareCode(selectedVenue, myRole) {
     return;
   }
 
+  // 1) utiliser ce qu’on a déjà en mémoire
+  const already = (selectedVenue?.share_code || "").trim();
+  if (already) {
+    shareCodeValue.textContent = already;
+    return;
+  }
+
+  // 2) fallback DB (URL corrigée, sans espace)
+  try {
+    const rows = await apiFetch(
+      `/rest/v1/locations?select=share_code&id=eq.${selectedVenue.id}&limit=1`
+    );
+    shareCodeValue.textContent = rows?.[0]?.share_code || "—";
+  } catch (e) {
+    shareCodeValue.textContent = "—";
+  }
+}
+
   // fetch share_code du lieu sélectionné
   try {
     const rows = await apiFetch(
