@@ -817,21 +817,7 @@ function suggestTeams(mode) {
       createMatchBtn.disabled = false;
     }
   });
-      } else {
-        // 4 joueurs: jamais 3
-        if (!a1 || !a2 || !b1 || !b2) return alert("A1, A2, B1, B2 requis (double).");
-        await createMatchForVenue(currentVenueId, { court, status, a1, a2, b1, b2 });
-      }
-
-      await refreshMatches();
-      alert("Match créé.");
-    } catch (e) {
-      log?.("[MATCH CREATE ERROR]\n" + e.message);
-      alert("Erreur création match (voir debug).");
-    } finally {
-      createMatchBtn.disabled = false;
-    }
-  });
+    
 
   finishAllTodayBtn?.addEventListener("click", async () => {
     if (!currentVenueId) return alert("Choisis un lieu d’abord.");
