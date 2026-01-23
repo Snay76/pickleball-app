@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pickleball — Affichage</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <div style="font-weight:950">Affichage</div>
+      <small id="displayVenue">Lieu: …</small>
+    </div>
+
+    <div class="row" style="gap:10px;align-items:center;">
+      <select id="displayFilter" style="height:46px;border-radius:14px;">
+        <option value="today_all">Aujourd’hui – tous</option>
+        <option value="today_inprogress">Aujourd’hui – en cours</option>
+        <option value="today_mine">Aujourd’hui – mes matchs</option>
+      </select>
+      <button id="backBtn" type="button" style="height:46px;">Retour</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div id="displayStatus" class="muted">Chargement…</div>
+    <div id="displayWrap"></div>
+  </div>
+
+  <script type="module" src="js/ui-display.js"></script>
+</body>
+</html>
