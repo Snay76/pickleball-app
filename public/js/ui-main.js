@@ -345,84 +345,77 @@ export function bindMainUI(ctx) {
         actions.style.gap = "10px";
         actions.style.alignItems = "center";
 
-        // Présent (petit label + switch)
-        if (HAS_PRESENCE_TOGGLE) {
-          const presWrap = document.createElement("div");
-          presWrap.className = "presWrap";
+// Présent (petit label + switch)
+if (HAS_PRESENCE_TOGGLE) {
+  const presWrap = document.createElement("div");
+  presWrap.className = "presWrap";
+  presWrap.title = "Présent aujourd’hui";
 
-          const presLabel = document.createElement("span");
-          presLabel.className = "presLabel";
-          presLabel.textContent = "Présent";
+  const presLabel = document.createElement("span");
+  presLabel.className = "presLabel";
+  presLabel.textContent = "Présent";
 
-          const wrap = document.createElement("label");
-          wrap.className = "switch";
-          wrap.title = "Présent aujourd’hui";
+  const sw = document.createElement("label");
+  sw.className = "switch";
 
-          const input = document.createElement("input");
-          input.type = "checkbox";
-          input.checked = !!p.present;
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.checked = !!p.present;
 
-          input.addEventListener("change", async () => {
-            try {
-              await apiFetch(
-                `/rest/v1/location_players?location_id=eq.${currentVenueId}&player_id=eq.${p.id}`,
-                {
-                  method: "PATCH",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Prefer: "return=minimal",
-                  },
-                  body: JSON.stringify({ present: !!input.checked }),
-                }
-              );
-            } catch (e) {
-              input.checked = !input.checked;
-              log?.("[PRESENT TOGGLE ERROR]\n" + e.message);
-              alert("Erreur présence (RLS/colonne manquante).");
-            }
-          });
+  const slider = document.createElement("span");
+  slider.className = "slider";
 
-          const slider = document.createElement("span");
-          slider.className = "slider";
-
-          wrap.appendChild(input);
-          wrap.appendChild(slider);
-
-          presWrap.appendChild(presLabel);
-          presWrap.appendChild(wrap);
-          actions.appendChild(presWrap);
+  input.addEventListener("change", async () => {
+    try {
+      await apiFetch(
+        `/rest/v1/location_players?location_id=eq.${currentVenueId}&player_id=eq.${p.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Prefer: "return=minimal",
+          },
+          body: JSON.stringify({ present: !!input.checked }),
         }
-
-        // Corbeille plus petite (bouton compact)
-        const del = document.createElement("button");
-        del.className = "iconBtnSm btnDanger";
-        del.innerHTML = "🗑";
-        del.title = "Retirer du lieu";
-        del.onclick = async () => {
-          if (!confirm(`Retirer "${p.name}" de ce lieu ?`)) return;
-          try {
-            await removePlayerFromVenue(currentVenueId, p.id);
-            await refreshPlayers();
-            await refreshMatches();
-          } catch (e) {
-            log?.("[VENUE PLAYER REMOVE ERROR]\n" + e.message);
-            alert("Erreur retrait joueur (voir debug).");
-          }
-        };
-
-        actions.appendChild(del);
-
-        row.appendChild(left);
-        row.appendChild(actions);
-        playersWrap?.appendChild(row);
-      }
+      );
+    } catch (e) {
+      input.checked = !input.checked;
+      log?.("[PRESENT TOGGLE ERROR]\n" + (e?.message || e));
+      alert("Erreur présence (RLS/colonne manquante).");
     }
+  });
 
-    fillPlayerSelect(a1El);
-    fillPlayerSelect(a2El);
-    fillPlayerSelect(b1El);
-    fillPlayerSelect(b2El);
+  sw.appendChild(input);
+  sw.appendChild(slider);
+
+  presWrap.appendChild(presLabel);
+  presWrap.appendChild(sw);
+
+  actions.appendChild(presWrap);
+}
+
+// Corbeille plus petite (bouton compact)
+const del = document.createElement("button");
+del.className = "btnDanger iconBtnSm";
+del.type = "button";
+del.innerHTML = "🗑";
+del.title = "Retirer du lieu";
+del.onclick = async () => {
+  if (!confirm(`Retirer "${p.name}" de ce lieu ?`)) return;
+  try {
+    await removePlayerFromVenue(currentVenueId, p.id);
+    await refreshPlayers();
+    await refreshMatches();
+  } catch (e) {
+    log?.("[VENUE PLAYER REMOVE ERROR]\n" + (e?.message || e));
+    alert("Erreur retrait joueur (voir debug).");
   }
+};
+actions.appendChild(del);
+
+row.appendChild(left);
+row.appendChild(actions);
+playersWrap?.appendChild(row);
 
   // =========================
   // Match filter
