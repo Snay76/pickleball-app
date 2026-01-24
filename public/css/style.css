@@ -21,7 +21,12 @@
 
 *{ box-sizing:border-box; }
 
-html, body{height:100%;background:var(--bg);margin:0;}
+html, body{
+  height:100%;
+  background:var(--bg);
+  margin:0;
+}
+
 body{
   min-height:100vh;
   padding-top:env(safe-area-inset-top);
@@ -257,9 +262,7 @@ button:disabled{ opacity:.55; cursor:not-allowed; }
   justify-content:center;
 }
 
-/* ====== MODIFS demandées (Présent + switch + corbeille petite) ====== */
-
-/* "Présent" + switch alignés */
+/* ===== Présent + Toggle (FIX: input pas en display:none) ===== */
 .presWrap{
   display:flex;
   align-items:center;
@@ -268,31 +271,39 @@ button:disabled{ opacity:.55; cursor:not-allowed; }
 .presLabel{
   font-size:11px;
   color:var(--muted);
-  font-weight:800;
+  font-weight:900;
   line-height:1;
 }
 
-/* Switch (toggle) — garde ta logique input:checked + .slider */
+/* Toggle */
 .switch{
   position: relative;
   width: 54px;
   height: 30px;
   display: inline-block;
+  flex: 0 0 auto;
 }
+
+/* IMPORTANT: ne JAMAIS mettre display:none ici */
 .switch input{
   position:absolute;
   inset:0;
-  opacity:0;
+  width:100%;
+  height:100%;
   margin:0;
+  opacity:0;
   cursor:pointer;
+  z-index:2;
 }
+
 .slider{
   position:absolute;
   inset:0;
-  background: rgba(239,68,68,.45); /* rouge */
+  background: rgba(239,68,68,.45);
   border:1px solid rgba(255,255,255,.18);
   border-radius: 999px;
   transition: .2s;
+  z-index:1;
 }
 .slider:before{
   content:"";
@@ -306,13 +317,13 @@ button:disabled{ opacity:.55; cursor:not-allowed; }
   transition: .2s;
 }
 .switch input:checked + .slider{
-  background: rgba(34,197,94,.55); /* vert */
+  background: rgba(34,197,94,.55);
 }
 .switch input:checked + .slider:before{
   transform: translateX(24px);
 }
 
-/* Bouton corbeille plus petit */
+/* ===== Corbeille plus petite ===== */
 .iconBtnSm{
   width:32px;
   height:32px;
