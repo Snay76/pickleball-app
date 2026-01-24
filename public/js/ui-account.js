@@ -37,6 +37,23 @@ const copyShareCodeBtn = document.getElementById("copyShareCodeBtn");
 const newVenueName = document.getElementById("newVenueName");
 const createVenueBtn = document.getElementById("createVenueBtn");
 
+// ui-account.js
+const APP_VERSION = "2026-01-22 1.1.01.1";
+
+function renderVersion(){
+  const v =
+    document.getElementById("versionTextTop") ||
+    document.getElementById("versionText") ||
+    document.getElementById("versionTextBottom");
+
+  if (v) v.textContent = "Version: " + APP_VERSION;
+}
+
+async function init(){
+  renderVersion();
+  ...
+}
+
 // ---------- Utils ----------
 function setStatus(msg) {
   if (statusEl) statusEl.textContent = msg || "";
