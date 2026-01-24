@@ -5,171 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Pickleball</title>
 
-  <style>
-    :root{
-      --bg:#0b1220; --card:#121b2f; --muted:#9fb0d0; --text:#e8efff;
-      --line:rgba(255,255,255,.12);
-      --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --accent:#60a5fa;
-      --radius:16px; --pad:16px; --tap:58px;
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    }
-    *{ box-sizing:border-box; }
-    html{background:var(--bg);}
-
-    body{
-      margin:0; font-family:var(--sans);
-      background:linear-gradient(180deg,#070b14, var(--bg));
-      color:var(--text);
-      padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); min-height:100vh;}
-    h2{ margin: 0 0 10px; font-size: 18px; }
-    h3{ margin: 16px 0 10px; font-size: 16px; color: #d7e3ff; }
-
-    .topbar{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:12px; padding: 10px 12px; border:1px solid var(--line);
-      border-radius: 18px; background: rgba(255,255,255,.04); box-shadow: var(--shadow);
-      position: sticky; top: 10px; z-index: 10;
-      backdrop-filter: blur(8px);
-    }
-    .brand{ display:flex; flex-direction:column; gap:2px; }
-    .brand small{ color:var(--muted); font-size:12px; }
-
-    .authMini{
-      display:flex; align-items:center; gap:10px;
-      padding: 8px 10px; border:1px solid var(--line); border-radius: 999px;
-      background: rgba(255,255,255,.03);
-      max-width: 62vw;
-      cursor: pointer;
-      user-select:none;
-      touch-action: manipulation;
-    }
-    .dot{ width:10px; height:10px; border-radius:999px; background: var(--warn); flex:0 0 auto; }
-    .dot.ok{ background: var(--ok); }
-    .dot.bad{ background: var(--bad); }
-    .authEmail{
-      font-size: 12px; color:var(--muted);
-      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-    }
-
-    .card{
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.04);
-      border-radius: var(--radius);
-      padding: var(--pad);
-      box-shadow: var(--shadow);
-      margin-top: 14px;
-    }
-    .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:end; }
-    .col{ display:flex; flex-direction:column; gap:8px; flex:1 1 220px; }
-    label{ font-weight:800; font-size: 13px; color:#d7e3ff; }
-    input, select{
-      width:100%;
-      height: var(--tap);
-      padding: 12px 14px;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: rgba(0,0,0,.2);
-      color: var(--text);
-      outline: none;
-      font-size: 16px;
-    }
-    button{
-      height: var(--tap);
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
-      color: var(--text);
-      font-weight: 900;
-      font-size: 16px;
-      padding: 0 14px;
-      cursor:pointer;
-      user-select:none;
-      touch-action: manipulation;
-    }
-    button:disabled{ opacity:.55; cursor:not-allowed; }
-    .btnPrimary{
-      background: linear-gradient(180deg, rgba(96,165,250,.35), rgba(96,165,250,.14));
-      border-color: rgba(96,165,250,.45);
-    }
-    .btnDanger{
-      background: linear-gradient(180deg, rgba(239,68,68,.28), rgba(239,68,68,.10));
-      border-color: rgba(239,68,68,.40);
-    }
-    .help{ color: var(--muted); font-size: 13px; margin-top: 6px; line-height:1.35; }
-    .status{
-      font-family: var(--mono);
-      font-size: 12px;
-      white-space: pre-wrap;
-      color: #d7e3ff;
-      border:1px dashed rgba(255,255,255,.18);
-      border-radius: 14px;
-      padding: 10px 12px;
-      background: rgba(0,0,0,.18);
-    }
-    .hidden{ display:none !important; }
-    .muted{ color: var(--muted); }
-    .hr{ height:1px; background: var(--line); margin: 12px 0; }
-
-    .tabs{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 12px;
-    }
-    .tab{
-      height: 52px;
-      border-radius: 16px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
-      font-weight: 900;
-      font-size: 14px;
-    }
-    .tab.active{
-      background: linear-gradient(180deg, rgba(96,165,250,.35), rgba(96,165,250,.14));
-      border-color: rgba(96,165,250,.55);
-    }
-
-    .listItem{
-      display:flex; justify-content:space-between; align-items:center; gap:10px;
-      padding: 10px 12px; border:1px solid var(--line); border-radius: 14px;
-      background: rgba(0,0,0,.12);
-      margin-top: 10px;
-    }
-    .name{ font-weight: 950; }
-
-    /* Modal score */
-    .overlay{
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.55);
-      display:flex; align-items:flex-end; justify-content:center;
-      padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
-      z-index: 1000;
-    }
-    .modal{
-      width: min(900px, 100%);
-      border:1px solid var(--line);
-      background: rgba(18,27,47,.98);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-      padding: 14px;
-    }
-    .modalHead{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
-    .iconBtn{
-      width: 46px; height: 46px; border-radius: 14px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.05);
-      color: var(--text);
-      display:inline-flex; align-items:center; justify-content:center;
-      cursor:pointer; user-select:none; touch-action: manipulation;
-      font-size: 18px;
-    }
-
-    @media (min-width: 840px){
-      body{ max-width: 860px; margin: 0 auto; }
-    }
-  </style>
+  <!-- IMPORTANT: utilise style.css (cache-busting) -->
+  <link rel="stylesheet" href="style.css?v=20260123-1" />
 </head>
 
 <body>
@@ -193,8 +30,8 @@
         <label for="email">Courriel</label>
         <input id="email" type="email" placeholder="nom@exemple.com" autocomplete="email" inputmode="email" />
       </div>
-      <div class="col" >
-        <button id="loginBtn" class="btnPrimary" type="button">Recevoir un lien</button>
+      <div class="col">
+        <button id="loginBtn" class="btnPrimary btnBlock" type="button">Recevoir un lien</button>
       </div>
     </div>
     <div class="help">
@@ -206,7 +43,12 @@
 
   <!-- APP -->
   <div id="appCard" class="card hidden">
-    <div id="venueBar" class="venueBar hidden"><div class="label">Lieu sélectionné</div><div class="value" id="venueBarValue">—</div></div>
+    <!-- Venue bar (CSS dans style.css) -->
+    <div id="venueBar" class="venueBar hidden">
+      <div class="label">Lieu sélectionné</div>
+      <div class="value" id="venueBarValue">—</div>
+    </div>
+
     <div class="tabs">
       <button class="tab active" data-tab="tabPlayers" type="button">Joueurs</button>
       <button class="tab" data-tab="tabMatches" type="button">Matchs</button>
@@ -229,7 +71,7 @@
           <label for="playerName">Nom complet</label>
           <input id="playerName" type="text" placeholder="Ex: Titi Pellerin" />
         </div>
-        <div class="col" >
+        <div class="col">
           <button id="addPlayerBtn" class="btnBlock btnPrimary" type="button">Ajouter joueur</button>
         </div>
       </div>
@@ -240,7 +82,6 @@
     </div>
 
     <!-- Matchs -->
-    <button type="button" onclick="location.href='display.html'">Ouvrir l’affichage</button>
     <div id="tabMatches" class="hidden" style="margin-top:12px;">
       <h3>Affichage</h3>
       <div class="row">
@@ -278,14 +119,6 @@
           <label for="court">Terrain</label>
           <select id="court"></select>
         </div>
-        <div class="col">
-          <label for="statusMatch">Statut</label>
-          <select id="statusMatch">
-            <option value="open">open</option>
-            <option value="locked">locked</option>
-            <option value="done">done</option>
-          </select>
-        </div>
       </div>
 
       <div class="row">
@@ -311,7 +144,7 @@
       </div>
 
       <div class="row">
-        <div class="col" >
+        <div class="col">
           <button id="createMatchBtn" class="btnBlock btnPrimary" type="button">Créer match</button>
         </div>
       </div>
@@ -336,8 +169,8 @@
         <strong>Terminer le match</strong>
         <button id="scoreCloseBtn" class="iconBtn" type="button" title="Fermer">✕</button>
       </div>
-      <div class="hr"></div>
 
+      <div class="hr"></div>
       <div id="scoreMatchInfo" class="status">…</div>
 
       <div class="row" style="margin-top:10px;">
@@ -375,8 +208,12 @@
     </div>
   </div>
 
-  <!-- IMPORTANT: charge ton app -->
-  <script type="module" src="js/main.js"></script>
-  <div id="versionTextBottom" style="position:fixed;bottom:10px;..."></div>
+  <!-- JS -->
+  <script type="module" src="js/main.js?v=20260123-1"></script>
+
+  <!-- Bottom version (fix: pas de "..." invalide) -->
+  <div id="versionTextBottom"
+       style="position:fixed;bottom:10px;left:10px;right:10px;font-size:12px;color:rgba(232,239,255,.45);text-align:center;pointer-events:none;">
+  </div>
 </body>
 </html>
