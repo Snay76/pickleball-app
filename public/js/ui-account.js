@@ -1,4 +1,5 @@
 // public/js/ui-account.js
+import { APP_VERSION } from "./config.js";
 import { apiFetch } from "./api.js";
 import { refreshSessionIfNeeded, hasSession, loadUser, clearTokens } from "./auth.js";
 
@@ -37,21 +38,15 @@ const copyShareCodeBtn = document.getElementById("copyShareCodeBtn");
 const newVenueName = document.getElementById("newVenueName");
 const createVenueBtn = document.getElementById("createVenueBtn");
 
-// ui-account.js
-const APP_VERSION = "2026-01-22 1.1.01.1";
-
-function renderVersion(){
+// =========================
+// Version helper
+// =========================
+function renderVersion() {
   const v =
     document.getElementById("versionTextTop") ||
     document.getElementById("versionText") ||
     document.getElementById("versionTextBottom");
-
-  if (v) v.textContent = "Version: " + APP_VERSION;
-}
-
-async function init(){
-  renderVersion();
-  ...
+  if (v) v.textContent = "Version: " + (APP_VERSION || "—");
 }
 
 // ---------- Utils ----------
@@ -59,9 +54,15 @@ function setStatus(msg) {
   if (statusEl) statusEl.textContent = msg || "";
 }
 
+function setAuthPill(isAuthed, email) {
+  if (authEmailMini) authEmailMini.textContent = isAuthed ? (email || "(connecté)") : "(non connecté)";
+  if (authDot) authDot.className = "dot" + (isAuthed ? " ok" : "");
+}
+
 function fillSelect(sel, venues) {
   if (!sel) return;
-  const current = sel.value || "";
+
+  const current = (sel.value || "").trim();
   sel.innerHTML = "";
 
   for (const v of venues) {
@@ -71,8 +72,7 @@ function fillSelect(sel, venues) {
     sel.appendChild(opt);
   }
 
-  // Tente de restaurer le choix précédent si encore valide
-  if (current && venues.some(v => v.id === current)) {
+  if (current && venues.some((v) => v.id === current)) {
     sel.value = current;
   }
 }
@@ -82,7 +82,7 @@ function firstVenueId() {
 }
 
 function getVenueById(id) {
-  return venuesState.venues.find(v => v.id === id) || null;
+  return venuesState.venues.find((v) => v.id === id) || null;
 }
 
 // ---------- Profile ----------
@@ -166,9 +166,11 @@ async function listMyVenues() {
   } catch (_) {
     // Legacy fallback
     const venues =
-      (await apiFetch(`/rest/v1/locations?select=id,name,share_code,created_by&order=created_at.desc`)) || [];
+      (await apiFetch(
+        `/rest/v1/locations?select=id,name,share_code,created_by&order=created_at.desc`
+      )) || [];
     return {
-      venues: venues.map(v => ({
+      venues: venues.map((v) => ({
         id: v.id,
         name: v.name,
         share_code: v.share_code ?? null,
@@ -198,16 +200,14 @@ function canSeeShareCode(myRole) {
 }
 
 async function fetchShareCodeFromDB(venueId) {
-  const rows = await apiFetch(
-    `/rest/v1/locations?select=share_code&id=eq.${venueId}&limit=1`
-  );
+  const rows = await apiFetch(`/rest/v1/locations?select=share_code&id=eq.${venueId}&limit=1`);
   return rows?.[0]?.share_code ?? null;
 }
 
 async function updateShareUI() {
   if (!shareBox || !shareVenueSelect || !shareCodeValue) return;
 
-  const venueId = shareVenueSelect.value || "";
+  const venueId = (shareVenueSelect.value || "").trim();
   if (!venueId) {
     shareBox.style.display = "none";
     shareCodeValue.textContent = "—";
@@ -215,7 +215,7 @@ async function updateShareUI() {
     return;
   }
 
-  const myRole = (myProfile?.level === "admin_full") ? "admin" : await loadVenueRoleForMe(venueId);
+  const myRole = myProfile?.level === "admin_full" ? "admin" : await loadVenueRoleForMe(venueId);
   const visible = canSeeShareCode(myRole);
 
   shareBox.style.display = visible ? "block" : "none";
@@ -225,7 +225,7 @@ async function updateShareUI() {
     return;
   }
 
-  // 1) tente cache venuesState
+  // 1) cache venuesState
   let code = getVenueById(venueId)?.share_code ?? null;
 
   // 2) fallback DB
@@ -310,12 +310,14 @@ async function joinVenueByCode() {
   // player attach
   const p = await ensurePlayerForMe();
   if (p?.id) {
-    try { await addPlayerToVenue(p.id, v.id); } catch (_) {}
+    try {
+      await addPlayerToVenue(p.id, v.id);
+    } catch (_) {}
   }
 }
 
 async function leaveSelectedVenue() {
-  const venueId = acctVenueSelect?.value;
+  const venueId = (acctVenueSelect?.value || "").trim();
   if (!venueId) return;
 
   try {
@@ -361,7 +363,9 @@ async function createVenueFlow() {
   try {
     const p = await ensurePlayerForMe();
     if (p?.id) {
-      try { await addPlayerToVenue(p.id, v.id); } catch (_) {}
+      try {
+        await addPlayerToVenue(p.id, v.id);
+      } catch (_) {}
     }
   } catch (_) {}
 
@@ -376,15 +380,15 @@ async function createVenueFlow() {
   await updateShareUI();
 }
 
-// ---------- UI refresh (NE PAS l'appeler sur chaque change) ----------
+// ---------- UI refresh ----------
 async function refreshVenuesUI() {
   venuesState = await listMyVenues();
 
-  // Remplir les deux selects sans casser la sélection courante
+  // Remplit les deux selects sans écraser le choix courant
   fillSelect(acctVenueSelect, venuesState.venues);
   fillSelect(shareVenueSelect, venuesState.venues);
 
-  // Si vide, force un default
+  // Si encore vide, force un default
   if (acctVenueSelect && !acctVenueSelect.value) acctVenueSelect.value = firstVenueId();
   if (shareVenueSelect && !shareVenueSelect.value) shareVenueSelect.value = firstVenueId();
 
@@ -400,8 +404,7 @@ logoutBtn?.addEventListener("click", () => {
 });
 
 acctVenueSelect?.addEventListener("change", async () => {
-  // IMPORTANT: ne pas refresh ici, sinon tu écrases la sélection de l’autre menu.
-  // Ici, tu n’as rien à faire (sauf si tu veux afficher autre chose).
+  // IMPORTANT: ne pas refresh ici (sinon ça peut "revenir" au premier item et casser l'autre menu).
 });
 
 shareVenueSelect?.addEventListener("change", async () => {
@@ -479,7 +482,9 @@ saveBtn?.addEventListener("click", async () => {
 
 // ---------- Init ----------
 async function init() {
+  renderVersion();
   setStatus("Chargement…");
+
   await refreshSessionIfNeeded();
 
   if (!hasSession()) {
@@ -487,18 +492,10 @@ async function init() {
     return;
   }
 
-  // User auth
   me = await loadUser();
 
-  // Auth pill (top right)
-  const authEmailMini = document.getElementById("authEmail");
-  const authDot = document.getElementById("authDot");
-
-  if (authEmailMini) authEmailMini.textContent = me.email || "(?)";
-  if (authDot){
-    authDot.classList.remove("bad");
-    authDot.classList.add("ok");
-  }
+  // Top auth pill
+  setAuthPill(true, me.email);
 
   // Form email
   if (cfgEmail) cfgEmail.value = me.email || "";
@@ -511,22 +508,14 @@ async function init() {
 
   // Skill (support legacy)
   const legacySkill =
-    myProfile?.level &&
-    myProfile.level !== "admin_full" &&
-    myProfile.level !== "user"
+    myProfile?.level && myProfile.level !== "admin_full" && myProfile.level !== "user"
       ? myProfile.level
       : "";
 
-  if (cfgSkill){
-    cfgSkill.value = myProfile?.skill_level || legacySkill || "";
-  }
+  if (cfgSkill) cfgSkill.value = myProfile?.skill_level || legacySkill || "";
 
   // Access (display only)
-  if (cfgAccess){
-    cfgAccess.value = myProfile?.level === "admin_full"
-      ? "admin_full"
-      : "user";
-  }
+  if (cfgAccess) cfgAccess.value = myProfile?.level === "admin_full" ? "admin_full" : "user";
 
   // Venues + share
   await refreshVenuesUI();
