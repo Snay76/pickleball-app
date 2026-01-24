@@ -12,7 +12,6 @@ import {
   createPlayerGlobal,
   addPlayerToVenue,
   removePlayerFromVenue,
-  // setPlayerPresentInVenue, // optionnel si tu l’ajoutes dans players.js
 } from "./players.js";
 import {
   listMatchesForVenueToday,
@@ -34,7 +33,12 @@ export function bindMainUI(ctx) {
   const venueSelect = document.getElementById("venueSelect");
   const venueBar = document.getElementById("venueBar");
   const venueBarValue = document.getElementById("venueBarValue");
-  const addVenueBtn = document.getElementById("addVenueBtn"); // optionnel
+
+  // IMPORTANT: sur index.html on NE DOIT PAS pouvoir créer un lieu
+  const addVenueBtn = document.getElementById("addVenueBtn");
+  const addVenueBtn2 = document.getElementById("addVenueBtn2");
+  if (addVenueBtn) addVenueBtn.remove();
+  if (addVenueBtn2) addVenueBtn2.remove();
 
   // =========================
   // DOM - Joueurs
@@ -43,7 +47,6 @@ export function bindMainUI(ctx) {
   const addPlayerBtn = document.getElementById("addPlayerBtn");
   const playersWrap = document.getElementById("playersWrap");
   const playersEmpty = document.getElementById("playersEmpty");
-  const addVenueBtn2 = document.getElementById("addVenueBtn2"); // bouton "Ajouter lieu" dans section joueurs
 
   const HAS_PRESENCE_TOGGLE = true; // nécessite colonne location_players.present
 
@@ -151,9 +154,7 @@ export function bindMainUI(ctx) {
 
   function isCourtBusy(court) {
     return (cachedMatches || []).some(
-      (m) =>
-        (m.status && m.status !== "done") &&
-        String(m.court) === String(court)
+      (m) => (m.status && m.status !== "done") && String(m.court) === String(court)
     );
   }
 
@@ -162,11 +163,7 @@ export function bindMainUI(ctx) {
     for (const m of matches || []) {
       const A = [m.a1, m.a2].filter(Boolean);
       const B = [m.b1, m.b2].filter(Boolean);
-      for (const a of A) {
-        for (const b of B) {
-          opp.add([a, b].sort().join("|"));
-        }
-      }
+      for (const a of A) for (const b of B) opp.add([a, b].sort().join("|"));
     }
     return opp;
   }
@@ -262,6 +259,8 @@ export function bindMainUI(ctx) {
     fillVenueSelect(venueSelect, venues, currentVenueId);
   }
 
+  // NOTE: createVenueFlow conservé au cas où tu réutilises ui-main.js ailleurs,
+  // mais aucun bouton ne l'appelle sur index.html (ils sont supprimés).
   async function createVenueFlow() {
     const name = prompt("Nom du lieu (ex: Ste-Élie Débutant-2026) :");
     if (!name) return;
@@ -340,10 +339,21 @@ export function bindMainUI(ctx) {
           <div class="small">ID: ${esc(p.id)}</div>
         `;
 
+        // Actions à droite
         const actions = document.createElement("div");
         actions.className = "inline";
+        actions.style.gap = "10px";
+        actions.style.alignItems = "center";
 
+        // Présent (petit label + switch)
         if (HAS_PRESENCE_TOGGLE) {
+          const presWrap = document.createElement("div");
+          presWrap.className = "presWrap";
+
+          const presLabel = document.createElement("span");
+          presLabel.className = "presLabel";
+          presLabel.textContent = "Présent";
+
           const wrap = document.createElement("label");
           wrap.className = "switch";
           wrap.title = "Présent aujourd’hui";
@@ -377,12 +387,16 @@ export function bindMainUI(ctx) {
 
           wrap.appendChild(input);
           wrap.appendChild(slider);
-          actions.appendChild(wrap);
+
+          presWrap.appendChild(presLabel);
+          presWrap.appendChild(wrap);
+          actions.appendChild(presWrap);
         }
 
+        // Corbeille plus petite (bouton compact)
         const del = document.createElement("button");
-        del.className = "miniBtn btnDanger iconOnly";
-        del.innerHTML = "🗑️";
+        del.className = "iconBtnSm btnDanger";
+        del.innerHTML = "🗑";
         del.title = "Retirer du lieu";
         del.onclick = async () => {
           if (!confirm(`Retirer "${p.name}" de ce lieu ?`)) return;
@@ -397,6 +411,7 @@ export function bindMainUI(ctx) {
         };
 
         actions.appendChild(del);
+
         row.appendChild(left);
         row.appendChild(actions);
         playersWrap?.appendChild(row);
@@ -560,7 +575,9 @@ export function bindMainUI(ctx) {
       const aFilled = aRaw !== "";
       const bFilled = bRaw !== "";
       if (aFilled !== bFilled) {
-        if (scoreStatus) scoreStatus.textContent = "Entre les 2 scores ou laisse vide pour 'sans score'.";
+        if (scoreStatus)
+          scoreStatus.textContent =
+            "Entre les 2 scores ou laisse vide pour 'sans score'.";
         return;
       }
       if (!aFilled && !bFilled) return confirmFinish(false);
@@ -624,10 +641,15 @@ export function bindMainUI(ctx) {
 
       const canFinish = (m.status || "") !== "done";
       const venueName = venues.find((v) => v.id === currentVenueId)?.name || "";
-      const dur = (m.status === "done" && m.ended_at) ? formatDuration(m.created_at, m.ended_at) : "";
-      const score = (m.score_a !== null && m.score_a !== undefined && m.score_b !== null && m.score_b !== undefined)
-        ? `${m.score_a}-${m.score_b}`
-        : "";
+      const dur =
+        m.status === "done" && m.ended_at ? formatDuration(m.created_at, m.ended_at) : "";
+      const score =
+        m.score_a !== null &&
+        m.score_a !== undefined &&
+        m.score_b !== null &&
+        m.score_b !== undefined
+          ? `${m.score_a}-${m.score_b}`
+          : "";
 
       const box = document.createElement("div");
       box.className = "listItem matchCard";
@@ -643,8 +665,16 @@ export function bindMainUI(ctx) {
             </div>
           </div>
           <div class="inline" style="justify-content:flex-end;">
-            <div class="muted" style="font-size:12px">${esc(new Date(m.created_at).toLocaleString())}</div>
-            ${canFinish ? `<button class="miniBtn btnPrimary" data-finish="${esc(m.id)}" type="button">Terminer</button>` : ``}
+            <div class="muted" style="font-size:12px">${esc(
+              new Date(m.created_at).toLocaleString()
+            )}</div>
+            ${
+              canFinish
+                ? `<button class="miniBtn btnPrimary" data-finish="${esc(
+                    m.id
+                  )}" type="button">Terminer</button>`
+                : ``
+            }
           </div>
         </div>
       `;
@@ -652,14 +682,16 @@ export function bindMainUI(ctx) {
       matchesWrap?.appendChild(box);
     }
 
-    matchesWrap?.querySelectorAll("button[data-finish]")?.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const id = btn.getAttribute("data-finish");
-        const match = cachedMatches.find((x) => x.id === id);
-        if (!match) return;
-        openScoreModal(match);
+    matchesWrap
+      ?.querySelectorAll("button[data-finish]")
+      ?.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-finish");
+          const match = cachedMatches.find((x) => x.id === id);
+          if (!match) return;
+          openScoreModal(match);
+        });
       });
-    });
   }
 
   // =========================
@@ -674,9 +706,6 @@ export function bindMainUI(ctx) {
     await refreshPlayers();
     await refreshMatches();
   });
-
-  addVenueBtn?.addEventListener("click", createVenueFlow);
-  addVenueBtn2?.addEventListener("click", createVenueFlow);
 
   addPlayerBtn?.addEventListener("click", async () => {
     if (!currentVenueId) return alert("Choisis un lieu d’abord.");
