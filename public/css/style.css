@@ -21,18 +21,16 @@
 
 *{ box-sizing:border-box; }
 
-html, body{
-  height:100%;
-  background:var(--bg);
-  margin:0;
-}
-
+html, body{height:100%;background:var(--bg);margin:0;}
 body{
   min-height:100vh;
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom);
+
   font-family:var(--sans);
   background:linear-gradient(180deg,#070b14, var(--bg));
   color:var(--text);
-  padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
 }
 
 /* Typography */
@@ -60,12 +58,7 @@ a:hover{ text-decoration: underline; }
   backdrop-filter: blur(8px);
 }
 
-.brand{
-  display:flex;
-  flex-direction:column;
-  gap:2px;
-  min-width: 0;
-}
+.brand{ display:flex; flex-direction:column; gap:2px; min-width: 0; }
 .brand small{
   color:var(--muted);
   font-size:12px;
@@ -88,7 +81,6 @@ a:hover{ text-decoration: underline; }
   max-width: 58vw;
   cursor:pointer;
   user-select:none;
-  touch-action: manipulation;
 }
 .dot{
   width:10px;
@@ -249,6 +241,7 @@ button:disabled{ opacity:.55; cursor:not-allowed; }
   margin-top:4px;
   font-family: var(--mono);
 }
+
 .miniBtn{
   height: 44px;
   min-width: 44px;
@@ -264,27 +257,35 @@ button:disabled{ opacity:.55; cursor:not-allowed; }
   justify-content:center;
 }
 
-/* ===== Présence: label + switch ===== */
+/* ====== MODIFS demandées (Présent + switch + corbeille petite) ====== */
+
+/* "Présent" + switch alignés */
 .presWrap{
-  display:inline-flex;
+  display:flex;
   align-items:center;
   gap:8px;
 }
 .presLabel{
   font-size:11px;
-  color: var(--muted);
+  color:var(--muted);
   font-weight:800;
-  letter-spacing:.2px;
+  line-height:1;
 }
 
-/* Presence switch (plus compact) */
+/* Switch (toggle) — garde ta logique input:checked + .slider */
 .switch{
   position: relative;
-  width: 46px;
-  height: 26px;
+  width: 54px;
+  height: 30px;
   display: inline-block;
 }
-.switch input{ display:none; }
+.switch input{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  margin:0;
+  cursor:pointer;
+}
 .slider{
   position:absolute;
   inset:0;
@@ -296,8 +297,8 @@ button:disabled{ opacity:.55; cursor:not-allowed; }
 .slider:before{
   content:"";
   position:absolute;
-  height: 20px;
-  width: 20px;
+  height: 24px;
+  width: 24px;
   left: 3px;
   top: 2px;
   background: #fff;
@@ -308,21 +309,21 @@ button:disabled{ opacity:.55; cursor:not-allowed; }
   background: rgba(34,197,94,.55); /* vert */
 }
 .switch input:checked + .slider:before{
-  transform: translateX(20px);
+  transform: translateX(24px);
 }
 
-/* Corbeille plus petite */
+/* Bouton corbeille plus petit */
 .iconBtnSm{
-  height: 34px;
-  width: 34px;
-  min-width: 34px;
-  padding: 0;
-  border-radius: 12px;
+  width:32px;
+  height:32px;
+  min-width:32px;
+  padding:0;
+  border-radius:10px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  font-size: 14px;
-  line-height: 1;
+  font-size:14px;
+  line-height:1;
 }
 
 /* Match cards */
@@ -390,8 +391,8 @@ a[href*="display.html"]{
 }
 
 /* Full-width centered buttons */
-.btnBlock{ width:100%; display:block; min-height:var(--tap); }
-.centerRow{ display:flex; justify-content:center; }
+.btnBlock{width:100%;display:block;min-height:var(--tap);}
+.centerRow{display:flex;justify-content:center;}
 
 /* Venue context bar */
 .venueBar{
@@ -403,5 +404,5 @@ a[href*="display.html"]{
   padding:10px 16px;
   border-bottom:1px solid var(--line);
 }
-.venueBar .label{ color:var(--muted); font-size:12px; }
-.venueBar .value{ font-weight:800; }
+.venueBar .label{color:var(--muted);font-size:12px;}
+.venueBar .value{font-weight:800;}
