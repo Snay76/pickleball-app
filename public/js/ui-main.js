@@ -295,128 +295,129 @@ export function bindMainUI(ctx) {
     }
   }
 
-  // =========================
-  // Players
-  // =========================
-  async function refreshPlayers() {
-    if (playersWrap) playersWrap.innerHTML = "";
+// =========================
+// Players
+// =========================
+async function refreshPlayers() {
+  if (playersWrap) playersWrap.innerHTML = "";
 
-    if (!currentVenueId) {
-      if (playersEmpty) playersEmpty.textContent = "Choisis un lieu.";
-      cachedPlayers = [];
-      fillPlayerSelect(a1El);
-      fillPlayerSelect(a2El);
-      fillPlayerSelect(b1El);
-      fillPlayerSelect(b2El);
-      return;
-    }
-
-    cachedPlayers = await listPlayersForVenue(currentVenueId);
-
-    const fn = ensureMyPlayerId.fullName;
-    if (fn) {
-      const meP = cachedPlayers.find((p) => String(p.name).trim() === fn);
-      myPlayerId = meP?.id || null;
-    }
-
-    if (!cachedPlayers.length) {
-      if (playersEmpty) playersEmpty.textContent = "(aucun joueur dans ce lieu)";
-    } else {
-      if (playersEmpty) playersEmpty.textContent = "";
-
-      for (const p of cachedPlayers) {
-        const row = document.createElement("div");
-        row.className = "listItem";
-
-        const left = document.createElement("div");
-        left.innerHTML = `
-          <div class="name">${esc(p.name)}</div>
-          <div class="small">ID: ${esc(p.id)}</div>
-        `;
-
-        const actions = document.createElement("div");
-        actions.className = "inline";
-
-        // Présent (petit label + switch)
-        if (HAS_PRESENCE_TOGGLE) {
-          const presWrap = document.createElement("div");
-          presWrap.className = "presWrap";
-          presWrap.title = "Présent aujourd’hui";
-
-          const presLabel = document.createElement("span");
-          presLabel.className = "presLabel";
-          presLabel.textContent = "Présent";
-
-          const sw = document.createElement("label");
-          sw.className = "switch";
-
-          const input = document.createElement("input");
-          input.type = "checkbox";
-          input.checked = !!p.present;
-
-          const slider = document.createElement("span");
-          slider.className = "slider";
-
-          input.addEventListener("change", async () => {
-            try {
-              await apiFetch(
-                `/rest/v1/location_players?location_id=eq.${currentVenueId}&player_id=eq.${p.id}`,
-                {
-                  method: "PATCH",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Prefer: "return=minimal",
-                  },
-                  body: JSON.stringify({ present: !!input.checked }),
-                }
-              );
-            } catch (e) {
-              input.checked = !input.checked;
-              log?.("[PRESENT TOGGLE ERROR]\n" + (e?.message || e));
-              alert("Erreur présence (RLS/colonne manquante).");
-            }
-          });
-
-          sw.appendChild(input);
-          sw.appendChild(slider);
-
-          presWrap.appendChild(presLabel);
-          presWrap.appendChild(sw);
-
-          actions.appendChild(presWrap);
-        }
-
-        // Corbeille plus petite (bouton compact)
-        const del = document.createElement("button");
-        del.className = "btnDanger iconBtnSm";
-        del.type = "button";
-        del.innerHTML = "🗑";
-        del.title = "Retirer du lieu";
-        del.onclick = async () => {
-          if (!confirm(`Retirer "${p.name}" de ce lieu ?`)) return;
-          try {
-            await removePlayerFromVenue(currentVenueId, p.id);
-            await refreshPlayers();
-            await refreshMatches();
-          } catch (e) {
-            log?.("[VENUE PLAYER REMOVE ERROR]\n" + (e?.message || e));
-            alert("Erreur retrait joueur (voir debug).");
-          }
-        };
-        actions.appendChild(del);
-
-        row.appendChild(left);
-        row.appendChild(actions);
-        playersWrap?.appendChild(row);
-      }
-    }
-
+  if (!currentVenueId) {
+    if (playersEmpty) playersEmpty.textContent = "Choisis un lieu.";
+    cachedPlayers = [];
     fillPlayerSelect(a1El);
     fillPlayerSelect(a2El);
     fillPlayerSelect(b1El);
     fillPlayerSelect(b2El);
+    return;
   }
 
+  cachedPlayers = await listPlayersForVenue(currentVenueId);
+
+  const fn = ensureMyPlayerId.fullName;
+  if (fn) {
+    const meP = cachedPlayers.find((p) => String(p.name).trim() === fn);
+    myPlayerId = meP?.id || null;
+  }
+
+  if (!cachedPlayers.length) {
+    if (playersEmpty) playersEmpty.textContent = "(aucun joueur dans ce lieu)";
+  } else {
+    if (playersEmpty) playersEmpty.textContent = "";
+
+    for (const p of cachedPlayers) {
+      const row = document.createElement("div");
+      row.className = "listItem";
+
+      const left = document.createElement("div");
+      left.innerHTML = `
+        <div class="name">${esc(p.name)}</div>
+        <div class="small">ID: ${esc(p.id)}</div>
+      `;
+
+      const actions = document.createElement("div");
+      actions.className = "inline";
+
+      // Présent (petit label + toggle)
+      if (HAS_PRESENCE_TOGGLE) {
+        const presWrap = document.createElement("div");
+        presWrap.className = "presWrap";
+        presWrap.title = "Présent aujourd’hui";
+
+        const presLabel = document.createElement("span");
+        presLabel.className = "presLabel";
+        presLabel.textContent = "Présent";
+
+        const sw = document.createElement("label");
+        sw.className = "switch";
+
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = !!p.present;
+
+        input.addEventListener("change", async () => {
+          try {
+            await apiFetch(
+              `/rest/v1/location_players?location_id=eq.${currentVenueId}&player_id=eq.${p.id}`,
+              {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                  Prefer: "return=minimal",
+                },
+                body: JSON.stringify({ present: !!input.checked }),
+              }
+            );
+          } catch (e) {
+            input.checked = !input.checked;
+            log?.("[PRESENT TOGGLE ERROR]\n" + (e?.message || e));
+            alert("Erreur présence (RLS/colonne manquante).");
+          }
+        });
+
+        const slider = document.createElement("span");
+        slider.className = "slider";
+
+        sw.appendChild(input);
+        sw.appendChild(slider);
+
+        presWrap.appendChild(presLabel);
+        presWrap.appendChild(sw);
+
+        actions.appendChild(presWrap);
+      }
+
+      // Corbeille petite
+      const del = document.createElement("button");
+      del.className = "iconBtnSm btnDanger";
+      del.type = "button";
+      del.innerHTML = "🗑";
+      del.title = "Retirer du lieu";
+      del.onclick = async () => {
+        if (!confirm(`Retirer "${p.name}" de ce lieu ?`)) return;
+        try {
+          await removePlayerFromVenue(currentVenueId, p.id);
+          await refreshPlayers();
+          await refreshMatches();
+        } catch (e) {
+          log?.("[VENUE PLAYER REMOVE ERROR]\n" + (e?.message || e));
+          alert("Erreur retrait joueur (voir debug).");
+        }
+      };
+
+      actions.appendChild(del);
+
+      row.appendChild(left);
+      row.appendChild(actions);
+      playersWrap?.appendChild(row);
+    }
+  }
+
+  fillPlayerSelect(a1El);
+  fillPlayerSelect(a2El);
+  fillPlayerSelect(b1El);
+  fillPlayerSelect(b2El);
+}
+  
   // =========================
   // Match filter
   // =========================
