@@ -19,7 +19,22 @@ function log(msg) {
   if (el) el.textContent = (el.textContent ? el.textContent + "\n" : "") + msg;
   console.log(msg);
 }
+// ui-account.js
+const APP_VERSION = "2026-01-22 1.1.01.1";
 
+function renderVersion(){
+  const v =
+    document.getElementById("versionTextTop") ||
+    document.getElementById("versionText") ||
+    document.getElementById("versionTextBottom");
+
+  if (v) v.textContent = "Version: " + APP_VERSION;
+}
+
+async function init(){
+  renderVersion();
+  ...
+}
 // =========================
 // UI helpers
 // =========================
