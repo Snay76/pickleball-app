@@ -7,6 +7,9 @@ let myProfile = null;
 let venuesState = { venues: [], mode: "members" };
 
 // ---------- DOM ----------
+const authDot = document.getElementById("authDot");
+const authEmailMini = document.getElementById("authEmail");
+
 const backBtn = document.getElementById("backBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const saveBtn = document.getElementById("saveBtn");
@@ -467,25 +470,50 @@ async function init() {
     return;
   }
 
+  // User auth
   me = await loadUser();
+
+  // Auth pill (top right)
+  const authEmailMini = document.getElementById("authEmail");
+  const authDot = document.getElementById("authDot");
+
+  if (authEmailMini) authEmailMini.textContent = me.email || "(?)";
+  if (authDot){
+    authDot.classList.remove("bad");
+    authDot.classList.add("ok");
+  }
+
+  // Form email
   if (cfgEmail) cfgEmail.value = me.email || "";
 
+  // Profile
   await loadMyProfile();
 
   if (cfgFullName) cfgFullName.value = myProfile?.full_name || "";
   if (cfgWantsEmail) cfgWantsEmail.value = String(myProfile?.wants_email ?? true);
 
+  // Skill (support legacy)
   const legacySkill =
-    myProfile?.level && myProfile.level !== "admin_full" && myProfile.level !== "user"
+    myProfile?.level &&
+    myProfile.level !== "admin_full" &&
+    myProfile.level !== "user"
       ? myProfile.level
       : "";
 
-  if (cfgSkill) cfgSkill.value = myProfile?.skill_level || legacySkill || "";
+  if (cfgSkill){
+    cfgSkill.value = myProfile?.skill_level || legacySkill || "";
+  }
 
-  // affichage seulement
-  if (cfgAccess) cfgAccess.value = myProfile?.level === "admin_full" ? "admin_full" : "user";
+  // Access (display only)
+  if (cfgAccess){
+    cfgAccess.value = myProfile?.level === "admin_full"
+      ? "admin_full"
+      : "user";
+  }
 
+  // Venues + share
   await refreshVenuesUI();
+
   setStatus("Prêt.");
 }
 
