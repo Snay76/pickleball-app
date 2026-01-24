@@ -2,7 +2,7 @@
 import { apiFetch } from "./api.js";
 import {
   listVenues,
-  createVenue,
+  createVenue, // conservé (au cas où), mais aucun bouton ne l'appelle sur index.html
   fillVenueSelect,
   getSelectedVenueId,
   setSelectedVenueId,
@@ -87,15 +87,14 @@ export function bindMainUI(ctx) {
   let venues = [];
   let currentVenueId = "";
   let currentVenueRole = "player"; // player | organiser | admin
-
   const isAdminFull = profile?.level === "admin_full";
 
-  let cachedPlayers = []; // joueurs du lieu
-  let cachedMatches = []; // matchs du jour (lieu)
-  let visibleMatches = []; // matches après filtre
+  let cachedPlayers = [];
+  let cachedMatches = [];
+  let visibleMatches = [];
 
-  let myPlayerId = null; // utilisé par filtre "mes matchs"
-  let activeMatch = null; // modal
+  let myPlayerId = null;
+  let activeMatch = null;
 
   // =========================
   // Utils
@@ -259,26 +258,22 @@ export function bindMainUI(ctx) {
     fillVenueSelect(venueSelect, venues, currentVenueId);
   }
 
-  // NOTE: createVenueFlow conservé au cas où tu réutilises ui-main.js ailleurs,
-  // mais aucun bouton ne l'appelle sur index.html (ils sont supprimés).
+  // (conservé, pas appelé sur index.html)
   async function createVenueFlow() {
     const name = prompt("Nom du lieu (ex: Ste-Élie Débutant-2026) :");
     if (!name) return;
-
     try {
       const created = await createVenue({ name: name.trim(), created_by: me.id });
       if (!created?.id) return alert("Création échouée.");
-
       await refreshVenues();
       currentVenueId = created.id;
       setSelectedVenueId(me?.id, currentVenueId);
       fillVenueSelect(venueSelect, venues, currentVenueId);
-
       await refreshPlayers();
       await refreshMatches();
       alert("Lieu créé.");
     } catch (e) {
-      log?.("[VENUE CREATE ERROR]\n" + e.message);
+      log?.("[VENUE CREATE ERROR]\n" + (e?.message || e));
       alert("Erreur création lieu (voir debug).");
     }
   }
@@ -339,83 +334,88 @@ export function bindMainUI(ctx) {
           <div class="small">ID: ${esc(p.id)}</div>
         `;
 
-        // Actions à droite
         const actions = document.createElement("div");
         actions.className = "inline";
-        actions.style.gap = "10px";
-        actions.style.alignItems = "center";
 
-// Présent (petit label + switch)
-if (HAS_PRESENCE_TOGGLE) {
-  const presWrap = document.createElement("div");
-  presWrap.className = "presWrap";
-  presWrap.title = "Présent aujourd’hui";
+        // Présent (petit label + switch)
+        if (HAS_PRESENCE_TOGGLE) {
+          const presWrap = document.createElement("div");
+          presWrap.className = "presWrap";
+          presWrap.title = "Présent aujourd’hui";
 
-  const presLabel = document.createElement("span");
-  presLabel.className = "presLabel";
-  presLabel.textContent = "Présent";
+          const presLabel = document.createElement("span");
+          presLabel.className = "presLabel";
+          presLabel.textContent = "Présent";
 
-  const sw = document.createElement("label");
-  sw.className = "switch";
+          const sw = document.createElement("label");
+          sw.className = "switch";
 
-  const input = document.createElement("input");
-  input.type = "checkbox";
-  input.checked = !!p.present;
+          const input = document.createElement("input");
+          input.type = "checkbox";
+          input.checked = !!p.present;
 
-  const slider = document.createElement("span");
-  slider.className = "slider";
+          const slider = document.createElement("span");
+          slider.className = "slider";
 
-  input.addEventListener("change", async () => {
-    try {
-      await apiFetch(
-        `/rest/v1/location_players?location_id=eq.${currentVenueId}&player_id=eq.${p.id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Prefer: "return=minimal",
-          },
-          body: JSON.stringify({ present: !!input.checked }),
+          input.addEventListener("change", async () => {
+            try {
+              await apiFetch(
+                `/rest/v1/location_players?location_id=eq.${currentVenueId}&player_id=eq.${p.id}`,
+                {
+                  method: "PATCH",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Prefer: "return=minimal",
+                  },
+                  body: JSON.stringify({ present: !!input.checked }),
+                }
+              );
+            } catch (e) {
+              input.checked = !input.checked;
+              log?.("[PRESENT TOGGLE ERROR]\n" + (e?.message || e));
+              alert("Erreur présence (RLS/colonne manquante).");
+            }
+          });
+
+          sw.appendChild(input);
+          sw.appendChild(slider);
+
+          presWrap.appendChild(presLabel);
+          presWrap.appendChild(sw);
+
+          actions.appendChild(presWrap);
         }
-      );
-    } catch (e) {
-      input.checked = !input.checked;
-      log?.("[PRESENT TOGGLE ERROR]\n" + (e?.message || e));
-      alert("Erreur présence (RLS/colonne manquante).");
+
+        // Corbeille plus petite (bouton compact)
+        const del = document.createElement("button");
+        del.className = "btnDanger iconBtnSm";
+        del.type = "button";
+        del.innerHTML = "🗑";
+        del.title = "Retirer du lieu";
+        del.onclick = async () => {
+          if (!confirm(`Retirer "${p.name}" de ce lieu ?`)) return;
+          try {
+            await removePlayerFromVenue(currentVenueId, p.id);
+            await refreshPlayers();
+            await refreshMatches();
+          } catch (e) {
+            log?.("[VENUE PLAYER REMOVE ERROR]\n" + (e?.message || e));
+            alert("Erreur retrait joueur (voir debug).");
+          }
+        };
+        actions.appendChild(del);
+
+        row.appendChild(left);
+        row.appendChild(actions);
+        playersWrap?.appendChild(row);
+      }
     }
-  });
 
-  sw.appendChild(input);
-  sw.appendChild(slider);
-
-  presWrap.appendChild(presLabel);
-  presWrap.appendChild(sw);
-
-  actions.appendChild(presWrap);
-}
-
-// Corbeille plus petite (bouton compact)
-const del = document.createElement("button");
-del.className = "btnDanger iconBtnSm";
-del.type = "button";
-del.innerHTML = "🗑";
-del.title = "Retirer du lieu";
-del.onclick = async () => {
-  if (!confirm(`Retirer "${p.name}" de ce lieu ?`)) return;
-  try {
-    await removePlayerFromVenue(currentVenueId, p.id);
-    await refreshPlayers();
-    await refreshMatches();
-  } catch (e) {
-    log?.("[VENUE PLAYER REMOVE ERROR]\n" + (e?.message || e));
-    alert("Erreur retrait joueur (voir debug).");
+    fillPlayerSelect(a1El);
+    fillPlayerSelect(a2El);
+    fillPlayerSelect(b1El);
+    fillPlayerSelect(b2El);
   }
-};
-actions.appendChild(del);
-
-row.appendChild(left);
-row.appendChild(actions);
-playersWrap?.appendChild(row);
 
   // =========================
   // Match filter
@@ -441,7 +441,7 @@ playersWrap?.appendChild(row);
   // =========================
   function buildPairSetFromMatches(matches) {
     const set = new Set();
-    for (const m of matches) {
+    for (const m of matches || []) {
       const a = [m.a1, m.a2].filter(Boolean);
       const b = [m.b1, m.b2].filter(Boolean);
       if (a.length === 2) set.add(a.slice().sort().join("|"));
@@ -500,11 +500,9 @@ playersWrap?.appendChild(row);
         if (usedPairs.has(pairA)) cost += 10;
         if (usedPairs.has(pairB)) cost += 10;
 
-        for (const x of a) {
-          for (const y of b) {
-            const k = [x, y].sort().join("|");
-            if (usedOpp.has(k)) cost += 3;
-          }
+        for (const x of a) for (const y of b) {
+          const k = [x, y].sort().join("|");
+          if (usedOpp.has(k)) cost += 3;
         }
 
         if (cost === 0) return { a1: a[0], a2: a[1], b1: b[0], b2: b[1] };
@@ -568,9 +566,9 @@ playersWrap?.appendChild(row);
       const aFilled = aRaw !== "";
       const bFilled = bRaw !== "";
       if (aFilled !== bFilled) {
-        if (scoreStatus)
-          scoreStatus.textContent =
-            "Entre les 2 scores ou laisse vide pour 'sans score'.";
+        if (scoreStatus) {
+          scoreStatus.textContent = "Entre les 2 scores ou laisse vide pour 'sans score'.";
+        }
         return;
       }
       if (!aFilled && !bFilled) return confirmFinish(false);
@@ -594,8 +592,8 @@ playersWrap?.appendChild(row);
       closeScoreModal();
       await refreshMatches();
     } catch (e) {
-      if (scoreStatus) scoreStatus.textContent = "Erreur:\n" + e.message;
-      log?.("[FINISH MATCH ERROR]\n" + e.message);
+      if (scoreStatus) scoreStatus.textContent = "Erreur:\n" + (e?.message || e);
+      log?.("[FINISH MATCH ERROR]\n" + (e?.message || e));
     } finally {
       if (scoreConfirmBtn) scoreConfirmBtn.disabled = false;
       if (scoreNoScoreBtn) scoreNoScoreBtn.disabled = false;
@@ -634,15 +632,12 @@ playersWrap?.appendChild(row);
 
       const canFinish = (m.status || "") !== "done";
       const venueName = venues.find((v) => v.id === currentVenueId)?.name || "";
-      const dur =
-        m.status === "done" && m.ended_at ? formatDuration(m.created_at, m.ended_at) : "";
-      const score =
-        m.score_a !== null &&
-        m.score_a !== undefined &&
-        m.score_b !== null &&
-        m.score_b !== undefined
-          ? `${m.score_a}-${m.score_b}`
-          : "";
+      const dur = (m.status === "done" && m.ended_at)
+        ? formatDuration(m.created_at, m.ended_at)
+        : "";
+      const score = (m.score_a !== null && m.score_a !== undefined && m.score_b !== null && m.score_b !== undefined)
+        ? `${m.score_a}-${m.score_b}`
+        : "";
 
       const box = document.createElement("div");
       box.className = "listItem matchCard";
@@ -658,16 +653,8 @@ playersWrap?.appendChild(row);
             </div>
           </div>
           <div class="inline" style="justify-content:flex-end;">
-            <div class="muted" style="font-size:12px">${esc(
-              new Date(m.created_at).toLocaleString()
-            )}</div>
-            ${
-              canFinish
-                ? `<button class="miniBtn btnPrimary" data-finish="${esc(
-                    m.id
-                  )}" type="button">Terminer</button>`
-                : ``
-            }
+            <div class="muted" style="font-size:12px">${esc(new Date(m.created_at).toLocaleString())}</div>
+            ${canFinish ? `<button class="miniBtn btnPrimary" data-finish="${esc(m.id)}" type="button">Terminer</button>` : ``}
           </div>
         </div>
       `;
@@ -675,16 +662,14 @@ playersWrap?.appendChild(row);
       matchesWrap?.appendChild(box);
     }
 
-    matchesWrap
-      ?.querySelectorAll("button[data-finish]")
-      ?.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const id = btn.getAttribute("data-finish");
-          const match = cachedMatches.find((x) => x.id === id);
-          if (!match) return;
-          openScoreModal(match);
-        });
+    matchesWrap?.querySelectorAll("button[data-finish]")?.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-finish");
+        const match = cachedMatches.find((x) => x.id === id);
+        if (!match) return;
+        openScoreModal(match);
       });
+    });
   }
 
   // =========================
@@ -716,7 +701,7 @@ playersWrap?.appendChild(row);
       await refreshPlayers();
       await refreshMatches();
     } catch (e) {
-      log?.("[ADD PLAYER ERROR]\n" + e.message);
+      log?.("[ADD PLAYER ERROR]\n" + (e?.message || e));
       alert("Erreur ajout joueur (voir debug).");
     } finally {
       addPlayerBtn.disabled = false;
@@ -830,7 +815,7 @@ playersWrap?.appendChild(row);
       await refreshMatches();
       alert(`OK. Matchs terminés: ${count}`);
     } catch (e) {
-      log?.("[FINISH ALL ERROR]\n" + e.message);
+      log?.("[FINISH ALL ERROR]\n" + (e?.message || e));
       alert("Erreur (voir debug).");
     } finally {
       finishAllTodayBtn.disabled = false;
