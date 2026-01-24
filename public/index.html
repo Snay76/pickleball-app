@@ -5,8 +5,363 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Pickleball</title>
 
-  <!-- IMPORTANT: utilise style.css (cache-busting) -->
-  <link rel="stylesheet" href="style.css?v=20260123-1" />
+  <style>
+    :root{
+      --bg:#0b1220; --card:#121b2f; --muted:#9fb0d0; --text:#e8efff;
+      --line:rgba(255,255,255,.12);
+      --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --accent:#60a5fa;
+      --radius:16px; --pad:16px; --tap:58px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    *{ box-sizing:border-box; }
+    html, body{ height:100%; background:var(--bg); margin:0; }
+    body{
+      min-height:100vh;
+      padding-top:env(safe-area-inset-top);
+      padding-bottom:env(safe-area-inset-bottom);
+      font-family:var(--sans);
+      background:linear-gradient(180deg,#070b14, var(--bg));
+      color:var(--text);
+      padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+    }
+
+    /* Typography */
+    h1{ margin: 6px 0 2px; font-size: 22px; letter-spacing:.2px; }
+    h2{ margin: 0 0 10px; font-size: 18px; }
+    h3{ margin: 16px 0 10px; font-size: 16px; color: #d7e3ff; }
+
+    a{ color: var(--text); text-decoration: none; }
+    a:hover{ text-decoration: underline; }
+
+    /* Top bar */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 10px 12px;
+      border:1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,.04);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 10px;
+      z-index: 10;
+      backdrop-filter: blur(8px);
+    }
+    .brand{ display:flex; flex-direction:column; gap:2px; min-width: 0; }
+    .brand small{
+      color:var(--muted);
+      font-size:12px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    .rightTop{ display:flex; align-items:center; gap:10px; }
+
+    /* Auth pill (clickable) */
+    .authMini{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 8px 10px;
+      border:1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,.03);
+      max-width: 62vw;
+      cursor:pointer;
+      user-select:none;
+      touch-action: manipulation;
+    }
+    .dot{
+      width:10px;
+      height:10px;
+      border-radius:999px;
+      background: var(--warn);
+      flex:0 0 auto;
+    }
+    .dot.ok{ background: var(--ok); }
+    .dot.bad{ background: var(--bad); }
+    .authEmail{
+      font-size: 12px;
+      color: var(--muted);
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    /* Layout helpers */
+    .card{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      border-radius: var(--radius);
+      padding: var(--pad);
+      box-shadow: var(--shadow);
+      margin-top: 14px;
+    }
+    .row{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:end;
+    }
+    .col{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      flex:1 1 220px;
+    }
+
+    label{ font-weight:800; font-size: 13px; color:#d7e3ff; }
+
+    /* Inputs */
+    input, select{
+      width:100%;
+      height: var(--tap);
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.2);
+      color: var(--text);
+      outline: none;
+      font-size: 16px;
+    }
+    input::placeholder{ color: rgba(232,239,255,.45); }
+
+    select{
+      appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, rgba(232,239,255,.55) 50%),
+        linear-gradient(135deg, rgba(232,239,255,.55) 50%, transparent 50%),
+        linear-gradient(to right, transparent, transparent);
+      background-position:
+        calc(100% - 22px) calc(50% - 3px),
+        calc(100% - 16px) calc(50% - 3px),
+        calc(100% - 40px) 50%;
+      background-size:
+        6px 6px,
+        6px 6px,
+        1px 24px;
+      background-repeat: no-repeat;
+      padding-right: 46px;
+    }
+
+    /* Buttons */
+    button{
+      height: var(--tap);
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      color: var(--text);
+      font-weight: 900;
+      font-size: 16px;
+      padding: 0 14px;
+      cursor:pointer;
+      user-select:none;
+      touch-action: manipulation;
+    }
+    button:disabled{ opacity:.55; cursor:not-allowed; }
+
+    .btnPrimary{
+      background: linear-gradient(180deg, rgba(96,165,250,.35), rgba(96,165,250,.14));
+      border-color: rgba(96,165,250,.45);
+    }
+    .btnDanger{
+      background: linear-gradient(180deg, rgba(239,68,68,.28), rgba(239,68,68,.10));
+      border-color: rgba(239,68,68,.40);
+    }
+    .btnGhost{ background: rgba(255,255,255,.03); }
+
+    .help{
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 6px;
+      line-height:1.35;
+    }
+    .status{
+      font-family: var(--mono);
+      font-size: 12px;
+      white-space: pre-wrap;
+      color: #d7e3ff;
+      border:1px dashed rgba(255,255,255,.18);
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: rgba(0,0,0,.18);
+    }
+
+    .hidden{ display:none !important; }
+    .muted{ color: var(--muted); }
+    .hr{ height:1px; background: var(--line); margin: 12px 0; }
+
+    /* Tabs */
+    .tabs{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .tab{
+      height: 52px;
+      border-radius: 16px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      font-weight: 900;
+      font-size: 14px;
+    }
+    .tab.active{
+      background: linear-gradient(180deg, rgba(96,165,250,.35), rgba(96,165,250,.14));
+      border-color: rgba(96,165,250,.55);
+    }
+
+    /* List items */
+    .listItem{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border:1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(0,0,0,.12);
+      margin-top: 10px;
+    }
+    .name{ font-weight: 950; }
+    .small{
+      font-size:12px;
+      color: var(--muted);
+      margin-top:4px;
+      font-family: var(--mono);
+    }
+
+    .inline{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    /* Venue context bar */
+    .venueBar{
+      position:sticky;
+      top:0;
+      z-index:20;
+      background:rgba(11,18,32,.96);
+      backdrop-filter: blur(8px);
+      padding:10px 16px;
+      border-bottom:1px solid var(--line);
+      border-radius: 14px;
+      margin-bottom: 10px;
+    }
+    .venueBar .label{ color:var(--muted); font-size:12px; }
+    .venueBar .value{ font-weight:800; }
+
+    /* Full width button helper */
+    .btnBlock{ width:100%; display:block; min-height:var(--tap); }
+
+    /* Match cards */
+    .matchCard{ display:flex; flex-direction:column; gap:10px; align-items:stretch; }
+    .matchTop{ display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+    .miniBtn{
+      height: 44px;
+      min-width: 44px;
+      border-radius: 14px;
+      font-size: 14px;
+      padding: 0 12px;
+    }
+
+    /* ===== Présent + Toggle (FIX: input visible/clickable) ===== */
+    .presWrap{ display:flex; align-items:center; gap:8px; }
+    .presLabel{ font-size:11px; color:var(--muted); font-weight:900; line-height:1; }
+
+    .switch{
+      position: relative;
+      width: 54px;
+      height: 30px;
+      display: inline-block;
+      flex:0 0 auto;
+    }
+    .switch input{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      margin:0;
+      opacity:0;
+      cursor:pointer;
+      z-index:2;
+    }
+    .slider{
+      position:absolute;
+      inset:0;
+      background: rgba(239,68,68,.45);
+      border:1px solid rgba(255,255,255,.18);
+      border-radius: 999px;
+      transition: .2s;
+      z-index:1;
+    }
+    .slider:before{
+      content:"";
+      position:absolute;
+      height: 24px;
+      width: 24px;
+      left: 3px;
+      top: 2px;
+      background: #fff;
+      border-radius: 999px;
+      transition: .2s;
+    }
+    .switch input:checked + .slider{ background: rgba(34,197,94,.55); }
+    .switch input:checked + .slider:before{ transform: translateX(24px); }
+
+    /* ===== Corbeille plus petite ===== */
+    .iconBtnSm{
+      width:32px;
+      height:32px;
+      min-width:32px;
+      padding:0;
+      border-radius:10px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-size:14px;
+      line-height:1;
+    }
+
+    /* Modal score */
+    .overlay{
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.55);
+      display:flex; align-items:flex-end; justify-content:center;
+      padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+      z-index: 1000;
+    }
+    .modal{
+      width: min(900px, 100%);
+      border:1px solid var(--line);
+      background: rgba(18,27,47,.98);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+    .modalHead{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .iconBtn{
+      width: 46px; height: 46px; border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      display:inline-flex; align-items:center; justify-content:center;
+      cursor:pointer; user-select:none; touch-action: manipulation;
+      font-size: 18px;
+    }
+
+    @media (min-width: 840px){
+      body{ max-width: 860px; margin: 0 auto; }
+    }
+  </style>
 </head>
 
 <body>
@@ -43,7 +398,6 @@
 
   <!-- APP -->
   <div id="appCard" class="card hidden">
-    <!-- Venue bar (CSS dans style.css) -->
     <div id="venueBar" class="venueBar hidden">
       <div class="label">Lieu sélectionné</div>
       <div class="value" id="venueBarValue">—</div>
@@ -84,6 +438,7 @@
     <!-- Matchs -->
     <div id="tabMatches" class="hidden" style="margin-top:12px;">
       <h3>Affichage</h3>
+
       <div class="row">
         <div class="col">
           <label for="matchFilter">Filtres</label>
@@ -169,8 +524,8 @@
         <strong>Terminer le match</strong>
         <button id="scoreCloseBtn" class="iconBtn" type="button" title="Fermer">✕</button>
       </div>
-
       <div class="hr"></div>
+
       <div id="scoreMatchInfo" class="status">…</div>
 
       <div class="row" style="margin-top:10px;">
@@ -208,10 +563,8 @@
     </div>
   </div>
 
-  <!-- JS -->
-  <script type="module" src="js/main.js?v=20260123-1"></script>
+  <script type="module" src="js/main.js"></script>
 
-  <!-- Bottom version (fix: pas de "..." invalide) -->
   <div id="versionTextBottom"
        style="position:fixed;bottom:10px;left:10px;right:10px;font-size:12px;color:rgba(232,239,255,.45);text-align:center;pointer-events:none;">
   </div>
