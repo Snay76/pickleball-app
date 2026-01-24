@@ -6,33 +6,31 @@
   <title>Compte - Pickleball</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
-    <!-- Topbar -->
-<div class="topbar">
-  <div class="brand">
-    <div style="font-weight:950">Pickleball</div>
-    <small id="appVersion">Version: —</small>
-  </div>
 
-  <div class="rightTop" style="display:flex;align-items:center;gap:10px;">
-    <!-- Bouton retour OPTIONNEL (cache-le si pas nécessaire) -->
-    <button id="backBtn" class="miniBtn btnGhost" type="button" style="display:none;">Retour</button>
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="brand">
+      <div style="font-weight:950">Compte</div>
+      <small>Configuration du compte</small>
+    </div>
 
-    <!-- Chip connecté -->
-    <div id="authPill" class="authPill">
-      <span id="authDot" class="dot"></span>
-      <span id="authEmail" class="authEmail">—</span>
+    <div class="rightTop" style="display:flex;align-items:center;gap:10px;">
+      <!-- Bouton retour -->
+      <button id="backBtn" class="miniBtn btnGhost" type="button">Retour</button>
+
+      <!-- Pill connecté -->
+      <div id="authPill" class="authMini" title="Compte">
+        <span id="authDot" class="dot"></span>
+        <span id="authEmail" class="authEmail">—</span>
+      </div>
     </div>
   </div>
-</div>
 
-  <div class="brand">
-    <div style="font-weight:950">Compte</div>
-    <small>Configuration du compte</small>
-  </div>
-</div>
-
+  <!-- CONTENU -->
   <div id="card" class="card">
+
     <h2>Profil</h2>
 
     <div class="row">
@@ -68,13 +66,15 @@
           <option value="user">Joueur</option>
           <option value="admin_full">Admin full</option>
         </select>
-        <div class="help">Le niveau d’accès ne doit pas être modifiable depuis l’app. (Sinon n’importe qui se donne admin.)</div>
+        <div class="help">
+          Le niveau d’accès ne doit pas être modifiable depuis l’app.
+        </div>
       </div>
     </div>
 
     <div class="row">
       <div class="col">
-        <label for="cfgWantsEmail">Rapport par email en fin de match/session</label>
+        <label for="cfgWantsEmail">Rapport par email</label>
         <select id="cfgWantsEmail">
           <option value="true">Oui</option>
           <option value="false">Non</option>
@@ -91,52 +91,65 @@
       </div>
     </div>
 
+    <!-- LIEUX -->
     <h2 style="margin-top:16px;">Lieux</h2>
-    <div class="help">Créer un lieu, puis choisis-le pour afficher/partager son code. Tu peux aussi t’inscrire par code.</div>
+    <div class="help">
+      Crée un lieu, puis choisis-le pour afficher/partager son code.
+    </div>
 
-    <!-- Créer un lieu -->
+    <!-- Créer -->
     <div class="row">
       <div class="col">
         <label for="newVenueName">Ajouter un lieu</label>
-        <input id="newVenueName" type="text" placeholder="ex: Ste-Élie Débutant-2026" />
+        <input id="newVenueName" type="text" placeholder="ex: Ste-Élie 2026" />
       </div>
       <div class="col">
-        <button id="createVenueBtn" class="btnPrimary btnBlock" type="button">Créer le lieu</button>
+        <button id="createVenueBtn" class="btnPrimary btnBlock" type="button">
+          Créer le lieu
+        </button>
       </div>
     </div>
 
-    <!-- Joindre par code -->
+    <!-- Joindre -->
     <div class="row" style="margin-top:10px;">
       <div class="col">
         <label for="joinCode">Code du lieu</label>
         <input id="joinCode" type="text" placeholder="ex: AB12CD" />
       </div>
       <div class="col">
-        <button id="joinByCodeBtn" class="btnPrimary btnBlock" type="button">M’inscrire avec ce code</button>
+        <button id="joinByCodeBtn" class="btnPrimary btnBlock" type="button">
+          M’inscrire
+        </button>
       </div>
     </div>
 
-    <!-- Choisir un lieu + quitter -->
+    <!-- Mes lieux -->
     <div class="row">
       <div class="col">
         <label for="acctVenueSelect">Mes lieux</label>
         <select id="acctVenueSelect"></select>
       </div>
       <div class="col">
-        <button id="leaveVenueBtn" class="btnDanger btnBlock" type="button">Me retirer du lieu</button>
+        <button id="leaveVenueBtn" class="btnDanger btnBlock" type="button">
+          Me retirer
+        </button>
       </div>
     </div>
 
-    <!-- Partage (menu séparé + code) -->
+    <!-- PARTAGE -->
     <div class="row">
       <div class="col">
         <div id="shareBox" class="card" style="padding:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
               <div style="font-weight:800;">Partage du lieu</div>
-              <div class="help">Choisis un lieu, le code s’affiche automatiquement. Copier copie le code.</div>
+              <div class="help">
+                Choisis un lieu, le code s’affiche.
+              </div>
             </div>
-            <button id="copyShareCodeBtn" class="miniBtn btnGhost" type="button">Copier</button>
+            <button id="copyShareCodeBtn" class="miniBtn btnGhost" type="button">
+              Copier
+            </button>
           </div>
 
           <div style="margin-top:10px;">
@@ -144,14 +157,17 @@
             <select id="shareVenueSelect"></select>
           </div>
 
-          <div style="margin-top:10px;font-family:var(--mono);" id="shareCodeValue">—</div>
+          <div id="shareCodeValue"
+               style="margin-top:10px;font-family:var(--mono);">
+            —
+          </div>
         </div>
       </div>
     </div>
 
     <div class="hr"></div>
-
     <div id="status" class="status">…</div>
+
   </div>
 
   <script type="module" src="js/ui-account.js"></script>
