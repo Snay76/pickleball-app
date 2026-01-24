@@ -121,14 +121,14 @@ export function bindMainUI(ctx) {
     }
   }
 
-  function setDebugVisibility() {
-    const debugTabBtn = document.querySelector('.tab[data-tab="tabDebug"]');
-    const debugTab = document.getElementById("tabDebug");
-    const canDebug = isAdminFull || currentVenueRole === "admin";
-    if (debugTabBtn) debugTabBtn.style.display = canDebug ? "" : "none";
-    if (debugTab) debugTab.style.display = canDebug ? "" : "none";
-  }
-
+ function setStatsVisibility() {
+  const statsTabBtn = document.querySelector('.tab[data-tab="tabStats"]');
+  const statsTab = document.getElementById("tabStats");
+  const canSee = true; // ou garde une règle si tu veux plus tard
+  if (statsTabBtn) statsTabBtn.style.display = canSee ? "" : "none";
+  if (statsTab) statsTab.style.display = canSee ? "" : "none";
+}
+  
   function updateVenueBar() {
     if (!venueBar || !venueBarValue) return;
     const v = venues.find((x) => x.id === currentVenueId);
