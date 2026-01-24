@@ -121,14 +121,15 @@ export function bindMainUI(ctx) {
     }
   }
 
- function setStatsVisibility() {
-  const statsTabBtn = document.querySelector('.tab[data-tab="tabStats"]');
-  const statsTab = document.getElementById("tabStats");
-  const canSee = true; // ou garde une règle si tu veux plus tard
-  if (statsTabBtn) statsTabBtn.style.display = canSee ? "" : "none";
-  if (statsTab) statsTab.style.display = canSee ? "" : "none";
-}
-  
+  // Remplace l'ancien setDebugVisibility()
+  function setStatsVisibility() {
+    const statsTabBtn = document.querySelector('.tab[data-tab="tabStats"]');
+    const statsTab = document.getElementById("tabStats");
+    const canSee = true; // mets une règle ici plus tard si tu veux
+    if (statsTabBtn) statsTabBtn.style.display = canSee ? "" : "none";
+    if (statsTab) statsTab.style.display = canSee ? "" : "none";
+  }
+
   function updateVenueBar() {
     if (!venueBar || !venueBarValue) return;
     const v = venues.find((x) => x.id === currentVenueId);
@@ -153,7 +154,7 @@ export function bindMainUI(ctx) {
 
   function isCourtBusy(court) {
     return (cachedMatches || []).some(
-      (m) => (m.status && m.status !== "done") && String(m.court) === String(court)
+      (m) => m.status && m.status !== "done" && String(m.court) === String(court)
     );
   }
 
@@ -262,13 +263,16 @@ export function bindMainUI(ctx) {
   async function createVenueFlow() {
     const name = prompt("Nom du lieu (ex: Ste-Élie Débutant-2026) :");
     if (!name) return;
+
     try {
       const created = await createVenue({ name: name.trim(), created_by: me.id });
       if (!created?.id) return alert("Création échouée.");
+
       await refreshVenues();
       currentVenueId = created.id;
       setSelectedVenueId(me?.id, currentVenueId);
       fillVenueSelect(venueSelect, venues, currentVenueId);
+
       await refreshPlayers();
       await refreshMatches();
       alert("Lieu créé.");
@@ -287,7 +291,9 @@ export function bindMainUI(ctx) {
       const rows = await apiFetch(
         `/rest/v1/profiles?select=full_name&user_id=eq.${me.id}&limit=1`
       );
-      const fullName = rows?.[0]?.full_name ? String(rows[0].full_name).trim() : "";
+      const fullName = rows?.[0]?.full_name
+        ? String(rows[0].full_name).trim()
+        : "";
       if (!fullName) return;
       ensureMyPlayerId.fullName = fullName;
     } catch {
@@ -295,129 +301,136 @@ export function bindMainUI(ctx) {
     }
   }
 
-// =========================
-// Players
-// =========================
-async function refreshPlayers() {
-  if (playersWrap) playersWrap.innerHTML = "";
+  // =========================
+  // Players
+  // =========================
+  async function refreshPlayers() {
+    if (playersWrap) playersWrap.innerHTML = "";
 
-  if (!currentVenueId) {
-    if (playersEmpty) playersEmpty.textContent = "Choisis un lieu.";
-    cachedPlayers = [];
+    if (!currentVenueId) {
+      if (playersEmpty) playersEmpty.textContent = "Choisis un lieu.";
+      cachedPlayers = [];
+      fillPlayerSelect(a1El);
+      fillPlayerSelect(a2El);
+      fillPlayerSelect(b1El);
+      fillPlayerSelect(b2El);
+      return;
+    }
+
+    try {
+      cachedPlayers = await listPlayersForVenue(currentVenueId);
+    } catch (e) {
+      cachedPlayers = [];
+      if (playersEmpty) playersEmpty.textContent = "Erreur chargement joueurs (voir debug).";
+      log?.("[LIST PLAYERS ERROR]\n" + (e?.message || e));
+      return;
+    }
+
+    const fn = ensureMyPlayerId.fullName;
+    if (fn) {
+      const meP = cachedPlayers.find((p) => String(p.name).trim() === fn);
+      myPlayerId = meP?.id || null;
+    }
+
+    if (!cachedPlayers.length) {
+      if (playersEmpty) playersEmpty.textContent = "(aucun joueur dans ce lieu)";
+    } else {
+      if (playersEmpty) playersEmpty.textContent = "";
+
+      for (const p of cachedPlayers) {
+        const row = document.createElement("div");
+        row.className = "listItem";
+
+        const left = document.createElement("div");
+        left.innerHTML = `
+          <div class="name">${esc(p.name)}</div>
+          <div class="small">ID: ${esc(p.id)}</div>
+        `;
+
+        const actions = document.createElement("div");
+        actions.className = "inline";
+
+        // Présent (petit label + toggle)
+        if (HAS_PRESENCE_TOGGLE) {
+          const presWrap = document.createElement("div");
+          presWrap.className = "presWrap";
+          presWrap.title = "Présent aujourd’hui";
+
+          const presLabel = document.createElement("span");
+          presLabel.className = "presLabel";
+          presLabel.textContent = "Présent";
+
+          const sw = document.createElement("label");
+          sw.className = "switch";
+
+          const input = document.createElement("input");
+          input.type = "checkbox";
+          input.checked = !!p.present;
+
+          input.addEventListener("change", async () => {
+            try {
+              await apiFetch(
+                `/rest/v1/location_players?location_id=eq.${currentVenueId}&player_id=eq.${p.id}`,
+                {
+                  method: "PATCH",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Prefer: "return=minimal",
+                  },
+                  body: JSON.stringify({ present: !!input.checked }),
+                }
+              );
+            } catch (e) {
+              input.checked = !input.checked;
+              log?.("[PRESENT TOGGLE ERROR]\n" + (e?.message || e));
+              alert("Erreur présence (RLS/colonne manquante).");
+            }
+          });
+
+          const slider = document.createElement("span");
+          slider.className = "slider";
+
+          sw.appendChild(input);
+          sw.appendChild(slider);
+
+          presWrap.appendChild(presLabel);
+          presWrap.appendChild(sw);
+
+          actions.appendChild(presWrap);
+        }
+
+        // Corbeille petite
+        const del = document.createElement("button");
+        del.className = "iconBtnSm btnDanger";
+        del.type = "button";
+        del.innerHTML = "🗑";
+        del.title = "Retirer du lieu";
+        del.onclick = async () => {
+          if (!confirm(`Retirer "${p.name}" de ce lieu ?`)) return;
+          try {
+            await removePlayerFromVenue(currentVenueId, p.id);
+            await refreshPlayers();
+            await refreshMatches();
+          } catch (e) {
+            log?.("[VENUE PLAYER REMOVE ERROR]\n" + (e?.message || e));
+            alert("Erreur retrait joueur (voir debug).");
+          }
+        };
+
+        actions.appendChild(del);
+
+        row.appendChild(left);
+        row.appendChild(actions);
+        playersWrap?.appendChild(row);
+      }
+    }
+
     fillPlayerSelect(a1El);
     fillPlayerSelect(a2El);
     fillPlayerSelect(b1El);
     fillPlayerSelect(b2El);
-    return;
   }
 
-  cachedPlayers = await listPlayersForVenue(currentVenueId);
-
-  const fn = ensureMyPlayerId.fullName;
-  if (fn) {
-    const meP = cachedPlayers.find((p) => String(p.name).trim() === fn);
-    myPlayerId = meP?.id || null;
-  }
-
-  if (!cachedPlayers.length) {
-    if (playersEmpty) playersEmpty.textContent = "(aucun joueur dans ce lieu)";
-  } else {
-    if (playersEmpty) playersEmpty.textContent = "";
-
-    for (const p of cachedPlayers) {
-      const row = document.createElement("div");
-      row.className = "listItem";
-
-      const left = document.createElement("div");
-      left.innerHTML = `
-        <div class="name">${esc(p.name)}</div>
-        <div class="small">ID: ${esc(p.id)}</div>
-      `;
-
-      const actions = document.createElement("div");
-      actions.className = "inline";
-
-      // Présent (petit label + toggle)
-      if (HAS_PRESENCE_TOGGLE) {
-        const presWrap = document.createElement("div");
-        presWrap.className = "presWrap";
-        presWrap.title = "Présent aujourd’hui";
-
-        const presLabel = document.createElement("span");
-        presLabel.className = "presLabel";
-        presLabel.textContent = "Présent";
-
-        const sw = document.createElement("label");
-        sw.className = "switch";
-
-        const input = document.createElement("input");
-        input.type = "checkbox";
-        input.checked = !!p.present;
-
-        input.addEventListener("change", async () => {
-          try {
-            await apiFetch(
-              `/rest/v1/location_players?location_id=eq.${currentVenueId}&player_id=eq.${p.id}`,
-              {
-                method: "PATCH",
-                headers: {
-                  "Content-Type": "application/json",
-                  Prefer: "return=minimal",
-                },
-                body: JSON.stringify({ present: !!input.checked }),
-              }
-            );
-          } catch (e) {
-            input.checked = !input.checked;
-            log?.("[PRESENT TOGGLE ERROR]\n" + (e?.message || e));
-            alert("Erreur présence (RLS/colonne manquante).");
-          }
-        });
-
-        const slider = document.createElement("span");
-        slider.className = "slider";
-
-        sw.appendChild(input);
-        sw.appendChild(slider);
-
-        presWrap.appendChild(presLabel);
-        presWrap.appendChild(sw);
-
-        actions.appendChild(presWrap);
-      }
-
-      // Corbeille petite
-      const del = document.createElement("button");
-      del.className = "iconBtnSm btnDanger";
-      del.type = "button";
-      del.innerHTML = "🗑";
-      del.title = "Retirer du lieu";
-      del.onclick = async () => {
-        if (!confirm(`Retirer "${p.name}" de ce lieu ?`)) return;
-        try {
-          await removePlayerFromVenue(currentVenueId, p.id);
-          await refreshPlayers();
-          await refreshMatches();
-        } catch (e) {
-          log?.("[VENUE PLAYER REMOVE ERROR]\n" + (e?.message || e));
-          alert("Erreur retrait joueur (voir debug).");
-        }
-      };
-
-      actions.appendChild(del);
-
-      row.appendChild(left);
-      row.appendChild(actions);
-      playersWrap?.appendChild(row);
-    }
-  }
-
-  fillPlayerSelect(a1El);
-  fillPlayerSelect(a2El);
-  fillPlayerSelect(b1El);
-  fillPlayerSelect(b2El);
-}
-  
   // =========================
   // Match filter
   // =========================
@@ -501,10 +514,11 @@ async function refreshPlayers() {
         if (usedPairs.has(pairA)) cost += 10;
         if (usedPairs.has(pairB)) cost += 10;
 
-        for (const x of a) for (const y of b) {
-          const k = [x, y].sort().join("|");
-          if (usedOpp.has(k)) cost += 3;
-        }
+        for (const x of a)
+          for (const y of b) {
+            const k = [x, y].sort().join("|");
+            if (usedOpp.has(k)) cost += 3;
+          }
 
         if (cost === 0) return { a1: a[0], a2: a[1], b1: b[0], b2: b[1] };
 
@@ -567,9 +581,9 @@ async function refreshPlayers() {
       const aFilled = aRaw !== "";
       const bFilled = bRaw !== "";
       if (aFilled !== bFilled) {
-        if (scoreStatus) {
-          scoreStatus.textContent = "Entre les 2 scores ou laisse vide pour 'sans score'.";
-        }
+        if (scoreStatus)
+          scoreStatus.textContent =
+            "Entre les 2 scores ou laisse vide pour 'sans score'.";
         return;
       }
       if (!aFilled && !bFilled) return confirmFinish(false);
@@ -617,7 +631,15 @@ async function refreshPlayers() {
     const fromIso = isoStartOfDayLocal();
     const toIso = isoStartOfTomorrowLocal();
 
-    cachedMatches = await listMatchesForVenueToday(currentVenueId, fromIso, toIso);
+    try {
+      cachedMatches = await listMatchesForVenueToday(currentVenueId, fromIso, toIso);
+    } catch (e) {
+      cachedMatches = [];
+      visibleMatches = [];
+      if (matchesEmpty) matchesEmpty.textContent = "Erreur chargement matchs (voir debug).";
+      log?.("[LIST MATCHES ERROR]\n" + (e?.message || e));
+      return;
+    }
 
     applyMatchFilter();
 
@@ -633,12 +655,15 @@ async function refreshPlayers() {
 
       const canFinish = (m.status || "") !== "done";
       const venueName = venues.find((v) => v.id === currentVenueId)?.name || "";
-      const dur = (m.status === "done" && m.ended_at)
-        ? formatDuration(m.created_at, m.ended_at)
-        : "";
-      const score = (m.score_a !== null && m.score_a !== undefined && m.score_b !== null && m.score_b !== undefined)
-        ? `${m.score_a}-${m.score_b}`
-        : "";
+      const dur =
+        m.status === "done" && m.ended_at ? formatDuration(m.created_at, m.ended_at) : "";
+      const score =
+        m.score_a !== null &&
+        m.score_a !== undefined &&
+        m.score_b !== null &&
+        m.score_b !== undefined
+          ? `${m.score_a}-${m.score_b}`
+          : "";
 
       const box = document.createElement("div");
       box.className = "listItem matchCard";
@@ -654,8 +679,16 @@ async function refreshPlayers() {
             </div>
           </div>
           <div class="inline" style="justify-content:flex-end;">
-            <div class="muted" style="font-size:12px">${esc(new Date(m.created_at).toLocaleString())}</div>
-            ${canFinish ? `<button class="miniBtn btnPrimary" data-finish="${esc(m.id)}" type="button">Terminer</button>` : ``}
+            <div class="muted" style="font-size:12px">${esc(
+              new Date(m.created_at).toLocaleString()
+            )}</div>
+            ${
+              canFinish
+                ? `<button class="miniBtn btnPrimary" data-finish="${esc(
+                    m.id
+                  )}" type="button">Terminer</button>`
+                : ``
+            }
           </div>
         </div>
       `;
@@ -681,7 +714,7 @@ async function refreshPlayers() {
     setSelectedVenueId(me?.id, currentVenueId);
     currentVenueRole = await getMyVenueRole(currentVenueId);
     updateVenueBar();
-    setDebugVisibility();
+    setStatsVisibility(); // FIX: ancien setDebugVisibility()
     await refreshPlayers();
     await refreshMatches();
   });
@@ -850,7 +883,7 @@ async function refreshPlayers() {
     await refreshVenues();
     currentVenueRole = await getMyVenueRole(currentVenueId);
     updateVenueBar();
-    setDebugVisibility();
+    setStatsVisibility(); // FIX: ancien setDebugVisibility()
     await ensureMyPlayerId();
     await refreshPlayers();
     await refreshMatches();
