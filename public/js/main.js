@@ -1,3 +1,4 @@
+// public/js/main.js
 import { APP_VERSION } from "./config.js";
 import {
   parseHash,
@@ -12,6 +13,18 @@ import { bindMainUI } from "./ui-main.js";
 import { apiFetch } from "./api.js";
 
 // =========================
+// Version helper
+// =========================
+function renderVersion() {
+  const v =
+    document.getElementById("versionTextTop") ||
+    document.getElementById("versionText") ||
+    document.getElementById("versionTextBottom");
+
+  if (v) v.textContent = "Version: " + (APP_VERSION || "—");
+}
+
+// =========================
 // Logger simple (debug panneau + console)
 // =========================
 function log(msg) {
@@ -19,22 +32,7 @@ function log(msg) {
   if (el) el.textContent = (el.textContent ? el.textContent + "\n" : "") + msg;
   console.log(msg);
 }
-// ui-account.js
-const APP_VERSION = "2026-01-22 1.1.01.1";
 
-function renderVersion(){
-  const v =
-    document.getElementById("versionTextTop") ||
-    document.getElementById("versionText") ||
-    document.getElementById("versionTextBottom");
-
-  if (v) v.textContent = "Version: " + APP_VERSION;
-}
-
-async function init(){
-  renderVersion();
-  ...
-}
 // =========================
 // UI helpers
 // =========================
@@ -68,7 +66,9 @@ function wireTabs() {
     tabs.forEach((b) => b.classList.toggle("active", b.dataset.tab === id));
   }
 
-  tabs.forEach((b) => b.addEventListener("click", () => setTab(b.dataset.tab)));
+  tabs.forEach((b) => {
+    b.addEventListener("click", () => setTab(b.dataset.tab));
+  });
   setTab("tabPlayers");
 }
 
@@ -143,15 +143,13 @@ function wireLogin() {
 }
 
 // =========================
-// Init
+// Init (IIFE)
 // =========================
 (async function init() {
-  // Version affichée
-  const v = document.getElementById("versionText");
-  if (v) v.textContent = "Version: " + (APP_VERSION || "(APP_VERSION manquant)");
+  renderVersion();
   log("APP_VERSION = " + (APP_VERSION || "(manquant)"));
 
-  // Toujours brancher la UI de base
+  // UI de base
   wireLogin();
   wireTabs();
   wireAuthBadge();
@@ -196,27 +194,26 @@ function wireLogin() {
     setAuthUI(true, me.email);
     log("[AUTH OK] " + me.email);
 
-    // Load profile (global_role via profiles.level when migrated)
+    // Load profile (optional)
     let profile = null;
     try {
       const rows = await apiFetch(
         `/rest/v1/profiles?select=user_id,level,full_name,skill_level&user_id=eq.${me.id}&limit=1`
       );
       profile = rows?.[0] || null;
-    } catch (e) {}
+    } catch (_) {}
 
     const ui = bindMainUI({ me, profile, log });
     await ui.initVenuesFlow();
-  }catch(e){
+  } catch (e) {
     const msg = e?.message || String(e);
 
-    // On clear uniquement si vraiment non autorisé
+    // Clear uniquement si vraiment non autorisé
     if (msg.includes("-> 401")) {
       clearTokens?.();
       showLogin();
       setAuthUI(false, "");
     } else {
-      // sinon on garde la session et on affiche l'app
       showApp();
     }
 
